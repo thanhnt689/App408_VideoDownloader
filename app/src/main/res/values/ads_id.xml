@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    //id test
+    <string name="app_flyer" translatable="false">LikYKU2zUYTct7BoQ7MuJY</string>
+    <string name="app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="facebook_app_id" translatable="false">1423362618544684</string>
+    <string name="facebook_client_token" translatable="false">c6867684694aefc9cf36a5212c4c1045</string>
+</resources>

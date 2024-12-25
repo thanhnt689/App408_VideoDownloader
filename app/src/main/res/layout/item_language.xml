@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/_5sdp"
+    android:elevation="@dimen/_4sdp">
+
+    <RelativeLayout
+        android:id="@+id/layoutItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_item_turnon"
+        android:paddingHorizontal="@dimen/_8sdp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/icLang"
+            android:layout_width="44sp"
+            android:layout_height="28sp"
+            android:layout_centerVertical="true"
+            android:layout_marginVertical="@dimen/_10sdp"
+            android:src="@drawable/co01"
+            android:visibility="visible" />
+
+        <TextView
+            android:id="@+id/txtName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginVertical="@dimen/_10sdp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginEnd="@dimen/_8sdp"
+            android:layout_toEndOf="@+id/icLang"
+            android:fontFamily="@font/sf_pro_display_regular"
+            android:text="English"
+            android:textColor="#1B1B1B"
+            android:textSize="18dp" />
+
+        <ImageView
+            android:id="@+id/iv_select"
+            android:layout_width="22sp"
+            android:layout_height="22sp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center"
+            android:layout_marginVertical="@dimen/_10sdp"
+            android:layout_marginRight="@dimen/_5sdp"
+            android:src="@drawable/ic_dot_normal" />
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/lottie_view_tab"
+            android:layout_width="@dimen/_80sdp"
+            android:layout_height="@dimen/_50sdp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="@dimen/_20sdp"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/tap_android" />
+
+    </RelativeLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
