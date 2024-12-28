@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.pin.PinActivity">
+
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_title"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_56sdp"
+            android:paddingHorizontal="@dimen/_13sdp"
+            app:layout_constraintHeight_percent="0.085"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/img_back"
+                android:layout_width="@dimen/_26sdp"
+                android:layout_height="@dimen/_26sdp"
+                android:src="@drawable/ic_arrow_back"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/_5sdp"
+                android:fontFamily="@font/sf_pro_display_bold"
+                android:gravity="center"
+                android:text="@string/string_set_pin"
+                android:textColor="#000000"
+                android:textSize="@dimen/_16ssp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/img_search"
+                app:layout_constraintStart_toEndOf="@id/img_back"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/img_search"
+                android:layout_width="@dimen/_26sdp"
+                android:layout_height="@dimen/_26sdp"
+                android:src="@drawable/ic_search"
+                android:visibility="invisible"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#404040" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_des"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/_40sdp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layout_des_hor"
+                android:visibility="visible"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/img_lock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_lock"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/_8sdp"
+                    android:orientation="vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/img_lock"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:id="@+id/tv_title_pin"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/sf_pro_display_semi_bold"
+                        android:text="@string/string_enter_your_new_pin"
+                        android:textColor="#A264FF"
+                        android:textSize="@dimen/_15ssp" />
+
+                    <TextView
+                        android:id="@+id/tv_des_pin"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/sf_pro_display_regular"
+                        android:text="@string/string_des_pin"
+                        android:textColor="#A264FF"
+                        android:textSize="@dimen/_12ssp" />
+
+
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layout_des_ver"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:paddingVertical="@dimen/_6sdp"
+                    android:drawableTop="@drawable/ic_lock"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:fontFamily="@font/sf_pro_display_semi_bold"
+                    android:text="@string/string_enter_your_new_pin"
+                    android:textColor="#A264FF"
+                    android:textSize="@dimen/_13ssp" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:gravity="center"
+            android:visibility="gone"
+            android:id="@+id/tv_incorrect"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ll_pass_code"
+            app:layout_constraintBottom_toTopOf="@id/keyboard"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:textColor="#BFBFBF"
+            android:layout_marginHorizontal="@dimen/_40sdp"
+            android:text="@string/string_forgot_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:id="@+id/ll_pass_code"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/_16sdp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:weightSum="4"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layout_des">
+
+            <ImageView
+                android:id="@+id/edt1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/_10sdp"
+                android:src="@drawable/ic_circle_unselected" />
+
+            <ImageView
+                android:id="@+id/edt2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/_10sdp"
+                android:src="@drawable/ic_circle_unselected" />
+
+            <ImageView
+                android:id="@+id/edt3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/_10sdp"
+                android:src="@drawable/ic_circle_unselected" />
+
+            <ImageView
+                android:id="@+id/edt4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/_10sdp"
+                android:src="@drawable/ic_circle_unselected" />
+        </LinearLayout>
+
+
+        <GridLayout
+            android:id="@+id/keyboard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/_20sdp"
+            android:layout_marginTop="@dimen/_30sdp"
+            android:background="@android:color/transparent"
+            android:orientation="vertical"
+            android:showDividers="beginning|middle|end"
+            app:layout_constraintTop_toBottomOf="@+id/ll_pass_code">
+
+            <TableRow style="@style/keyboard_row">
+
+                <TextView
+                    android:id="@+id/btn1"
+                    style="@style/keyboard_number_button"
+                    android:layout_marginStart="@dimen/_10sdp"
+                    android:text="1" />
+
+                <TextView
+                    android:id="@+id/btn2"
+                    style="@style/keyboard_number_button"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:text="2" />
+
+                <TextView
+                    android:id="@+id/btn3"
+                    style="@style/keyboard_number_button"
+                    android:layout_marginEnd="@dimen/_10sdp"
+                    android:text="3" />
+            </TableRow>
+
+            <TableRow
+                style="@style/keyboard_row"
+                android:layout_marginTop="@dimen/_10sdp">
+
+                <TextView
+                    android:id="@+id/btn4"
+                    style="@style/keyboard_number_button"
+                    android:layout_marginStart="@dimen/_10sdp"
+                    android:text="4" />
+
+                <TextView
+                    android:id="@+id/btn5"
+                    style="@style/keyboard_number_button"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:text="5" />
+
+                <TextView
+                    android:id="@+id/btn6"
+                    style="@style/keyboard_number_button"
+                    android:layout_marginEnd="@dimen/_10sdp"
+                    android:text="6" />
+            </TableRow>
+
+            <TableRow
+                style="@style/keyboard_row"
+                android:layout_marginTop="@dimen/_10sdp">
+
+                <TextView
+                    android:id="@+id/btn7"
+                    style="@style/keyboard_number_button"
+                    android:layout_marginStart="@dimen/_10sdp"
+                    android:text="7" />
+
+                <TextView
+                    android:id="@+id/btn8"
+                    style="@style/keyboard_number_button"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:text="8" />
+
+                <TextView
+                    android:id="@+id/btn9"
+                    style="@style/keyboard_number_button"
+                    android:layout_marginEnd="@dimen/_10sdp"
+                    android:text="9" />
+            </TableRow>
+
+            <TableRow
+                style="@style/keyboard_row"
+                android:layout_marginTop="@dimen/_10sdp">
+
+                <ImageView
+                    android:id="@+id/btnX"
+                    style="@style/keyboard_button"
+                    android:layout_marginStart="@dimen/_10sdp"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_remove"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:visibility="invisible" />
+
+                <TextView
+                    android:id="@+id/btn0"
+                    style="@style/keyboard_number_button"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:text="0" />
+
+                <ImageView
+                    android:id="@+id/btnNext"
+                    style="@style/keyboard_button"
+                    android:layout_marginEnd="@dimen/_10sdp"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_remove"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </TableRow>
+        </GridLayout>
+
+        <TextView
+            android:gravity="center"
+            android:id="@+id/tv_forgot_password"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/keyboard"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:paddingVertical="@dimen/_10sdp"
+            android:textColor="#BFBFBF"
+            android:layout_marginHorizontal="@dimen/_40sdp"
+            android:text="@string/string_forgot_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

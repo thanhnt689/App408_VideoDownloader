@@ -1,5 +1,6 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.data.dao
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
 import io.reactivex.rxjava3.core.Flowable
@@ -8,7 +9,7 @@ import io.reactivex.rxjava3.core.Flowable
 interface HistoryDao {
 
     @Query("SELECT * FROM HistoryItem")
-    fun getHistory(): Flowable<List<HistoryItem>>
+    fun getHistory(): LiveData<List<HistoryItem>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertHistoryItem(item: HistoryItem)

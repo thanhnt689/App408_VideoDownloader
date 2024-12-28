@@ -23,4 +23,29 @@
     <style name="CustomAlertDialogRate" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
+
+    <style name="keyboard_row">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:showDividers">beginning|middle|end</item>
+    </style>
+
+    <style name="keyboard_number_button" parent="keyboard_button">
+        <item name="android:tag">number_button</item>
+    </style>
+
+    <style name="keyboard_button">
+        <item name="android:layout_width">@dimen/_70sdp</item>
+        <item name="android:layout_height">@dimen/_70sdp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:scaleType">centerInside</item>
+        <item name="android:textColor">#A264FF</item>
+        <item name="android:fontFamily">@font/sf_pro_display_medium</item>
+        <item name="android:textSize">@dimen/_24sdp</item>
+        <item name="android:background">@drawable/bg_item_turnon_stroke</item>
+        <item name="android:backgroundTint">#EDEDED</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceLarge</item>
+    </style>
 </resources>

@@ -12,6 +12,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.we
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabFactory
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.guide.GuideActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.KeyboardUtils
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -36,7 +37,7 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.imgGuide.setOnClickListener {
-            startActivity(GuideActivity.newIntent(requireContext()))
+            startActivity(HistoryActivity.newIntent(requireContext()))
         }
 
         binding.layoutSearch.setOnClickListener {

@@ -24,6 +24,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_ut
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.reactivex.rxjava3.disposables.Disposable
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
@@ -56,7 +57,7 @@ class CustomWebViewClient(
         val userAgent = view?.settings?.userAgentString ?: tabViewModel.userAgent.get()
 
         if (url != null && lastSavedHistoryUrl != url) {
-            historyModel.viewModelScope.launch(historyModel.executorSingleHistory) {
+            historyModel.viewModelScope.launch(Dispatchers.IO) {
                 val icon = try {
                     FaviconUtils.getEncodedFaviconFromUrl(
                         okHttpProxyClient.getProxyOkHttpClient(), url
@@ -95,7 +96,7 @@ class CustomWebViewClient(
         val isAdBlockerOn = settingsModel.isAdBlocker.get()
         val url = request?.url.toString()
 
-        val isUrlAd: Boolean = isAdBlockerOn && tabViewModel.isAd(url)
+        val isUrlAd: Boolean = isAdBlockerOn
 
         if (isUrlAd) {
             return AdBlockerHelper.createEmptyResource()
@@ -179,7 +180,7 @@ class CustomWebViewClient(
 
     override fun shouldOverrideUrlLoading(view: WebView, url: WebResourceRequest): Boolean {
         val isAdBlockerOn = settingsModel.isAdBlocker.get()
-        val isAd = if (isAdBlockerOn) tabViewModel.isAd(url.url.toString()) else false
+        val isAd = false
 
         return if (url.url.toString().startsWith("http") && url.isForMainFrame && !isAd) {
             if (!tabViewModel.isTabInputFocused.get()) {

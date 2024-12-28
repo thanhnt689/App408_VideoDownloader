@@ -10,7 +10,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
 import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.AdBlockHostsRepository
-import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.HistoryRepository
+import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.HistoryRepositoryImpl
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
 import com.files.video.downloader.videoplayerdownloader.downloader.util.scheduler.BaseSchedulers
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,9 +24,8 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-@HiltViewModel
 class WebTabViewModel @Inject constructor(
-    private val historyRepository: HistoryRepository,
+    private val historyRepository: HistoryRepositoryImpl,
     private val baseSchedulers: BaseSchedulers,
     private val adBlockHostsRepository: AdBlockHostsRepository,
 ) : BaseViewModel() {
@@ -73,9 +72,9 @@ class WebTabViewModel @Inject constructor(
     override fun stop() {
     }
 
-    fun isAd(url: String): Boolean {
-        return adBlockHostsRepository.isAds(url)
-    }
+//    fun isAd(url: String): Boolean {
+//        return adBlockHostsRepository.isAds(url)
+//    }
 
     fun finishPage(url: String) {
         setTabTextInput(url, true)
@@ -97,42 +96,42 @@ class WebTabViewModel @Inject constructor(
         }
     }
 
-    fun showTabSuggestions() {
-        if (tabSuggestionJob != null && tabSuggestionJob?.isActive == true) {
-            tabSuggestionJob?.cancel()
-        }
-        tabSuggestionJob = viewModelScope.launch(Dispatchers.IO) {
-            try {
-                withContext(this.coroutineContext) {
-                    val list = getListTabSuggestions().blockingFirst().reversed()
-                    if (list.size > 50) {
-                        listTabSuggestions.set(list.subList(0, 50).toMutableList())
-                    } else {
-                        listTabSuggestions.set(list.toMutableList())
-                    }
-                }
-            } catch (e: Throwable) {
-                e.printStackTrace()
-            }
-        }
-    }
+//    fun showTabSuggestions() {
+//        if (tabSuggestionJob != null && tabSuggestionJob?.isActive == true) {
+//            tabSuggestionJob?.cancel()
+//        }
+//        tabSuggestionJob = viewModelScope.launch(Dispatchers.IO) {
+//            try {
+//                withContext(this.coroutineContext) {
+//                    val list = getListTabSuggestions().blockingFirst().reversed()
+//                    if (list.size > 50) {
+//                        listTabSuggestions.set(list.subList(0, 50).toMutableList())
+//                    } else {
+//                        listTabSuggestions.set(list.toMutableList())
+//                    }
+//                }
+//            } catch (e: Throwable) {
+//                e.printStackTrace()
+//            }
+//        }
+//    }
 
-    private fun getListTabSuggestions(): Flowable<List<HistoryItem>> {
-        return Flowable.combineLatest(
-            tabPublishSubject.debounce(300, TimeUnit.MILLISECONDS)
-                .toFlowable(BackpressureStrategy.LATEST), historyRepository.getAllHistory().take(1)
-        ) { input, suggestions ->
-            tabUrl.set(input)
-
-            val listSuggestions = suggestions.filter { historyItem ->
-                historyItem.url.contains(
-                    input
-                )
-            }
-            listSuggestions.toList()
-        }.take(1).observeOn(baseSchedulers.single)
-            .subscribeOn(baseSchedulers.computation) // MAIN_TH
-    }
+//    private fun getListTabSuggestions(): Flowable<List<HistoryItem>> {
+//        return Flowable.combineLatest(
+//            tabPublishSubject.debounce(300, TimeUnit.MILLISECONDS)
+//                .toFlowable(BackpressureStrategy.LATEST), historyRepository.getAllHistory().take(1)
+//        ) { input, suggestions ->
+//            tabUrl.set(input)
+//
+//            val listSuggestions = suggestions.filter { historyItem ->
+//                historyItem.url.contains(
+//                    input
+//                )
+//            }
+//            listSuggestions.toList()
+//        }.take(1).observeOn(baseSchedulers.single)
+//            .subscribeOn(baseSchedulers.computation) // MAIN_TH
+//    }
 
     fun changeTabFocus(isFocus: Boolean) {
         this.isTabInputFocused.set(isFocus)

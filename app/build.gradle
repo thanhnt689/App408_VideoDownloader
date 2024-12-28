@@ -200,6 +200,11 @@ dependencies {
     // optional - Multiprocess support
     implementation 'androidx.work:work-multiprocess:2.9.1'
 
+    implementation 'com.github.chthai64:SwipeRevealLayout:1.4.0'
+
+    implementation 'com.daimajia.androidanimations:library:2.4@aar'
+
+
 //    implementation "com.google.dagger:dagger:2.54"
 //    kapt "com.google.dagger:dagger-compiler:2.54"
 //

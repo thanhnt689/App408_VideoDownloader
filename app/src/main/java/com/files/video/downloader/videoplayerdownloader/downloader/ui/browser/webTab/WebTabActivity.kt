@@ -1,8 +1,12 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab
 
+import android.content.pm.ActivityInfo
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.os.Message
 import android.view.LayoutInflater
 import android.view.View
+import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -91,17 +95,17 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 
     private lateinit var webTab: WebTab
 
-    private val tabViewModel: WebTabViewModel by viewModels()
-
-//    private val settingsViewModel: SettingsViewModel by viewModels()
-
-    private lateinit var historyProvider: HistoryProvider
-
-    private val videoDetectionTabViewModel: DetectedVideosTabViewModel by viewModels()
-
-    private lateinit var tabManagerProvider: TabManagerProvider
-
-    private lateinit var pageTabProvider: PageTabProvider
+//    private lateinit var tabViewModel: WebTabViewModel
+//
+//    private lateinit var settingsViewModel: SettingsViewModel
+//
+//    private lateinit var historyProvider: HistoryProvider
+//
+//    private lateinit var videoDetectionTabViewModel: DetectedVideosTabViewModel
+//
+//    private lateinit var tabManagerProvider: TabManagerProvider
+//
+//    private lateinit var pageTabProvider: PageTabProvider
 //
 //
 //    @Inject
@@ -125,10 +129,18 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 
         webTab = intent.extras?.getSerializable("webtab") as WebTab
 
-        recreateWebView(savedInstanceState)
-
-        val currentWebView = this.webTab.getWebView()
-
+//        tabViewModel = ViewModelProvider(this, viewModelFactory)[WebTabViewModel::class.java]
+//        settingsViewModel = ViewModelProvider(this, viewModelFactory)[SettingsViewModel::class.java]
+//        historyProvider = tabViewModel.browserServicesProvider!!
+//        videoDetectionTabViewModel =
+//            ViewModelProvider(this, viewModelFactory)[DetectedVideosTabViewModel::class.java]
+//        videoDetectionTabViewModel.settingsModel = settingsViewModel
+//        videoDetectionTabViewModel.webTabModel = tabViewModel
+//
+//        recreateWebView(savedInstanceState)
+//
+//        val currentWebView = this.webTab.getWebView()
+//
 //        val webViewClient = CustomWebViewClient(
 //            tabViewModel,
 //            settingsViewModel,
@@ -139,52 +151,53 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 //            pageTabProvider,
 //            proxyController,
 //        )
-
-        val chromeClient = CustomWebChromeClient(
+//
+//        val chromeClient = CustomWebChromeClient(
 //            tabViewModel,
 //            settingsViewModel,
 //            tabManagerProvider.getUpdateTabEvent(),
 //            pageTabProvider,
-            ActivityWebTabBinding.inflate(layoutInflater),
-            appUtil,
-            this
-        )
+//            ActivityWebTabBinding.inflate(layoutInflater),
+//            appUtil,
+//            this
+//        )
 
-        currentWebView?.webChromeClient = chromeClient
+//        currentWebView?.webChromeClient = chromeClient
 //        currentWebView?.webViewClient = webViewClient
+//
+//
+//        val webSettings = webTab.getWebView()?.settings
+//        val webView = webTab.getWebView()
+//
+//        webView?.webViewClient = webViewClient
+//        webView?.webChromeClient = chromeClient
 
-        val webSettings = webTab.getWebView()?.settings
-        val webView = webTab.getWebView()
-
-        webView?.webViewClient = WebViewClient()
-        webView?.webChromeClient = chromeClient
-
-        webView?.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-        webView?.isScrollbarFadingEnabled = true
-
-        webView?.loadUrl(webTab.getUrl())
-
-        webSettings?.apply {
-            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-            setSupportZoom(true)
-            setSupportMultipleWindows(true)
-            setGeolocationEnabled(false)
-            allowContentAccess = true
-            allowFileAccess = true
-            offscreenPreRaster = false
-            displayZoomControls = false
-            builtInZoomControls = true
-            loadWithOverviewMode = true
-            layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
-            useWideViewPort = true
-            domStorageEnabled = true
-            javaScriptEnabled = true
-            databaseEnabled = true
-            cacheMode = WebSettings.LOAD_NO_CACHE
-            javaScriptCanOpenWindowsAutomatically = true
-            mediaPlaybackRequiresUserGesture = false
-            userAgentString = BrowserFragment.DESKTOP_USER_AGENT
-        }
+//        webView?.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+//        webView?.isScrollbarFadingEnabled = true
+//
+//        webView?.loadUrl(webTab.getUrl())
+//
+//        webSettings?.apply {
+//            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+//            setSupportZoom(true)
+//            setSupportMultipleWindows(true)
+//            setGeolocationEnabled(false)
+//            allowContentAccess = true
+//            allowFileAccess = true
+//            offscreenPreRaster = false
+//            displayZoomControls = false
+//            builtInZoomControls = true
+//            loadWithOverviewMode = true
+//            layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
+//            useWideViewPort = true
+//            domStorageEnabled = true
+//            javaScriptEnabled = true
+//            databaseEnabled = true
+//            cacheMode = WebSettings.LOAD_NO_CACHE
+//            javaScriptCanOpenWindowsAutomatically = true
+//            mediaPlaybackRequiresUserGesture = false
+//            userAgentString = BrowserFragment.MOBILE_USER_AGENT
+//        }
 
         AppLogger.d(webTab.toString())
 
@@ -210,9 +223,6 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 //        tabViewModel.start()
 //        settingsViewModel.start()
 //        videoDetectionTabViewModel.start()
-
-
-
 
 
     }

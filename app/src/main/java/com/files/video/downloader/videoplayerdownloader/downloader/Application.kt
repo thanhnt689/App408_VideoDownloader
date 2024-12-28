@@ -11,6 +11,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.splash.Spl
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SystemUtil
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
+import javax.inject.Inject
 
 @HiltAndroidApp
 class Application : AdsApplication() {
@@ -54,6 +55,7 @@ class Application : AdsApplication() {
     override fun getAdjustToken(): String {
         return "thyg2mqmypkw"
     }
+
 
 
 }

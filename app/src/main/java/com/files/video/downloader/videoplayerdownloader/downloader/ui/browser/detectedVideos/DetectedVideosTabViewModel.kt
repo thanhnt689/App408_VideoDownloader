@@ -42,7 +42,6 @@ import java.net.URL
 import java.util.concurrent.Executors
 import javax.inject.Inject
 
-@HiltViewModel
 class DetectedVideosTabViewModel @Inject constructor(
     private val videoRepository: VideoRepository,
     private val baseSchedulers: BaseSchedulers,
@@ -309,7 +308,7 @@ class DetectedVideosTabViewModel @Inject constructor(
 
         val uriString = request.url.toString()
 
-        val isAd = webTabModel?.isAd(uriString) ?: false
+        val isAd = false
         if (!uriString.startsWith("http") || isAd) {
             return null
         }

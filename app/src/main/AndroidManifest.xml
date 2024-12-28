@@ -13,6 +13,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Main">
         <activity
+            android:name=".ui.pin.SecurityActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.pin.PinActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.history.HistoryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.tab.TabsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.browser.webTab.WebTabActivity"
             android:exported="false" />
         <activity

@@ -78,6 +78,19 @@
     <string name="download_open_in_app">Open in App</string>
     <string name="download_watch_in_app">Watch Video</string>
     <string name="app_download_channel_id" translatable="false">download_channel_id</string>
+    <string name="string_close_all">Close all</string>
+    <string name="string_num_tabs">%s Tabs</string>
+    <string name="string_go_see_the_sites">Go see the sites! The pages you visit will show up here !</string>
+    <string name="string_you_have_not_added">You have not added any Bookmarks, select the "+" sign at the bottom of the screen to add a Bookmark.</string>
+    <string name="string_clear_all_history">Clear all history</string>
+    <string name="string_set_pin">Set PIN</string>
+    <string name="string_enter_your_new_pin">Enter your new PIN</string>
+    <string name="string_des_pin">Enhanced security with PIN codes to prevent access to sensitive content</string>
+    <string name="string_forgot_password">Forgot Password</string>
+    <string name="string_enter_search_name">Enter search name</string>
+    <string name="string_security_question">Security Question</string>
+    <string name="string_what_is_your_lucky_number">What is your lucky number?</string>
+    <string name="string_enter_your_answer">Enter your answer</string>
 
 
 </resources>

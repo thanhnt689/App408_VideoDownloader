@@ -60,12 +60,11 @@ interface IVideoDetector {
 }
 
 // TODO: @i3po refactoring: remove duplicated code
-@HiltViewModel
 class VideoDetectionAlgVModel @Inject constructor(
     private val videoRepository: VideoRepository,
     private val baseSchedulers: BaseSchedulers,
     private val okHttpProxyClient: OkHttpProxyClient,
-    ) : BaseViewModel(), IVideoDetector {
+) : BaseViewModel(), IVideoDetector {
     var downloadButtonState =
         ObservableField<DownloadButtonState>(DownloadButtonStateCanNotDownload())
     val downloadButtonIcon = ObservableInt(R.drawable.ic_download_enable)

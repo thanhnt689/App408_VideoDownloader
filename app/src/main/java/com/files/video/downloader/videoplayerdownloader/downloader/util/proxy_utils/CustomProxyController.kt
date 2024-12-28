@@ -12,7 +12,6 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.schedule
 import io.reactivex.rxjava3.core.Observable
 
 
-
 class CustomProxyController @Inject constructor(
     private val sharedPrefHelper: PreferenceHelper,
     private val schedulers: BaseSchedulers,
