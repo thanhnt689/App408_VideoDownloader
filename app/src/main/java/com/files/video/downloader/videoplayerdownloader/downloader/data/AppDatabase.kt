@@ -11,7 +11,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.network.
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 
 
-const val DB_VERSION = 4
+const val DB_VERSION = 1
 
 @Database(
     entities = [VideoInfo::class, HistoryItem::class, AdHost::class],

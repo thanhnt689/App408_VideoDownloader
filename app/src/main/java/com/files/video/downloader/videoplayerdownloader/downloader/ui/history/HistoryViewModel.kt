@@ -1,9 +1,11 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.ui.history
 
+import android.util.Log
 import androidx.databinding.ObservableField
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
@@ -21,7 +23,7 @@ class HistoryViewModel @Inject constructor(
 ) :
     ViewModel() {
 
-    var historyItem = historyRepository.getAllHistory()
+    val searchCharObservable: MutableLiveData<String> = MutableLiveData("")
 
 //    var searchHistoryItems = ObservableField<List<HistoryItem>>(emptyList())
 //
@@ -51,6 +53,25 @@ class HistoryViewModel @Inject constructor(
 //            isLoadingHistory.set(false)
 //        }
 //    }
+
+    suspend fun queryHistoryFile(): LiveData<List<HistoryItem>> {
+        Log.d("ntt", "queryFile: ")
+        return searchCharObservable.switchMap { query ->
+            historyRepository.queryHistoryItem(
+                query
+            )
+        }
+    }
+
+
+    suspend fun queryBookmarkFile(): LiveData<List<HistoryItem>> {
+        Log.d("ntt", "queryFile: ")
+        return searchCharObservable.switchMap { query ->
+            historyRepository.queryBookmarkItem(
+                query
+            )
+        }
+    }
 
     fun saveHistory(historyItem: HistoryItem) {
         viewModelScope.launch(Dispatchers.IO) {

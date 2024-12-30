@@ -15,6 +15,7 @@ data class HistoryItem(
     var title: String? = null,
     var url: String,
     var datetime: Long = Date().time,
+    var isBookmark: Boolean = false,
 
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
     var favicon: ByteArray? = null

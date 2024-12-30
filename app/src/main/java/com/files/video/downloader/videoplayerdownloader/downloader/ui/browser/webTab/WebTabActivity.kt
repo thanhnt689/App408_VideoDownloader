@@ -95,13 +95,15 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 
     private lateinit var webTab: WebTab
 
-//    private lateinit var tabViewModel: WebTabViewModel
-//
-//    private lateinit var settingsViewModel: SettingsViewModel
-//
-//    private lateinit var historyProvider: HistoryProvider
-//
-//    private lateinit var videoDetectionTabViewModel: DetectedVideosTabViewModel
+    private val tabViewModel: WebTabViewModel by viewModels()
+
+    private val settingsViewModel: SettingsViewModel by viewModels()
+
+    //
+    private val historyViewModel: HistoryViewModel by viewModels()
+
+    //
+    private val videoDetectionTabViewModel: DetectedVideosTabViewModel by viewModels()
 //
 //    private lateinit var tabManagerProvider: TabManagerProvider
 //
@@ -127,6 +129,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        videoDetectionTabViewModel.start()
+
         webTab = intent.extras?.getSerializable("webtab") as WebTab
 
 //        tabViewModel = ViewModelProvider(this, viewModelFactory)[WebTabViewModel::class.java]
@@ -136,68 +140,69 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 //            ViewModelProvider(this, viewModelFactory)[DetectedVideosTabViewModel::class.java]
 //        videoDetectionTabViewModel.settingsModel = settingsViewModel
 //        videoDetectionTabViewModel.webTabModel = tabViewModel
-//
-//        recreateWebView(savedInstanceState)
-//
-//        val currentWebView = this.webTab.getWebView()
-//
-//        val webViewClient = CustomWebViewClient(
-//            tabViewModel,
-//            settingsViewModel,
-//            videoDetectionTabViewModel,
-//            historyProvider.getHistoryVModel(),
-//            okHttpProxyClient,
+
+        recreateWebView(savedInstanceState)
+
+
+        val currentWebView = this.webTab.getWebView()
+
+        val webViewClient = CustomWebViewClient(
+            tabViewModel,
+            settingsViewModel,
+            videoDetectionTabViewModel,
+            historyViewModel,
+            okHttpProxyClient,
 //            tabManagerProvider.getUpdateTabEvent(),
 //            pageTabProvider,
-//            proxyController,
-//        )
-//
-//        val chromeClient = CustomWebChromeClient(
-//            tabViewModel,
-//            settingsViewModel,
+            proxyController,
+        )
+
+        val chromeClient = CustomWebChromeClient(
+            tabViewModel,
+            settingsViewModel,
 //            tabManagerProvider.getUpdateTabEvent(),
 //            pageTabProvider,
-//            ActivityWebTabBinding.inflate(layoutInflater),
-//            appUtil,
-//            this
-//        )
+            ActivityWebTabBinding.inflate(layoutInflater),
+            appUtil,
+            this
+        )
 
-//        currentWebView?.webChromeClient = chromeClient
-//        currentWebView?.webViewClient = webViewClient
-//
-//
-//        val webSettings = webTab.getWebView()?.settings
-//        val webView = webTab.getWebView()
-//
-//        webView?.webViewClient = webViewClient
-//        webView?.webChromeClient = chromeClient
+        currentWebView?.webChromeClient = chromeClient
+        currentWebView?.webViewClient = webViewClient
 
-//        webView?.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-//        webView?.isScrollbarFadingEnabled = true
-//
-//        webView?.loadUrl(webTab.getUrl())
-//
-//        webSettings?.apply {
-//            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-//            setSupportZoom(true)
-//            setSupportMultipleWindows(true)
-//            setGeolocationEnabled(false)
-//            allowContentAccess = true
-//            allowFileAccess = true
-//            offscreenPreRaster = false
-//            displayZoomControls = false
-//            builtInZoomControls = true
-//            loadWithOverviewMode = true
-//            layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
-//            useWideViewPort = true
-//            domStorageEnabled = true
-//            javaScriptEnabled = true
-//            databaseEnabled = true
-//            cacheMode = WebSettings.LOAD_NO_CACHE
-//            javaScriptCanOpenWindowsAutomatically = true
-//            mediaPlaybackRequiresUserGesture = false
-//            userAgentString = BrowserFragment.MOBILE_USER_AGENT
-//        }
+
+        val webSettings = webTab.getWebView()?.settings
+        val webView = webTab.getWebView()
+
+        webView?.webViewClient = webViewClient
+        webView?.webChromeClient = chromeClient
+
+        webView?.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        webView?.isScrollbarFadingEnabled = true
+
+        webView?.loadUrl(webTab.getUrl())
+
+        webSettings?.apply {
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            setSupportZoom(true)
+            setSupportMultipleWindows(true)
+            setGeolocationEnabled(false)
+            allowContentAccess = true
+            allowFileAccess = true
+            offscreenPreRaster = false
+            displayZoomControls = false
+            builtInZoomControls = true
+            loadWithOverviewMode = true
+            layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
+            useWideViewPort = true
+            domStorageEnabled = true
+            javaScriptEnabled = true
+            databaseEnabled = true
+            cacheMode = WebSettings.LOAD_NO_CACHE
+            javaScriptCanOpenWindowsAutomatically = true
+            mediaPlaybackRequiresUserGesture = false
+            userAgentString = BrowserFragment.MOBILE_USER_AGENT
+        }
 
         AppLogger.d(webTab.toString())
 
@@ -235,5 +240,10 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
         if (savedInstanceState != null) {
             webTab.getWebView()?.restoreState(savedInstanceState)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        videoDetectionTabViewModel.stop()
     }
 }

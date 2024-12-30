@@ -60,8 +60,9 @@ interface IVideoDetector {
 }
 
 // TODO: @i3po refactoring: remove duplicated code
+
 class VideoDetectionAlgVModel @Inject constructor(
-    private val videoRepository: VideoRepository,
+//    private val videoRepository: VideoRepository,
     private val baseSchedulers: BaseSchedulers,
     private val okHttpProxyClient: OkHttpProxyClient,
 ) : BaseViewModel(), IVideoDetector {
@@ -70,6 +71,8 @@ class VideoDetectionAlgVModel @Inject constructor(
     val downloadButtonIcon = ObservableInt(R.drawable.ic_download_enable)
 
     lateinit var settingsModel: SettingsViewModel
+
+    var cachedVideos: MutableMap<String, VideoInfo> = mutableMapOf()
 
     private var verifyVideoLinkJobStorage = mutableMapOf<String, Disposable>()
     private var lastVerifiedLink: String = ""
@@ -158,6 +161,27 @@ class VideoDetectionAlgVModel @Inject constructor(
         return downloadButtonIcon
     }
 
+    fun getVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
+        cachedVideos[url.url.toString()]?.let { return it }
+
+        return getAndCacheRemoteVideo(url, isM3u8OrMpd)
+    }
+
+    fun saveVideoInfo(videoInfo: VideoInfo) {
+        cachedVideos[videoInfo.originalUrl] = videoInfo
+    }
+
+    private fun getAndCacheRemoteVideo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
+        val videoInfo = getVideoInfo(url, isM3u8OrMpd)
+        if (videoInfo != null) {
+            videoInfo.originalUrl = url.url.toString()
+            cachedVideos[videoInfo.originalUrl] = videoInfo
+
+            return videoInfo
+        }
+        return null
+    }
+
     private fun startVerifyProcess(
         resourceRequest: Request, isM3u8: Boolean, hlsTitle: String? = null
     ) {
@@ -170,7 +194,7 @@ class VideoDetectionAlgVModel @Inject constructor(
             io.reactivex.rxjava3.core.Observable.create { emitter ->
                 downloadButtonState.set(DownloadButtonStateLoading())
                 val info = try {
-                    videoRepository.getVideoInfo(resourceRequest, isM3u8)
+                    getVideoInfo(resourceRequest, isM3u8)
                 } catch (e: Throwable) {
                     e.printStackTrace()
                     null

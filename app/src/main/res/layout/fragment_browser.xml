@@ -131,6 +131,7 @@
                 app:layout_constraintTop_toBottomOf="@id/layout_search">
 
                 <LinearLayout
+                    android:id="@+id/layout_bookmark"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/_5sdp"
@@ -152,6 +153,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/layout_history"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/_5sdp"

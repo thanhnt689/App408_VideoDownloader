@@ -10,9 +10,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/_16sdp"
-        android:padding="@dimen/_16sdp"
         android:background="@drawable/bg_dialog_rate"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="@dimen/_16sdp">
 
         <LinearLayout
             android:id="@+id/layout_question_1"
@@ -20,27 +20,106 @@
             android:layout_height="wrap_content">
 
             <TextView
+                android:id="@+id/tv_question_1"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/_8sdp"
                 android:layout_weight="9"
-                android:fontFamily="@font/sf_pro_display_semi_bold"
+                android:ellipsize="marquee"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:fontFamily="@font/sf_pro_display_regular"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:scrollHorizontally="true"
+                android:singleLine="true"
                 android:text="@string/string_what_is_your_lucky_number"
                 android:textColor="#3785FB"
                 android:textSize="@dimen/_14ssp" />
 
             <ImageView
+                android:id="@+id/dot_question_1"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:src="@drawable/ic_dot_selected" />
         </LinearLayout>
 
         <View
-            android:layout_marginTop="@dimen/_16sdp"
-            android:background="#EDEDED"
-            android:layout_marginEnd="@dimen/_40sdp"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_1sdp" />
+            android:layout_height="@dimen/_2sdp"
+            android:layout_marginTop="@dimen/_12sdp"
+            android:layout_marginEnd="@dimen/_40sdp"
+            android:background="#EDEDED" />
+
+        <LinearLayout
+            android:id="@+id/layout_question_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_12sdp">
+
+            <TextView
+                android:id="@+id/tv_question_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/_8sdp"
+                android:layout_weight="9"
+                android:ellipsize="marquee"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:fontFamily="@font/sf_pro_display_regular"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:scrollHorizontally="true"
+                android:singleLine="true"
+                android:text="@string/string_what_is_your_favourite_pet_name"
+                android:textColor="#BFBFBF"
+                android:textSize="@dimen/_14ssp" />
+
+            <ImageView
+                android:id="@+id/dot_question_2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:src="@drawable/ic_dot_normal" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_2sdp"
+            android:layout_marginTop="@dimen/_12sdp"
+            android:layout_marginEnd="@dimen/_40sdp"
+            android:background="#EDEDED" />
+
+        <LinearLayout
+            android:id="@+id/layout_question_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_12sdp">
+
+            <TextView
+                android:id="@+id/tv_question_3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/_8sdp"
+                android:layout_weight="9"
+                android:ellipsize="marquee"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:fontFamily="@font/sf_pro_display_regular"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:scrollHorizontally="true"
+                android:singleLine="true"
+                android:text="@string/string_what_was_your_favorite_food_as_a_child"
+                android:textColor="#BFBFBF"
+                android:textSize="@dimen/_14ssp" />
+
+            <ImageView
+                android:id="@+id/dot_question_3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:src="@drawable/ic_dot_normal" />
+        </LinearLayout>
+
 
     </LinearLayout>
 </LinearLayout>

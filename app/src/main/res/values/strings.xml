@@ -91,6 +91,13 @@
     <string name="string_security_question">Security Question</string>
     <string name="string_what_is_your_lucky_number">What is your lucky number?</string>
     <string name="string_enter_your_answer">Enter your answer</string>
+    <string name="string_what_is_your_favourite_pet_name">What is your favourite pet name?</string>
+    <string name="string_what_was_your_favorite_food_as_a_child">What was your favorite food as a child?</string>
+    <string name="string_add_bookmark">Add bookmark</string>
+    <string name="string_add">Add</string>
+    <string name="string_name">Name</string>
+    <string name="string_url">URL</string>
+    <string name="string_invalid_data">Invalid data!</string>
 
 
 </resources>

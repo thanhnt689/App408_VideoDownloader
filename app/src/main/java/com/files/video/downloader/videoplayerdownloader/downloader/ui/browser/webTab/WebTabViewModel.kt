@@ -24,10 +24,11 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
+@HiltViewModel
 class WebTabViewModel @Inject constructor(
     private val historyRepository: HistoryRepositoryImpl,
     private val baseSchedulers: BaseSchedulers,
-    private val adBlockHostsRepository: AdBlockHostsRepository,
+//    private val adBlockHostsRepository: AdBlockHostsRepository,
 ) : BaseViewModel() {
     val isTabInputFocused = ObservableBoolean(false)
     val changeTabFocusEvent = SingleLiveEvent<Boolean>()

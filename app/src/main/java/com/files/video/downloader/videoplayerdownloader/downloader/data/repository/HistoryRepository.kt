@@ -8,16 +8,6 @@ import io.reactivex.rxjava3.core.Flowable
 import javax.inject.Inject
 import javax.inject.Singleton
 
-//interface HistoryRepository {
-//    fun getAllHistory(): Flowable<List<HistoryItem>>
-//
-//    fun saveHistory(history: HistoryItem)
-//
-//    fun deleteHistory(history: HistoryItem)
-//
-//    fun deleteAllHistory()
-//}
-
 class HistoryRepositoryImpl @Inject constructor(
     private val historyDao: HistoryDao
 ) {
@@ -36,6 +26,20 @@ class HistoryRepositoryImpl @Inject constructor(
 
     fun deleteAllHistory() {
         historyDao.clear()
+    }
+
+    fun queryHistoryItem(
+        textSearch: String,
+    ): LiveData<List<HistoryItem>> {
+        return historyDao
+            .getLiveDataHistoryByTextSearch("%" + textSearch.trim() + "%")
+    }
+
+    fun queryBookmarkItem(
+        textSearch: String,
+    ): LiveData<List<HistoryItem>> {
+        return historyDao
+            .getLiveDataBookmarkByTextSearch("%" + textSearch.trim() + "%")
     }
 
 }

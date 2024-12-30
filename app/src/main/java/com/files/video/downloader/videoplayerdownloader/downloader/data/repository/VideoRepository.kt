@@ -3,6 +3,11 @@ package com.files.video.downloader.videoplayerdownloader.downloader.data.reposit
 import androidx.annotation.VisibleForTesting
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.di.qualifier.RemoteData
+import dagger.Binds
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import okhttp3.Request
 import javax.inject.Inject
 import javax.inject.Singleton

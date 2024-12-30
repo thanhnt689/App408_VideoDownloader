@@ -37,7 +37,7 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.imgGuide.setOnClickListener {
-            startActivity(HistoryActivity.newIntent(requireContext()))
+            startActivity(GuideActivity.newIntent(requireContext()))
         }
 
         binding.layoutSearch.setOnClickListener {
@@ -97,6 +97,14 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
 
         binding.layoutDailyMotion.setOnClickListener {
             openNewTab("https://www.dailymotion.com")
+        }
+
+        binding.layoutBookmark.setOnClickListener {
+            startActivity(HistoryActivity.newIntent(requireContext(),"bookmark"))
+        }
+
+        binding.layoutHistory.setOnClickListener {
+            startActivity(HistoryActivity.newIntent(requireContext(),"history"))
         }
     }
 

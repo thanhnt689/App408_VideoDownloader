@@ -17,6 +17,20 @@ interface HistoryDao {
     @Delete
     fun deleteHistoryItem(historyItem: HistoryItem)
 
-    @Query("DELETE FROM HistoryItem")
+    @Query("DELETE FROM HistoryItem WHERE isBookmark = 0")
     fun clear()
+
+    @Query(
+        """SELECT * FROM HistoryItem 
+       WHERE title LIKE :textSearch  AND isBookmark = 0
+       ORDER BY title COLLATE NOCASE COLLATE UNICODE"""
+    )
+    fun getLiveDataHistoryByTextSearch(textSearch: String?): LiveData<List<HistoryItem>>
+
+    @Query(
+        """SELECT * FROM HistoryItem 
+       WHERE title LIKE :textSearch  AND isBookmark = 1
+       ORDER BY title COLLATE NOCASE COLLATE UNICODE"""
+    )
+    fun getLiveDataBookmarkByTextSearch(textSearch: String?): LiveData<List<HistoryItem>>
 }

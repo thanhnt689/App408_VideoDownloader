@@ -15,6 +15,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.network.
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoFormatEntity
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.VideoRepository
+import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.DownloadButtonState
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.DownloadButtonStateCanDownload
@@ -42,8 +43,10 @@ import java.net.URL
 import java.util.concurrent.Executors
 import javax.inject.Inject
 
+@HiltViewModel
 class DetectedVideosTabViewModel @Inject constructor(
-    private val videoRepository: VideoRepository,
+//    private val videoRepository: VideoRepository,
+    private val preferenceHelper: PreferenceHelper,
     private val baseSchedulers: BaseSchedulers,
     private val okHttpProxyClient: OkHttpProxyClient,
 ) : BaseViewModel(), IVideoDetector {
@@ -71,7 +74,6 @@ class DetectedVideosTabViewModel @Inject constructor(
 
     val executorReload = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     var webTabModel: WebTabViewModel? = null
-    lateinit var settingsModel: SettingsViewModel
     val detectedVideosList = ObservableField(mutableSetOf<VideoInfo>())
 
     private val downloadButtonIcon = ObservableInt(R.drawable.ic_download_disable)
@@ -187,10 +189,33 @@ class DetectedVideosTabViewModel @Inject constructor(
             ) {
                 return
             }
-            if (settingsModel.getIsFindVideoByUrl().get()) {
+//            if (settingsViewModel.getIsFindVideoByUrl().get()) {
                 startVerifyProcess(resourceRequest, false)
-            }
+//            }
         }
+    }
+
+    var cachedVideos: MutableMap<String, VideoInfo> = mutableMapOf()
+
+    fun getVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
+        cachedVideos[url.url.toString()]?.let { return it }
+
+        return getAndCacheRemoteVideo(url, isM3u8OrMpd)
+    }
+
+    fun saveVideoInfo(videoInfo: VideoInfo) {
+        cachedVideos[videoInfo.originalUrl] = videoInfo
+    }
+
+    private fun getAndCacheRemoteVideo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
+        val videoInfo = getVideoInfo(url, isM3u8OrMpd)
+        if (videoInfo != null) {
+            videoInfo.originalUrl = url.url.toString()
+            cachedVideos[videoInfo.originalUrl] = videoInfo
+
+            return videoInfo
+        }
+        return null
     }
 
     private fun startVerifyProcess(
@@ -211,7 +236,7 @@ class DetectedVideosTabViewModel @Inject constructor(
         verifyVideoLinkJobStorage[taskUrlCleaned] =
             io.reactivex.rxjava3.core.Observable.create { emitter ->
                 val info = try {
-                    videoRepository.getVideoInfo(resourceRequest, isM3u8)
+                    getVideoInfo(resourceRequest, isM3u8)
                 } catch (e: Throwable) {
                     e.printStackTrace()
                     null
@@ -457,7 +482,7 @@ class DetectedVideosTabViewModel @Inject constructor(
     }
 
     private fun propagateCheckJob(url: String, headersMap: Map<String, String>) {
-        val treshold = settingsModel.videoDetectionTreshold.get()
+        val treshold = preferenceHelper.getVideoDetectionTreshold()
         var headers = headersMap.toMutableMap()
         val finlUrlPair = try {
             CookieUtils.getFinalRedirectURL(URL(Uri.parse(url).toString()), headers)

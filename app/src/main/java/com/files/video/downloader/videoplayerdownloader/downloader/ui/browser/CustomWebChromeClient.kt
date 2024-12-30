@@ -19,8 +19,8 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLi
 class CustomWebChromeClient(
     private val tabViewModel: WebTabViewModel,
     private val settingsViewModel: SettingsViewModel,
-    private val updateTabEvent: SingleLiveEvent<WebTab>,
-    private val pageTabProvider: PageTabProvider,
+//    private val updateTabEvent: SingleLiveEvent<WebTab>,
+//    private val pageTabProvider: PageTabProvider,
     private val dataBinding: ActivityWebTabBinding,
     private val appUtil: AppUtil,
     private val webTabActivity: WebTabActivity
@@ -59,18 +59,18 @@ class CustomWebChromeClient(
     }
 
     override fun onReceivedIcon(view: WebView?, icon: Bitmap?) {
-        val pageTab = pageTabProvider.getPageTab(tabViewModel.thisTabIndex.get())
-
-        val headers = pageTab.getHeaders() ?: emptyMap()
-        val updateTab = WebTab(
-            pageTab.getUrl(),
-            pageTab.getTitle(),
-            icon ?: pageTab.getFavicon(),
-            headers,
-            view,
-            id = pageTab.id
-        )
-        updateTabEvent.value = updateTab
+//        val pageTab = pageTabProvider.getPageTab(tabViewModel.thisTabIndex.get())
+//
+//        val headers = pageTab.getHeaders() ?: emptyMap()
+//        val updateTab = WebTab(
+//            pageTab.getUrl(),
+//            pageTab.getTitle(),
+//            icon ?: pageTab.getFavicon(),
+//            headers,
+//            view,
+//            id = pageTab.id
+//        )
+//        updateTabEvent.value = updateTab
     }
 
     override fun onProgressChanged(view: WebView?, newProgress: Int) {

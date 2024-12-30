@@ -21,7 +21,7 @@ object DatabaseModule {
         return Room.databaseBuilder(
             appContext,
             AppDatabase::class.java,
-            "Video"
+            "video"
         ).fallbackToDestructiveMigration().build()
     }
 

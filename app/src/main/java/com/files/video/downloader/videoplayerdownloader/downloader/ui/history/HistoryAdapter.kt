@@ -5,8 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.chauthai.swipereveallayout.SwipeRevealLayout
 import com.chauthai.swipereveallayout.SwipeRevealLayout.SimpleSwipeListener
+import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ItemHistoryBinding
 
@@ -22,14 +24,14 @@ class HistoryAdapter(
     inner class ViewHolder(var binding: ItemHistoryBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(historyItem: HistoryItem) {
-            binding.tvTitleMain.text = historyItem.title
-            binding.tvContentMain.text = historyItem.url
+            binding.tvContentMain.text = historyItem.title
+            binding.tvTitleMain.text = historyItem.url
 
-            binding.tvTitle.text = historyItem.title
-            binding.tvContent.text = historyItem.url
+            binding.tvContent.text = historyItem.title
+            binding.tvTitle.text = historyItem.url
 
 
-//            Glide.with(binding.root.context).load(historyItem.faviconBitmap()).into(binding.icIcon)
+            Glide.with(binding.icIconMain).load(historyItem.faviconBitmap()).placeholder(R.drawable.ic_browser_navigation_selected).into(binding.icIconMain)
         }
 
     }

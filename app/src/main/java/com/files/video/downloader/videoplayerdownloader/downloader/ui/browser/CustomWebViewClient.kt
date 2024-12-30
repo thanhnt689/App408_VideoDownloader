@@ -41,8 +41,8 @@ class CustomWebViewClient(
     private val videoDetectionModel: IVideoDetector,
     private val historyModel: HistoryViewModel,
     private val okHttpProxyClient: OkHttpProxyClient,
-    private val updateTabEvent: SingleLiveEvent<WebTab>,
-    private val pageTabProvider: PageTabProvider,
+//    private val updateTabEvent: SingleLiveEvent<WebTab>,
+//    private val pageTabProvider: PageTabProvider,
     private val proxyController: CustomProxyController
 ) : WebViewClient() {
     var videoAlert: MaterialAlertDialogBuilder? = null
@@ -162,20 +162,20 @@ class CustomWebViewClient(
     override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
 
-        videoAlert = null
-        val pageTab = pageTabProvider.getPageTab(tabViewModel.thisTabIndex.get())
-        val headers = pageTab.getHeaders() ?: emptyMap()
-        val favi = pageTab.getFavicon() ?: view.favicon ?: favicon
-
-        updateTabEvent.value = WebTab(
-            url,
-            view.title,
-            favi,
-            headers,
-            view,
-            id = pageTab.id
-        )
-        tabViewModel.onStartPage(url, view.title)
+//        videoAlert = null
+//        val pageTab = pageTabProvider.getPageTab(tabViewModel.thisTabIndex.get())
+//        val headers = pageTab.getHeaders() ?: emptyMap()
+//        val favi = pageTab.getFavicon() ?: view.favicon ?: favicon
+//
+//        updateTabEvent.value = WebTab(
+//            url,
+//            view.title,
+//            favi,
+//            headers,
+//            view,
+//            id = pageTab.id
+//        )
+//        tabViewModel.onStartPage(url, view.title)
     }
 
     override fun shouldOverrideUrlLoading(view: WebView, url: WebResourceRequest): Boolean {
@@ -200,17 +200,17 @@ class CustomWebViewClient(
     override fun onRenderProcessGone(
         view: WebView?, detail: RenderProcessGoneDetail?
     ): Boolean {
-        val pageTab = pageTabProvider.getPageTab(tabViewModel.thisTabIndex.get())
-
-        val webView = pageTab.getWebView()
-        if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                view == webView && detail?.didCrash() == true
-            } else {
-                view == webView
-            }) {
-            webView?.destroy()
-            return true
-        }
+//        val pageTab = pageTabProvider.getPageTab(tabViewModel.thisTabIndex.get())
+//
+//        val webView = pageTab.getWebView()
+//        if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                view == webView && detail?.didCrash() == true
+//            } else {
+//                view == webView
+//            }) {
+//            webView?.destroy()
+//            return true
+//        }
 
         return super.onRenderProcessGone(view, detail)
     }

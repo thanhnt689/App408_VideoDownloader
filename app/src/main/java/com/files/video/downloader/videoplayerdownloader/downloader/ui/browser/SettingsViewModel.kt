@@ -21,6 +21,7 @@ enum class StorageType {
 }
 
 //@OpenForTesting
+@HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val sharedPrefHelper: PreferenceHelper,
 ) :
