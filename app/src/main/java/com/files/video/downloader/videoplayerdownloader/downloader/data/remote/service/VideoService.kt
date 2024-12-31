@@ -1,4 +1,4 @@
-package com.files.video.downloader.videoplayerdownloader.downloader.data.repository.service
+package com.files.video.downloader.videoplayerdownloader.downloader.data.remote.service
 
 import com.files.video.downloader.videoplayerdownloader.downloader.data.model.VideoInfoWrapper
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideFormatEntityList

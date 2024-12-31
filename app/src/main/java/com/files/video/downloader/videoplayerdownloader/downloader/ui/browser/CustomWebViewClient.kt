@@ -15,6 +15,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.we
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTab
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryViewModel
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AdBlockerHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.util.CookieUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FaviconUtils
@@ -36,6 +37,7 @@ enum class ContentType {
 }
 
 class CustomWebViewClient(
+    private val tabViewModels: TabViewModel,
     private val tabViewModel: WebTabViewModel,
     private val settingsModel: SettingsViewModel,
     private val videoDetectionModel: IVideoDetector,
@@ -93,7 +95,7 @@ class CustomWebViewClient(
     override fun shouldInterceptRequest(
         view: WebView?, request: WebResourceRequest?
     ): WebResourceResponse? {
-        val isAdBlockerOn = settingsModel.isAdBlocker.get()
+        val isAdBlockerOn = false
         val url = request?.url.toString()
 
         val isUrlAd: Boolean = isAdBlockerOn
@@ -162,7 +164,8 @@ class CustomWebViewClient(
     override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
 
-//        videoAlert = null
+        videoAlert = null
+
 //        val pageTab = pageTabProvider.getPageTab(tabViewModel.thisTabIndex.get())
 //        val headers = pageTab.getHeaders() ?: emptyMap()
 //        val favi = pageTab.getFavicon() ?: view.favicon ?: favicon
@@ -175,7 +178,8 @@ class CustomWebViewClient(
 //            view,
 //            id = pageTab.id
 //        )
-//        tabViewModel.onStartPage(url, view.title)
+
+        tabViewModel.onStartPage(url, view.title)
     }
 
     override fun shouldOverrideUrlLoading(view: WebView, url: WebResourceRequest): Boolean {
@@ -201,16 +205,17 @@ class CustomWebViewClient(
         view: WebView?, detail: RenderProcessGoneDetail?
     ): Boolean {
 //        val pageTab = pageTabProvider.getPageTab(tabViewModel.thisTabIndex.get())
-//
-//        val webView = pageTab.getWebView()
-//        if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                view == webView && detail?.didCrash() == true
-//            } else {
-//                view == webView
-//            }) {
-//            webView?.destroy()
-//            return true
-//        }
+        val pageTab = tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
+
+        val webView = pageTab?.getWebView()
+        if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                view == webView && detail?.didCrash() == true
+            } else {
+                view == webView
+            }) {
+            webView?.destroy()
+            return true
+        }
 
         return super.onRenderProcessGone(view, detail)
     }

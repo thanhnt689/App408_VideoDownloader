@@ -3,6 +3,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.ui.browser
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.os.Message
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.webkit.WebChromeClient
@@ -13,10 +14,12 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.we
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTab
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabViewModel
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
 
 class CustomWebChromeClient(
+    private val tabViewModels: TabViewModel,
     private val tabViewModel: WebTabViewModel,
     private val settingsViewModel: SettingsViewModel,
 //    private val updateTabEvent: SingleLiveEvent<WebTab>,
@@ -31,7 +34,6 @@ class CustomWebChromeClient(
         isUserGesture: Boolean,
         resultMsg: Message?
     ): Boolean {
-
         if (view != null && view.handler != null) {
             val href = view.handler.obtainMessage()
             view.requestFocusNodeHref(href)
@@ -53,6 +55,18 @@ class CustomWebChromeClient(
                     title = view.title,
                     iconBytes = null
                 )
+
+//            Log.d("ntt", "onCreateWindow: ")
+//
+//            tabViewModels.addNewTab(
+//                WebTab(
+//                    webview = transport.webView,
+//                    resultMsg = resultMsg,
+//                    url = "url",
+//                    title = view.title,
+//                    iconBytes = null
+//                )
+//            )
             return true
         }
         return false
@@ -71,6 +85,22 @@ class CustomWebChromeClient(
 //            id = pageTab.id
 //        )
 //        updateTabEvent.value = updateTab
+
+        Log.d("ntt", "onReceivedIcon pos: ${tabViewModels.currentPositionTabWeb.value}")
+        Log.d("ntt", "onReceivedIcon: ${tabViewModels.listTabWeb.value}")
+
+        val pageTab = tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
+
+        val headers = pageTab?.getHeaders() ?: emptyMap()
+        val updateTab = WebTab(
+            pageTab!!.getUrl(),
+            pageTab.getTitle(),
+            icon ?: pageTab.getFavicon(),
+            headers,
+            view,
+            id = pageTab.id
+        )
+        tabViewModels.updateCurrentTab(updateTab)
     }
 
     override fun onProgressChanged(view: WebView?, newProgress: Int) {

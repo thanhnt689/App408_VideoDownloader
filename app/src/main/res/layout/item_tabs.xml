@@ -22,6 +22,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/cv"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
@@ -37,7 +38,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
-                android:padding="@dimen/_5sdp">
+                android:padding="@dimen/_8sdp">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/layout_top"
@@ -64,9 +65,15 @@
                         android:paddingHorizontal="@dimen/_5sdp"
                         android:text="Facebook"
                         android:textColor="#404040"
-                        android:textSize="@dimen/_9ssp"
+                        android:textSize="@dimen/_10ssp"
+                        android:ellipsize="marquee"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:singleLine="true"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="@id/img_close"
+                        app:layout_constraintEnd_toStartOf="@id/img_close"
                         app:layout_constraintStart_toEndOf="@id/img_icon"
                         app:layout_constraintTop_toTopOf="parent" />
 
@@ -110,7 +117,7 @@
                         <ImageView
                             android:id="@+id/img_wallpaper"
                             android:layout_width="match_parent"
-                            android:layout_height="250dp"
+                            android:layout_height="@dimen/_140sdp"
                             android:layout_gravity="center"
                             android:scaleType="fitXY"
                             android:src="@drawable/img_intro_slide_4"

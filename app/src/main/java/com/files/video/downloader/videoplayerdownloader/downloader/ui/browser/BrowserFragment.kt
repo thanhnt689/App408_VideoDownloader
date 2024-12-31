@@ -13,6 +13,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.we
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabFactory
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.guide.GuideActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabsActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.KeyboardUtils
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -38,6 +39,14 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
 
         binding.imgGuide.setOnClickListener {
             startActivity(GuideActivity.newIntent(requireContext()))
+        }
+
+        tabViewModels.listTabWeb.observe(viewLifecycleOwner) {
+            binding.tvTab.text = it.size.toString()
+        }
+
+        binding.tvTab.setOnClickListener {
+            startActivity(Intent(requireContext(), TabsActivity::class.java))
         }
 
         binding.layoutSearch.setOnClickListener {
@@ -100,17 +109,19 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
         }
 
         binding.layoutBookmark.setOnClickListener {
-            startActivity(HistoryActivity.newIntent(requireContext(),"bookmark"))
+            startActivity(HistoryActivity.newIntent(requireContext(), "bookmark"))
         }
 
         binding.layoutHistory.setOnClickListener {
-            startActivity(HistoryActivity.newIntent(requireContext(),"history"))
+            startActivity(HistoryActivity.newIntent(requireContext(), "history"))
         }
     }
 
     private fun openNewTab(input: String) {
         if (input.isNotEmpty()) {
             val webTab = WebTabFactory.createWebTabFromInput(input)
+
+            tabViewModels.addNewTab(webTab)
 
             val intent = Intent(requireContext(), WebTabActivity::class.java)
             val bundle = Bundle()

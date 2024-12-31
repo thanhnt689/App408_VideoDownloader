@@ -31,7 +31,8 @@ class HistoryAdapter(
             binding.tvTitle.text = historyItem.url
 
 
-            Glide.with(binding.icIconMain).load(historyItem.faviconBitmap()).placeholder(R.drawable.ic_browser_navigation_selected).into(binding.icIconMain)
+            Glide.with(binding.icIconMain).load(historyItem.faviconBitmap())
+                .placeholder(R.drawable.ic_placeholder_icon).into(binding.icIconMain)
         }
 
     }

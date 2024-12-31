@@ -98,6 +98,10 @@
     <string name="string_name">Name</string>
     <string name="string_url">URL</string>
     <string name="string_invalid_data">Invalid data!</string>
+    <string name="string_video_found">Video found</string>
+    <string name="whatshould">What should we do?</string>
+    <string name="dontshow">Don\'t show again</string>
+    <string name="view">View</string>
 
 
 </resources>

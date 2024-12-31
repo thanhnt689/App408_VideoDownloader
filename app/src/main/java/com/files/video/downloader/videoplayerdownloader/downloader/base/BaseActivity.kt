@@ -7,6 +7,8 @@ import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.Application
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SystemUtil
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -14,6 +16,10 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     protected lateinit var binding: T
 
     var currentApiVersion = 0
+
+    val tabViewModels: TabViewModel by lazy {
+        (application as Application).globalViewModel
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         SystemUtil.setLocale(this)

@@ -63,6 +63,7 @@
         android:layout_centerVertical="true"
         android:layout_marginBottom="@dimen/_10sdp"
         android:scaleType="centerCrop"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/tv_load_ads"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -8,6 +8,7 @@ import com.nlbn.ads.util.Adjust
 import com.nlbn.ads.util.AdsApplication
 import com.nlbn.ads.util.AppOpenManager
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.splash.SplashActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SystemUtil
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -16,6 +17,12 @@ import javax.inject.Inject
 @HiltAndroidApp
 class Application : AdsApplication() {
 
+    val globalViewModel by lazy {
+        ViewModelProvider(
+            ViewModelStore(),
+            ViewModelProvider.AndroidViewModelFactory.getInstance(this)
+        ).get(TabViewModel::class.java)
+    }
 
     override fun onCreate() {
         super.onCreate()

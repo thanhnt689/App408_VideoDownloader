@@ -60,7 +60,7 @@ interface IVideoDetector {
 }
 
 // TODO: @i3po refactoring: remove duplicated code
-
+@HiltViewModel
 class VideoDetectionAlgVModel @Inject constructor(
 //    private val videoRepository: VideoRepository,
     private val baseSchedulers: BaseSchedulers,
