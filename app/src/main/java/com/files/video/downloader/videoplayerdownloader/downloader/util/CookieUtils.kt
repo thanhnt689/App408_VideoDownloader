@@ -131,9 +131,9 @@ object CookieUtils {
 
     private fun readCookiesForUrlFromDb(url: String): String {
         val cookiesDbFile = if (Build.VERSION.SDK_INT > 28) {
-            File("${chromeDefaultPathApi29More}/Cookies")
+            File("$chromeDefaultPathApi29More/Cookies")
         } else {
-            File("${chromeDefaultPathApi28Less}/Cookies")
+            File("$chromeDefaultPathApi28Less/Cookies")
         }
 
         val chrome = ChromeBrowser()

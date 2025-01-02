@@ -2,6 +2,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.ui.browser
 
 import android.graphics.Bitmap
 import android.os.Build
+import android.util.Log
 import android.webkit.HttpAuthHandler
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
@@ -108,6 +109,8 @@ class CustomWebViewClient(
         val isCheckOnMp4 = settingsModel.getIsCheckEveryRequestOnMp4Video().get()
 
         if (isCheckOnMp4 || isCheckM3u8) {
+            Log.d("ntt", "shouldInterceptRequest: ${CookieUtils.chromeDefaultPathApi28Less}")
+
             val requestWithCookies = request?.let { resourceRequest ->
                 try {
                     CookieUtils.webRequestToHttpWithCookies(

@@ -77,7 +77,7 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
                         }
 
                         listHistory.clear()
-                        listHistory.addAll(it)
+                        listHistory.addAll(it.reversed())
 
                         binding.rcvHistory.apply {
                             setHasFixedSize(true)
@@ -127,7 +127,7 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
                         }
 
                         listHistory.clear()
-                        listHistory.addAll(it)
+                        listHistory.addAll(it.reversed())
 
                         binding.rcvHistory.apply {
                             setHasFixedSize(true)

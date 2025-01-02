@@ -471,6 +471,49 @@
                         app:layout_constraintTop_toBottomOf="@id/img_daily_motion" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_invisible"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_16sdp"
+                    android:visibility="invisible"
+                    app:layout_constraintEnd_toEndOf="@id/layout_tiktok"
+                    app:layout_constraintStart_toStartOf="@id/layout_tiktok"
+                    app:layout_constraintTop_toBottomOf="@id/layout_tiktok">
+
+                    <ImageView
+                        android:id="@+id/img_invisible"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:background="@drawable/bg_item_turnon_stroke"
+                        android:backgroundTint="#EDEDED"
+                        android:padding="@dimen/_24sdp"
+                        android:src="@drawable/ic_dailymotion"
+                        app:layout_constraintDimensionRatio="1:1"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/_5sdp"
+                        android:layout_marginVertical="@dimen/_4sdp"
+                        android:ellipsize="marquee"
+                        android:fontFamily="@font/sf_pro_display_semi_bold"
+                        android:gravity="center"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:singleLine="true"
+                        android:text="@string/string_dailymotion"
+                        android:textColor="#404040"
+                        android:textSize="@dimen/_13ssp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/img_invisible" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.constraintlayout.widget.ConstraintLayout>
 
 

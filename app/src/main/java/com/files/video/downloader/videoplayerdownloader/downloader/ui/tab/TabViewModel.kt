@@ -15,7 +15,7 @@ class TabViewModel(application: Application) : AndroidViewModel(application) {
 
     var listTabWeb = MutableLiveData<MutableList<WebTab>>()
 
-    var currentPositionTabWeb = MutableLiveData<Int>()
+    var currentPositionTabWeb = MutableLiveData<Int>(0)
 
     fun addNewTab(tab: WebTab) {
         val currentList = listTabWeb.value ?: mutableListOf()

@@ -23,14 +23,14 @@ interface HistoryDao {
     @Query(
         """SELECT * FROM HistoryItem 
        WHERE title LIKE :textSearch  AND isBookmark = 0
-       ORDER BY title COLLATE NOCASE COLLATE UNICODE"""
+       """
     )
     fun getLiveDataHistoryByTextSearch(textSearch: String?): LiveData<List<HistoryItem>>
 
     @Query(
         """SELECT * FROM HistoryItem 
        WHERE title LIKE :textSearch  AND isBookmark = 1
-       ORDER BY title COLLATE NOCASE COLLATE UNICODE"""
+       """
     )
     fun getLiveDataBookmarkByTextSearch(textSearch: String?): LiveData<List<HistoryItem>>
 }

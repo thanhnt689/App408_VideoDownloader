@@ -76,6 +76,9 @@
                         android:hint="@string/string_search_for_anything"
                         android:paddingVertical="@dimen/_4sdp"
                         android:textColor="#404040"
+                        android:lines="1"
+                        android:maxLines="1"
+                        android:singleLine="true"
                         android:textColorHint="#BFBFBF"
                         android:textSize="@dimen/_14ssp"
                         app:layout_constraintBottom_toBottomOf="parent"
@@ -222,6 +225,17 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ProgressBar
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="@dimen/_2sdp"
+                android:layout_height="0dp"
+                android:background="@android:color/transparent"
+                android:progressDrawable="@drawable/progress_load_data"
                 app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

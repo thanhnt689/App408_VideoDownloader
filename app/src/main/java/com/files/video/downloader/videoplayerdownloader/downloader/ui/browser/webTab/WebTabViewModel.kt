@@ -51,7 +51,7 @@ class WebTabViewModel @Inject constructor(
 
     val loadPageEvent = SingleLiveEvent<WebTab>()
 
-    private val tabUrl = ObservableField("")
+    val tabUrl = ObservableField("")
     private var tabSuggestionJob: Job? = null
 
     var browserServicesProvider: BrowserServicesProvider? = null
@@ -59,15 +59,15 @@ class WebTabViewModel @Inject constructor(
     override fun start() {
         tabPublishSubject = PublishSubject.create()
 
-        isShowProgress.addOnPropertyChangedCallback(object :
-            Observable.OnPropertyChangedCallback() {
-            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                when (isShowProgress.get()) {
-                    true -> progressIcon.set(R.drawable.ic_close)
-                    false -> progressIcon.set(R.drawable.ic_reload)
-                }
-            }
-        })
+//        isShowProgress.addOnPropertyChangedCallback(object :
+//            Observable.OnPropertyChangedCallback() {
+//            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+//                when (isShowProgress.get()) {
+//                    true -> progressIcon.set(R.drawable.ic_close)
+//                    false -> progressIcon.set(R.drawable.ic_reload)
+//                }
+//            }
+//        })
     }
 
     override fun stop() {

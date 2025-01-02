@@ -21,6 +21,10 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
+        ndk {
+            abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+        }
+
         multiDexEnabled true
         def formattedDate = new Date().format('MM.dd.yyyy')
         archivesBaseName = "App294_ZipperLockScreen_v${versionName}(${versionCode})_${formattedDate}"

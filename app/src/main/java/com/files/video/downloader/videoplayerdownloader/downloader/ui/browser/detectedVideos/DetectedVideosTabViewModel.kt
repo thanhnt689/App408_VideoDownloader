@@ -45,7 +45,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DetectedVideosTabViewModel @Inject constructor(
-//    private val videoRepository: VideoRepository,
     private val preferenceHelper: PreferenceHelper,
     private val baseSchedulers: BaseSchedulers,
     private val okHttpProxyClient: OkHttpProxyClient,
