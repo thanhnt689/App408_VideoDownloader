@@ -19,32 +19,30 @@ interface VideoRepository {
     fun saveVideoInfo(videoInfo: VideoInfo)
 }
 
-@Singleton
-class VideoRepositoryImpl @Inject constructor(
-    @RemoteData private val remoteDataSource: VideoRepository
-) : VideoRepository {
+class VideoRepositoryImpl() {
 
-    @VisibleForTesting
-    internal var cachedVideos: MutableMap<String, VideoInfo> = mutableMapOf()
+    var cachedVideos: MutableMap<String, VideoInfo> = mutableMapOf()
 
-    override fun getVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
-        cachedVideos[url.url.toString()]?.let { return it }
-
-        return getAndCacheRemoteVideo(url, isM3u8OrMpd)
+    fun getVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
+        return cachedVideos[url.url.toString()] ?: getAndCacheRemoteVideo(url, isM3u8OrMpd)
     }
 
-    override fun saveVideoInfo(videoInfo: VideoInfo) {
+    fun saveVideoInfo(videoInfo: VideoInfo) {
         cachedVideos[videoInfo.originalUrl] = videoInfo
     }
 
     private fun getAndCacheRemoteVideo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
-        val videoInfo = remoteDataSource.getVideoInfo(url, isM3u8OrMpd)
+        // Thực hiện xử lý lấy video từ nguồn bên ngoài
+        val videoInfo = fetchRemoteVideoInfo(url, isM3u8OrMpd)
         if (videoInfo != null) {
             videoInfo.originalUrl = url.url.toString()
             cachedVideos[videoInfo.originalUrl] = videoInfo
-
-            return videoInfo
         }
-        return null
+        return videoInfo
+    }
+
+    private fun fetchRemoteVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
+        // Giả lập việc fetch thông tin video từ server hoặc nguồn bên ngoài
+        return VideoInfo(url.url.toString()) // Thay bằng logic thực tế
     }
 }

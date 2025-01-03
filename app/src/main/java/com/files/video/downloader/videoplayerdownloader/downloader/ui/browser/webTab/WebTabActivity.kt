@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
@@ -25,32 +26,44 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.databinding.Observable
+import androidx.databinding.Observable.OnPropertyChangedCallback
 import androidx.databinding.ObservableField
 import androidx.databinding.ObservableInt
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import com.bumptech.glide.Glide
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
+import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityWebTabBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetDownloadBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.ContentType
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.DownloadButtonState
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.DownloadButtonStateCanDownload
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.DownloadButtonStateCanNotDownload
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.DownloadButtonStateLoading
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.SettingsViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.detectedVideos.DetectedVideosTabViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.detectedVideos.VideoDetectionAlgVModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryViewModel
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabsActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AdBlockerHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogger
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.CookieUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FaviconUtils
+import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
 import com.files.video.downloader.videoplayerdownloader.downloader.util.VideoUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.CustomProxyController
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.disposables.Disposable
@@ -58,6 +71,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import org.json.JSONObject
+import java.text.SimpleDateFormat
 import javax.inject.Inject
 
 interface BrowserServicesProvider : TabManagerProvider, PageTabProvider, HistoryProvider,
@@ -144,6 +159,10 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
     @Inject
     lateinit var okHttpProxyClient: OkHttpProxyClient
 
+    private lateinit var downloadBinding: LayoutBottomSheetDownloadBinding
+
+    private lateinit var bottomSheetDialog: BottomSheetDialog
+
     var videoAlert: MaterialAlertDialogBuilder? = null
     private var lastSavedHistoryUrl: String = ""
     private var lastSavedTitleHistory: String = ""
@@ -167,7 +186,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
                     }
                     saveUrlToHistory(url, icon, viewTitle ?: title)
 
-                    videoDetectionModel.onStartPage(
+                    videoDetectionTabViewModel.onStartPage(
                         url,
                         userAgent
                             ?: BrowserFragment.MOBILE_USER_AGENT
@@ -226,6 +245,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
                         okHttpProxyClient
                     )
 
+
                 when {
 
                     contentType == ContentType.M3U8 || contentType == ContentType.MPD || url.contains(
@@ -234,15 +254,17 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
                         ".mpd"
                     ) || (url.contains(".txt") && url.contains("hentaihaven")) -> {
                         if (requestWithCookies != null && isCheckM3u8) {
-                            videoDetectionModel.verifyLinkStatus(
+                            videoDetectionTabViewModel.verifyLinkStatus(
                                 requestWithCookies, tabViewModel.currentTitle.get(), true
                             )
+
                         }
                     }
 
                     else -> {
                         if (isCheckOnMp4) {
-                            val disposable = videoDetectionModel.checkRegularMp4(requestWithCookies)
+                            val disposable =
+                                videoDetectionTabViewModel.checkRegularMp4(requestWithCookies)
 
                             val currentUrl = tabViewModel.getTabTextInput().get() ?: ""
                             if (currentUrl != lastRegularCheckUrl) {
@@ -540,32 +562,53 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 
         tabViewModel.start()
 
-//        tabViewModel = ViewModelProvider(this, viewModelFactory)[WebTabViewModel::class.java]
-//        settingsViewModel = ViewModelProvider(this, viewModelFactory)[SettingsViewModel::class.java]
-
-//        pageTabProvider = tabViewModel.browserServicesProvider!!
-//        historyProvider = tabViewModel.browserServicesProvider!!
-
-//        videoDetectionTabViewModel =
-//            ViewModelProvider(this, viewModelFactory)[DetectedVideosTabViewModel::class.java]
-//        videoDetectionTabViewModel.settingsModel = settingsViewModel
-//        videoDetectionTabViewModel.webTabModel = tabViewModel
-//
-//        tabViewModel.start()
-//        settingsViewModel.start()
-//        videoDetectionTabViewModel.start()
 
         val swController = ServiceWorkerController.getInstance()
         swController.setServiceWorkerClient(serviceWorkerClient)
         swController.serviceWorkerWebSettings.allowContentAccess = true
 
-        videoDetectionModel.downloadButtonState.addOnPropertyChangedCallback(object :
+        videoDetectionTabViewModel.webTabModel = tabViewModel
+
+
+        bottomSheetDialog = BottomSheetDialog(this, R.style.CustomAlertBottomSheet)
+
+        videoDetectionTabViewModel.downloadButtonState.addOnPropertyChangedCallback(object :
             Observable.OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
                 lifecycleScope.launch(Dispatchers.Main) {
 //                    browserViewModel.workerM3u8MpdEvent.value =
-                    videoDetectionModel.downloadButtonState.get()
-                    AppLogger.d("download button state::::::::: ${videoDetectionModel.downloadButtonState.get()}")
+
+                    val state = videoDetectionTabViewModel.downloadButtonState.get()
+
+                    when (videoDetectionTabViewModel.downloadButtonState.get()) {
+                        is DownloadButtonStateCanNotDownload -> binding.imgDownload.setImageResource(
+                            R.drawable.ic_download_disable
+                        )
+
+                        is DownloadButtonStateCanDownload -> binding.imgDownload.setImageResource(R.drawable.ic_download_enable)
+                        is DownloadButtonStateLoading -> {
+                            binding.imgDownload.setImageResource(R.drawable.ic_download_disable)
+                        }
+                    }
+
+//                    if (state is DownloadButtonStateCanDownload && state.info?.id?.isNotEmpty() == true) {
+//                        videoDetectionTabViewModel.pushNewVideoInfoToAll(state.info)
+//                        val loadings = videoDetectionTabViewModel.m3u8LoadingList.get()
+//                        loadings?.remove("m3u8")
+//                        videoDetectionTabViewModel.m3u8LoadingList.set(loadings?.toMutableSet())
+//                    }
+//                    if (state is DownloadButtonStateLoading) {
+//                        val loadings = videoDetectionTabViewModel.m3u8LoadingList.get()
+//                        loadings?.add("m3u8")
+//                        videoDetectionTabViewModel.m3u8LoadingList.set(loadings?.toMutableSet())
+//                        videoDetectionTabViewModel.setButtonState(DownloadButtonStateLoading())
+//                    }
+//                    if (state is DownloadButtonStateCanNotDownload) {
+//                        val loadings = videoDetectionTabViewModel.m3u8LoadingList.get()
+//                        loadings?.remove("m3u8")
+//                        videoDetectionTabViewModel.m3u8LoadingList.set(loadings?.toMutableSet())
+//                        videoDetectionTabViewModel.setButtonState(DownloadButtonStateCanNotDownload())
+//                    }
                 }
             }
         })
@@ -591,11 +634,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 
         handleVideoPushed()
 
-        tabViewModel.start()
-
-        videoDetectionTabViewModel.start()
-
         configureWebView()
+
 
         tabViewModels.listTabWeb.observe(this) {
             binding.tvTab.text = it.size.toString()
@@ -726,7 +766,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
         }
 
         binding.imgDownload.setOnClickListener {
-
+            videoDetectionTabViewModel.showVideoInfo()
         }
 
         binding.tvTab.setOnClickListener {
@@ -757,34 +797,6 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
     }
 
     private fun configureWebView() {
-
-
-//        val webViewClient = CustomWebViewClient(
-//            tabViewModels,
-//            tabViewModel,
-//            settingsViewModel,
-//            videoDetectionTabViewModel,
-//            historyViewModel,
-//            okHttpProxyClient,
-////            tabManagerProvider.getUpdateTabEvent(),
-////            pageTabProvider,
-//            proxyController,
-//        )
-
-//        val chromeClient = CustomWebChromeClient(
-//            tabViewModels,
-//            tabViewModel,
-//            settingsViewModel,
-////            tabManagerProvider.getUpdateTabEvent(),
-////            pageTabProvider,
-//            ActivityWebTabBinding.inflate(layoutInflater),
-//            appUtil,
-//            this
-//        )
-
-//        currentWebView?.webChromeClient = chromeClient
-//        currentWebView?.webViewClient = webViewClient
-
 
         val webSettings = webTab.getWebView()?.settings
         val webView = webTab.getWebView()
@@ -844,6 +856,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 
     private fun handleWorkerEvent() {
 //        workerEventProvider.getWorkerM3u8MpdEvent().observe(this) { state ->
+//            Log.d("ntt", "handleWorkerEvent: state $state")
 //            if (state is DownloadButtonStateCanDownload && state.info?.id?.isNotEmpty() == true) {
 //                videoDetectionTabViewModel.pushNewVideoInfoToAll(state.info)
 //                val loadings = videoDetectionTabViewModel.m3u8LoadingList.get()
@@ -877,6 +890,20 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
     private fun handleOpenDetectedVideos() {
         videoDetectionTabViewModel.showDetectedVideosEvent.observe(this) {
 //            navigateToDownloads()
+            Log.d(
+                "ntt",
+                "handleOpenDetectedVideos: ${videoDetectionTabViewModel.detectedVideosList.get()}"
+            )
+
+            val list = videoDetectionTabViewModel.detectedVideosList.get()
+            val firstItem = list?.firstOrNull() // Lấy phần tử đầu tiên hoặc null nếu danh sách rỗng
+
+            if (firstItem != null) {
+                showBottomSheetDownload(firstItem)
+            } else {
+                // Xử lý khi danh sách rỗng
+                Log.d("ntt", "Danh sách rỗng, không có phần tử đầu tiên")
+            }
         }
     }
 
@@ -985,9 +1012,162 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 
     }
 
+    private fun showBottomSheetDownload(videoInfo: VideoInfo) {
+
+        downloadBinding = LayoutBottomSheetDownloadBinding.inflate(layoutInflater)
+
+        bottomSheetDialog.setContentView(downloadBinding.root)
+
+        bottomSheetDialog.setCanceledOnTouchOutside(true);
+
+        val behavior = bottomSheetDialog.behavior
+
+        behavior.state = BottomSheetBehavior.STATE_EXPANDED
+
+        val bottomSheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                // Xử lý sự kiện thay đổi trạng thái của bottom sheet
+                when (newState) {
+                    BottomSheetBehavior.STATE_HIDDEN -> {
+                    }
+
+                    BottomSheetBehavior.STATE_EXPANDED -> {
+                    }
+
+                    BottomSheetBehavior.STATE_COLLAPSED -> {
+                    }
+
+                    BottomSheetBehavior.STATE_DRAGGING -> {
+                        behavior.setState(BottomSheetBehavior.STATE_EXPANDED)
+                    }
+                }
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                // Xử lý khi bottom sheet được trượt
+            }
+        }
+        bottomSheetDialog.behavior.addBottomSheetCallback(bottomSheetCallback)
+
+
+        Glide.with(downloadBinding.icFile).load(videoInfo.thumbnail).into(downloadBinding.icFile)
+
+
+        val titles = videoDetectionTabViewModel.formatsTitles.get()?.toMutableMap() ?: mutableMapOf()
+        titles[videoInfo.id] = titles[videoInfo.id] ?: videoInfo.title
+
+        videoDetectionTabViewModel.formatsTitles.set(titles)
+
+        val frmts = videoDetectionTabViewModel.selectedFormats.get()?.toMutableMap() ?: mutableMapOf()
+        val selected = frmts[videoInfo.id]
+        val defaultFormat = videoInfo.formats.formats.lastOrNull()?.format ?: "unknown"
+        if (selected == null) {
+            frmts[videoInfo.id] = defaultFormat
+        }
+
+        downloadBinding.nameFile.text = titles[videoInfo.id]
+
+
+        videoDetectionTabViewModel.selectedFormats.set(frmts)
+        if (videoInfo.isRegularDownload) {
+            videoDetectionTabViewModel.selectedFormatUrl.set(videoInfo.firstUrlToString)
+        } else {
+            videoDetectionTabViewModel.selectedFormatUrl.set(videoInfo.formats.formats.lastOrNull()?.url)
+        }
+
+
+        val typeText = if (videoInfo.isM3u8) {
+            val isMpd = videoInfo.formats.formats.firstOrNull()?.url?.contains(".mpd") == true
+            if (isMpd) "MPD List" else "M3U8 List"
+        } else if (videoInfo.isMaster) {
+            val isMpd = videoInfo.formats.formats.firstOrNull()?.url?.contains(".mpd") == true
+            if (isMpd) "MPD Master List" else "M3U8 Mater List"
+        } else if (videoInfo.isRegularDownload) {
+            "Regular MP4 Download"
+        } else {
+            ""
+        }
+
+        downloadBinding.txtType.text = typeText
+
+        videoDetectionTabViewModel.selectedFormats.addOnPropertyChangedCallback(object :
+            OnPropertyChangedCallback() {
+            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+                val curSelected = videoDetectionTabViewModel.selectedFormats.get()?.get(videoInfo?.id)
+                val foundFormat =
+                    videoInfo?.formats?.formats?.find { it.format == curSelected }
+                videoDetectionTabViewModel.selectedFormatUrl.set(foundFormat?.url.toString())
+            }
+        })
+
+        if (videoInfo.isRegularDownload) {
+            val fileSize = videoInfo.formats.formats.firstOrNull()?.fileSize
+            if (fileSize != null) {
+                val size = FileUtil.getFileSizeReadable(fileSize.toDouble())
+                downloadBinding.txtSize.text = "Download Size: $size"
+            }
+        }
+
+        downloadBinding.icEdit.setOnClickListener {
+            showDialogRename(videoInfo.name)
+        }
+
+        downloadBinding.cvImage.setOnClickListener{
+            startActivity(
+                Intent(
+                    this, PlayMediaActivity::class.java
+                ).apply {
+                    val selectedFormatsMap = videoDetectionTabViewModel.selectedFormats.get()
+                    val format = selectedFormatsMap?.get(videoInfo.id)
+
+                    val selectedFormatTitle = videoDetectionTabViewModel.formatsTitles.get()
+                    val title = selectedFormatTitle?.get(videoInfo.id)
+                    // you can add values(if any) to pass to the next class or avoid using `.apply`
+                    val currFormat = videoInfo.formats.formats.filter {
+                        format?.let { it1 ->
+                            it.format?.contains(
+                                it1 as CharSequence
+                            )
+                        } ?: false
+                    }
+
+                    putExtra(PlayMediaActivity.VIDEO_NAME, videoInfo.title)
+
+                    if (currFormat.isNotEmpty()) {
+                        val headers = currFormat.first().httpHeaders?.let {
+                            JSONObject(
+                                currFormat.first().httpHeaders ?: emptyMap<String, String>()
+                            ).toString()
+                        } ?: "{}"
+
+                        putExtra(
+                            PlayMediaActivity.VIDEO_URL, currFormat.first().url
+                        )
+                        val headersFinal = headers
+                        putExtra(
+                            PlayMediaActivity.VIDEO_HEADERS, headersFinal
+                        )
+                    }
+                })
+        }
+
+
+        bottomSheetDialog.show()
+    }
+
+    private fun showDialogRename(name: String) {
+        val dialogRename = DialogRename(this, name) { it ->
+            downloadBinding.nameFile.text = it
+        }
+
+        dialogRename.show()
+    }
+
 
     override fun onDestroy() {
         super.onDestroy()
+        tabViewModel.stop()
+        videoDetectionModel.stop()
         videoDetectionTabViewModel.stop()
     }
 }

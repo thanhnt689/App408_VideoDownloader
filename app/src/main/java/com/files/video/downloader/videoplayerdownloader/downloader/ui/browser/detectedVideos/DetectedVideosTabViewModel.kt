@@ -1,6 +1,7 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.detectedVideos
 
 import android.net.Uri
+import android.util.Log
 import android.webkit.CookieManager
 import androidx.databinding.Observable
 import androidx.databinding.Observable.OnPropertyChangedCallback
@@ -15,6 +16,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.network.
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoFormatEntity
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.VideoRepository
+import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.VideoRepositoryImpl
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.DownloadButtonState
@@ -48,6 +50,7 @@ class DetectedVideosTabViewModel @Inject constructor(
     private val preferenceHelper: PreferenceHelper,
     private val baseSchedulers: BaseSchedulers,
     private val okHttpProxyClient: OkHttpProxyClient,
+
 ) : BaseViewModel(), IVideoDetector {
     // key: videoInfo.id, value: format - string
     val selectedFormats = ObservableField<Map<String, String>>()
@@ -56,6 +59,8 @@ class DetectedVideosTabViewModel @Inject constructor(
     val formatsTitles = ObservableField<Map<String, String>>()
 
     val selectedFormatUrl = ObservableField<String>()
+
+    val videoRepositoryImpl = VideoRepositoryImpl()
 
     @Volatile
     var m3u8LoadingList = ObservableField<MutableSet<String>>()
@@ -174,6 +179,7 @@ class DetectedVideosTabViewModel @Inject constructor(
 
     override fun verifyLinkStatus(resourceRequest: Request, hlsTitle: String?, isM3u8: Boolean) {
         // TODO list of sites, where youtube dl should be disabled
+        Log.d("ntt", "verifyLinkStatus: ")
         if (resourceRequest.url.toString().contains("tiktok.")) {
             return
         }
@@ -194,32 +200,33 @@ class DetectedVideosTabViewModel @Inject constructor(
         }
     }
 
-    var cachedVideos: MutableMap<String, VideoInfo> = mutableMapOf()
-
-    fun getVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
-        cachedVideos[url.url.toString()]?.let { return it }
-
-        return getAndCacheRemoteVideo(url, isM3u8OrMpd)
-    }
-
-    fun saveVideoInfo(videoInfo: VideoInfo) {
-        cachedVideos[videoInfo.originalUrl] = videoInfo
-    }
-
-    private fun getAndCacheRemoteVideo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
-        val videoInfo = getVideoInfo(url, isM3u8OrMpd)
-        if (videoInfo != null) {
-            videoInfo.originalUrl = url.url.toString()
-            cachedVideos[videoInfo.originalUrl] = videoInfo
-
-            return videoInfo
-        }
-        return null
-    }
+//    var cachedVideos: MutableMap<String, VideoInfo> = mutableMapOf()
+//
+//    fun getVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
+//        cachedVideos[url.url.toString()]?.let { return it }
+//
+//        return getAndCacheRemoteVideo(url, isM3u8OrMpd)
+//    }
+//
+//    fun saveVideoInfo(videoInfo: VideoInfo) {
+//        cachedVideos[videoInfo.originalUrl] = videoInfo
+//    }
+//
+//    private fun getAndCacheRemoteVideo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
+//        val videoInfo = getVideoInfo(url, isM3u8OrMpd)
+//        if (videoInfo != null) {
+//            videoInfo.originalUrl = url.url.toString()
+//            cachedVideos[videoInfo.originalUrl] = videoInfo
+//
+//            return videoInfo
+//        }
+//        return null
+//    }
 
     private fun startVerifyProcess(
         resourceRequest: Request, isM3u8: Boolean, hlsTitle: String? = null
     ) {
+        Log.d("ntt", "startVerifyProcess: ")
         val taskUrlCleaned = resourceRequest.url.toString().split("?").firstOrNull()?.trim() ?: ""
 
         val job = verifyVideoLinkJobStorage[taskUrlCleaned]
@@ -235,11 +242,15 @@ class DetectedVideosTabViewModel @Inject constructor(
         verifyVideoLinkJobStorage[taskUrlCleaned] =
             io.reactivex.rxjava3.core.Observable.create { emitter ->
                 val info = try {
-                    getVideoInfo(resourceRequest, isM3u8)
+                    videoRepositoryImpl.getVideoInfo(resourceRequest, isM3u8)
                 } catch (e: Throwable) {
                     e.printStackTrace()
+                    Log.d("ntt", "startVerifyProcess:Throwable: $e ")
                     null
                 }
+
+                Log.d("ntt", "startVerifyProcess: info: $info")
+
                 if (info != null) {
                     emitter.onNext(info)
                 } else {
@@ -561,6 +572,7 @@ class DetectedVideosTabViewModel @Inject constructor(
         alternativeHeaders: Map<String, String> = emptyMap(),
         contentLength: Long
     ) {
+        Log.d("ntt", "setVideoInfoWrapperFromUrl: ")
         try {
             if (!url.toString().startsWith("http")) {
                 return

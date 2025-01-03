@@ -3,6 +3,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.d
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.webkit.CookieManager
 import androidx.databinding.Observable
 import androidx.databinding.ObservableBoolean
@@ -126,6 +127,7 @@ class VideoDetectionAlgVModel @Inject constructor(
         hlsTitle: String?,
         isM3u8: Boolean
     ) {
+        Log.d("ntt", "VideoDetectionAlgVModel verifyLinkStatus: ")
         if (resourceRequest.url.toString().contains("tiktok.")) {
             return
         }
@@ -179,12 +181,14 @@ class VideoDetectionAlgVModel @Inject constructor(
 
             return videoInfo
         }
+        Log.d("ntt", "getAndCacheRemoteVideo: $videoInfo")
         return null
     }
 
     private fun startVerifyProcess(
         resourceRequest: Request, isM3u8: Boolean, hlsTitle: String? = null
     ) {
+        Log.d("ntt", "startVerifyProcess: ")
         val job = verifyVideoLinkJobStorage[resourceRequest.url.toString()]
         if (job != null && !job.isDisposed) {
             return
@@ -251,6 +255,7 @@ class VideoDetectionAlgVModel @Inject constructor(
     }
 
     override fun checkRegularMp4(request: Request?): Disposable? {
+
         if (request == null) {
             return null
         }
@@ -286,7 +291,7 @@ class VideoDetectionAlgVModel @Inject constructor(
     }
 
     private fun propagateCheckJob(url: String, headersMap: Map<String, String>) {
-        val treshold = settingsModel.videoDetectionTreshold.get()
+        val treshold = 4 * 1024 * 1024
         var headers = headersMap.toMutableMap()
         val finlUrlPair = try {
             CookieUtils.getFinalRedirectURL(URL(Uri.parse(url).toString()), headers)
@@ -366,6 +371,7 @@ class VideoDetectionAlgVModel @Inject constructor(
         alternativeHeaders: Map<String, String> = emptyMap(),
         contentLength: Long
     ) {
+        Log.d("ntt", "setVideoInfoWrapperFromUrl: ")
         try {
             if (!url.toString().startsWith("http")) {
                 return

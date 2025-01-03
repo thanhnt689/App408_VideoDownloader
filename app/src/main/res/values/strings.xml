@@ -102,6 +102,8 @@
     <string name="whatshould">What should we do?</string>
     <string name="dontshow">Don\'t show again</string>
     <string name="view">View</string>
+    <string name="string_save">Save</string>
+    <string name="string_rename">Rename</string>
 
 
 </resources>
