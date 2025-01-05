@@ -36,6 +36,7 @@ import com.bumptech.glide.Glide
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
+import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideFormatEntityList
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityWebTabBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetDownloadBinding
@@ -57,6 +58,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogge
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.CookieUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FaviconUtils
+import com.files.video.downloader.videoplayerdownloader.downloader.util.FileNameCleaner
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
 import com.files.video.downloader.videoplayerdownloader.downloader.util.VideoUtils
@@ -244,7 +246,6 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
                         requestWithCookies?.headers,
                         okHttpProxyClient
                     )
-
 
                 when {
 
@@ -1052,13 +1053,14 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 
         Glide.with(downloadBinding.icFile).load(videoInfo.thumbnail).into(downloadBinding.icFile)
 
-
-        val titles = videoDetectionTabViewModel.formatsTitles.get()?.toMutableMap() ?: mutableMapOf()
+        val titles =
+            videoDetectionTabViewModel.formatsTitles.get()?.toMutableMap() ?: mutableMapOf()
         titles[videoInfo.id] = titles[videoInfo.id] ?: videoInfo.title
 
         videoDetectionTabViewModel.formatsTitles.set(titles)
 
-        val frmts = videoDetectionTabViewModel.selectedFormats.get()?.toMutableMap() ?: mutableMapOf()
+        val frmts =
+            videoDetectionTabViewModel.selectedFormats.get()?.toMutableMap() ?: mutableMapOf()
         val selected = frmts[videoInfo.id]
         val defaultFormat = videoInfo.formats.formats.lastOrNull()?.format ?: "unknown"
         if (selected == null) {
@@ -1093,7 +1095,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
         videoDetectionTabViewModel.selectedFormats.addOnPropertyChangedCallback(object :
             OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                val curSelected = videoDetectionTabViewModel.selectedFormats.get()?.get(videoInfo?.id)
+                val curSelected =
+                    videoDetectionTabViewModel.selectedFormats.get()?.get(videoInfo?.id)
                 val foundFormat =
                     videoInfo?.formats?.formats?.find { it.format == curSelected }
                 videoDetectionTabViewModel.selectedFormatUrl.set(foundFormat?.url.toString())
@@ -1109,10 +1112,14 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
         }
 
         downloadBinding.icEdit.setOnClickListener {
-            showDialogRename(videoInfo.name)
+            showDialogRename(videoInfo,titles[videoInfo.id].toString())
         }
 
-        downloadBinding.cvImage.setOnClickListener{
+        downloadBinding.imgClose.setOnClickListener {
+            bottomSheetDialog.dismiss()
+        }
+
+        downloadBinding.cvImage.setOnClickListener {
             startActivity(
                 Intent(
                     this, PlayMediaActivity::class.java
@@ -1131,7 +1138,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
                         } ?: false
                     }
 
-                    putExtra(PlayMediaActivity.VIDEO_NAME, videoInfo.title)
+                    putExtra(PlayMediaActivity.VIDEO_NAME, title)
 
                     if (currFormat.isNotEmpty()) {
                         val headers = currFormat.first().httpHeaders?.let {
@@ -1155,9 +1162,34 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
         bottomSheetDialog.show()
     }
 
-    private fun showDialogRename(name: String) {
+    private fun onVideoDownloadPropagate(
+        videoInfo: VideoInfo, videoTitle: String, format: String
+    ) {
+        val info = videoInfo.copy(
+            title = FileNameCleaner.cleanFileName(videoTitle),
+            formats = VideFormatEntityList(videoInfo.formats.formats.filter {
+                it.format?.contains(
+                    format
+                ) ?: false
+            })
+        )
+
+//        downloadVideoEvent.value = info
+
+        Toast.makeText(
+            this, getString(R.string.download_started), Toast.LENGTH_SHORT
+        ).show()
+
+    }
+
+    private fun showDialogRename(videoInfo: VideoInfo,name: String) {
         val dialogRename = DialogRename(this, name) { it ->
             downloadBinding.nameFile.text = it
+
+            val title = it.toString()
+            val titlesF = videoDetectionTabViewModel.formatsTitles.get()?.toMutableMap() ?: mutableMapOf()
+            titlesF[videoInfo.id] = title
+            videoDetectionTabViewModel.formatsTitles.set(titlesF)
         }
 
         dialogRename.show()

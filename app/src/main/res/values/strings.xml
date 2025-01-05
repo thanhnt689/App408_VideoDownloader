@@ -104,6 +104,9 @@
     <string name="view">View</string>
     <string name="string_save">Save</string>
     <string name="string_rename">Rename</string>
+    <string name="string_download_only">Download Only</string>
+    <string name="string_this_video_supports_only_download">This video supports only download.</string>
+    <string name="download_started">Video Download Started Successfully!!!</string>
 
 
 </resources>

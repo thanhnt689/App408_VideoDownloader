@@ -55,4 +55,13 @@
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
+
+    <style name="Custom_Slider_Style" parent="Widget.MaterialComponents.Slider">
+        <item name="materialThemeOverlay">@style/slider_overlay</item>
+    </style>
+
+    <style name="slider_overlay">
+        <!--        <item name="colorPrimary">@color/ba</item>-->
+        <!--        <item name="colorOnPrimary">@color/color_pr_8</item>-->
+    </style>
 </resources>

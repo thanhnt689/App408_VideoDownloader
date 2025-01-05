@@ -1,5 +1,7 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.ui.media
 
+import android.graphics.Color
+import android.media.AudioManager
 import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Bundle
@@ -8,19 +10,17 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.SeekBar
+import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.Observable
 import androidx.databinding.Observable.OnPropertyChangedCallback
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
@@ -31,11 +31,16 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.RenderersFactory
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView.SHOW_BUFFERING_ALWAYS
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityPlayMediaBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
+import com.google.android.material.slider.Slider
+import com.skydoves.balloon.ArrowOrientation
+import com.skydoves.balloon.Balloon
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -64,6 +69,9 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
     private val playMediaViewModel: PlayMediaViewModel by viewModels()
 
     @Inject
+    lateinit var preferenceHelper: PreferenceHelper
+
+    @Inject
     lateinit var appUtil: AppUtil
 
     private lateinit var player: ExoPlayer
@@ -76,12 +84,24 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
     private val handlerUI = Handler()
 
+    private var isLoop = false
+
+    private var isFill = true
+
+    private var speed = 1.0f
+
+    private val speedValues = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+    private var currentIndexSpeed = 0
+
+    private lateinit var audioManager: AudioManager
+
     override fun setBinding(layoutInflater: LayoutInflater): ActivityPlayMediaBinding {
         return ActivityPlayMediaBinding.inflate(layoutInflater)
     }
 
     override fun initView() {
         playMediaViewModel.start()
+        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         intent.getStringExtra(VIDEO_HEADERS)?.let { rawHeaders ->
             val headers =
                 Json.parseToJsonElement(rawHeaders).jsonObject.toMap()
@@ -89,7 +109,10 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
                     .toMap()
             playMediaViewModel.videoHeaders.set(headers)
         }
-        intent.getStringExtra(VIDEO_NAME)?.let { playMediaViewModel.videoName.set(it) }
+        intent.getStringExtra(VIDEO_NAME)?.let {
+            playMediaViewModel.videoName.set(it)
+            binding.tvName.text = it
+        }
 
         Log.d("ntt", "initView: VIDEO_NAME: ${intent.getStringExtra(VIDEO_NAME)}")
 
@@ -102,10 +125,20 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
         val url = playMediaViewModel.videoUrl.get() ?: Uri.EMPTY
         val headers = playMediaViewModel.videoHeaders.get() ?: emptyMap()
 
+        speed = preferenceHelper.getSpeedMedia()
+        currentIndexSpeed = setCurrentPositionSpeed(speed)
+        binding.tvSpeed.text = "${speed}x"
+
+        isLoop = preferenceHelper.getIsLoopMedia()
+        updateStatusLoop(isLoop)
+
+        isFill = preferenceHelper.getIsFillMedia()
+        updateFillMedia(isFill)
+
         playMediaViewModel.videoName.addOnPropertyChangedCallback(object :
             OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                val name = playMediaViewModel.videoName
+                val name = playMediaViewModel.videoName.get()
                 binding.tvName.text = name.toString()
             }
         })
@@ -134,8 +167,24 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
             .setRenderersFactory(createRenderFactory())
             .build()
 
+        player.setMediaItem(mediaItem)
+
+        player.prepare()
+
+        player.setMediaSource(mediaFactory.createMediaSource(mediaItem))
+
+        player.playWhenReady = false
+
         binding.playerView.player = player
         binding.playerView.setShowBuffering(SHOW_BUFFERING_ALWAYS)
+        player.setPlaybackSpeed(speed)
+
+        if (isFill) {
+            binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+        } else {
+            binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+        }
+
         binding.playerView.setFullscreenButtonClickListener {
             if (it) {
                 binding.toolbar.visibility = View.GONE
@@ -146,30 +195,57 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
         player.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playbackState == PlaybackState.STATE_PLAYING) {
+                if (playbackState == Player.STATE_ENDED) {
+                    if (isLoop) {
+                        player.seekTo(0)
+
+                        playAudio()
+                    } else {
+                        player.seekTo(0)
+
+                        pauseAudio()
+
+                    }
+                } else if (playbackState == Player.STATE_READY) {
                     binding.pbLoading.visibility = View.GONE
-                } else {
+                } else if (playbackState == Player.STATE_BUFFERING) {
+                    // Hiển thị ImageView khi video đang tải
                     binding.pbLoading.visibility = View.VISIBLE
+                } else {
+                    binding.pbLoading.visibility = View.GONE
                 }
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                if (playMediaViewModel?.videoUrl?.get().toString().startsWith("http")) {
+                if (playMediaViewModel.videoUrl.get().toString().startsWith("http")) {
                     AlertDialog.Builder(this@PlayMediaActivity)
-                        .setTitle("Download Only")
-                        .setMessage("This video supports only download.")
+                        .setTitle(getString(R.string.string_download_only))
+                        .setCancelable(false)
+                        .setMessage(getString(R.string.string_this_video_supports_only_download))
                         .setPositiveButton("OK") { dialog, _ ->
                             dialog.dismiss()
+                            finish()
                         }
                         .show()
                 }
                 Toast.makeText(this@PlayMediaActivity, error.message, Toast.LENGTH_LONG).show()
             }
+
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo,
+                newPosition: Player.PositionInfo,
+                reason: Int,
+            ) {
+                super.onPositionDiscontinuity(oldPosition, newPosition, reason)
+                updateProgressText()
+            }
+
+            override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+                updateProgressText()
+            }
         })
 
-        player.setMediaSource(mediaFactory.createMediaSource(mediaItem))
-        player.prepare()
-        player.playWhenReady = true
+
 
         binding.btnBack.setOnClickListener {
             finish()
@@ -184,28 +260,24 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
                 } else {
                     playAudio()
                 }
-                binding.btnPlayPause.setImageResource(R.drawable.ic_pause)
+                binding.btnPlayPause.setBackgroundResource(R.drawable.ic_pause)
             }
         }
 
-        binding.sbSoundWave.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        binding.sbSoundWave.setCustomThumbDrawable(R.drawable.ic_thumb)
 
-                if (fromUser) {
-
-                    val duration = player.duration ?: 0
-
-                    val videoPosition = (progress.toFloat() / 100.toFloat()) * duration
-                    player.seekTo(videoPosition.toLong())
-
-                }
-
+        binding.sbSoundWave.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-            }
+            override fun onStopTrackingTouch(slider: Slider) {
+//                preferenceHelper.setInt(INT_BASS_BOOST, slider.value.toInt() * 10)
 
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                val duration = player.duration ?: 0
+
+                val videoPosition = (slider.value.toInt().toFloat() / 100.toFloat()) * duration
+                player.seekTo(videoPosition.toLong())
+
             }
         })
 
@@ -221,6 +293,75 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
                 val currentPosition = it.currentPosition - 15000
                 it.seekTo(currentPosition.coerceIn(0, it.duration))
             }
+        }
+
+        binding.tvSpeed.setOnClickListener {
+            currentIndexSpeed = (currentIndexSpeed + 1) % speedValues.size
+            binding.tvSpeed.text = "${speedValues[currentIndexSpeed]}x"
+            player.setPlaybackSpeed(speedValues[currentIndexSpeed])
+            preferenceHelper.setSpeedMedia(speedValues[currentIndexSpeed])
+        }
+
+        binding.btnLoop.setOnClickListener {
+            isLoop = !isLoop
+            updateStatusLoop(isLoop)
+        }
+
+        binding.btnResize.setOnClickListener {
+            isFill = !isFill
+            updateFillMedia(isFill)
+
+            if (isFill) {
+                binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+            } else {
+                binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            }
+        }
+
+        binding.btnVolume.setOnClickListener {
+
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+
+            val balloon: Balloon = Balloon.Builder(binding.root.context)
+                .setLayout(R.layout.dialog_volume)
+                .setArrowSize(0)
+                .setArrowOrientation(ArrowOrientation.TOP)
+                .setBackgroundColor(Color.TRANSPARENT)
+                .build()
+
+            balloon.showAlignTop(binding.btnVolume, 0, 5)
+
+            val tvVolume: TextView = balloon.getContentView().findViewById(R.id.tv_volume)
+
+            val sbVolume: SeekBar = balloon.getContentView().findViewById(R.id.volumeSeekBar)
+
+            tvVolume.text = currentVolume.toString()
+            sbVolume.max = maxVolume
+            sbVolume.progress = currentVolume
+
+            sbVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
+                    if (fromUser) {
+                        // Thay đổi âm lượng
+                        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
+                        tvVolume.text = "$progress"
+                    }
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                    // Không cần xử lý
+                }
+
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                    // Không cần xử lý
+                }
+            })
+
         }
     }
 
@@ -274,6 +415,39 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
     }
 
+    private fun setCurrentPositionSpeed(speed: Float): Int {
+        return when (speed) {
+            0.25f -> 1
+            0.5f -> 2
+            0.75f -> 3
+            1.0f -> 4
+            1.25f -> 5
+            1.5f -> 6
+            1.75f -> 7
+            else -> 4
+        }
+    }
+
+    private fun updateStatusLoop(isLoop: Boolean) {
+        if (isLoop) {
+            binding.btnLoop.setBackgroundResource(R.drawable.ic_enable_loop)
+        } else {
+            binding.btnLoop.setBackgroundResource(R.drawable.ic_disable_loop)
+        }
+
+        preferenceHelper.setIsLoopMedia(isLoop)
+    }
+
+    private fun updateFillMedia(isFill: Boolean) {
+        if (isFill) {
+            binding.btnResize.setBackgroundResource(R.drawable.ic_fill)
+        } else {
+            binding.btnResize.setBackgroundResource(R.drawable.ic_fit)
+        }
+
+        preferenceHelper.setIsFillMedia(isFill)
+    }
+
     private fun resumeAudio() {
         player.apply {
             play()
@@ -309,7 +483,7 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
     }
 
     private fun pauseAudio() {
-        binding.btnPlayPause.setImageResource(R.drawable.ic_play_media)
+        binding.btnPlayPause.setBackgroundResource(R.drawable.ic_play_media)
         binding.playerView.onPause()
 
         isPause = true
@@ -330,7 +504,7 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
             isPlay = false
             isPause = false
 
-            binding.btnPlayPause.setImageResource(R.drawable.ic_play_media)
+            binding.btnPlayPause.setBackgroundResource(R.drawable.ic_play_media)
         }
     }
 
@@ -344,10 +518,10 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
                 val progress = (currentPosition.toFloat() / duration.toFloat() * 100).toInt()
 
-                binding.sbSoundWave.progress = progress
+                binding.sbSoundWave.value = progress.toFloat()
             }
 
-            handlerUI.postDelayed(this, 1000)
+            handlerUI.postDelayed(this, 500)
         }
     }
 
@@ -357,5 +531,10 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
     private fun stopUpdatingUI() {
         handlerUI.removeCallbacks(updateProgressTextRunnable)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopMediaPlayer()
     }
 }

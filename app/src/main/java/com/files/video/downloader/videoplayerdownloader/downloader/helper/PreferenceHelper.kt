@@ -60,6 +60,9 @@ class PreferenceHelper @Inject constructor(
         private const val IS_APP_DIR_USE = "IS_APP_DIR_USE"
         private const val IS_DARK_MODE = "IS_DARK_MODE"
         const val REGULAR_THREAD_COUNT = "REGULAR_THREAD_COUNT"
+        const val SPEED = "SPEED"
+        const val LOOP = "LOOP_MEDIA"
+        const val FILL = "FILL_MEDIA"
         private const val M3U8_THREAD_COUNT = "M3U8_THREAD_COUNT"
         private const val VIDEO_DETECTION_TRESHOLD = "VIDEO_DETECTION_TRESHOLD"
         private const val IS_LOCK_PORTRAIT = "IS_LOCK_PORTRAIT"
@@ -372,6 +375,39 @@ class PreferenceHelper @Inject constructor(
     fun setIsFirstStart(isFirstStart: Boolean) {
         sharedPreferences.edit().let {
             it.putBoolean(IS_FIRST_START, isFirstStart)
+            it.apply()
+        }
+    }
+
+    fun getSpeedMedia(): Float {
+        return sharedPreferences.getFloat(SPEED, 1.0f)
+    }
+
+    fun setSpeedMedia(speed: Float) {
+        sharedPreferences.edit().let {
+            it.putFloat(SPEED, speed)
+            it.apply()
+        }
+    }
+
+    fun getIsLoopMedia(): Boolean {
+        return sharedPreferences.getBoolean(LOOP, false)
+    }
+
+    fun setIsLoopMedia(isLoopMedia: Boolean) {
+        sharedPreferences.edit().let {
+            it.putBoolean(LOOP, isLoopMedia)
+            it.apply()
+        }
+    }
+
+    fun getIsFillMedia(): Boolean {
+        return sharedPreferences.getBoolean(FILL, true)
+    }
+
+    fun setIsFillMedia(isFillMedia: Boolean) {
+        sharedPreferences.edit().let {
+            it.putBoolean(FILL, isFillMedia)
             it.apply()
         }
     }
