@@ -25,14 +25,14 @@ interface VideoService {
 
 open class VideoServiceLocal(
     private val proxyController: CustomProxyController, private val helper: YoutubedlHelper
-) : VideoService {
+)  {
     companion object {
         const val MP4_EXT = "mp4"
         private const val FACEBOOK_HOST = ".facebook."
         private const val COOKIE_HEADER = "Cookie"
     }
 
-    override fun getVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfoWrapper? {
+    fun getVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfoWrapper? {
         AppLogger.d("Getting info url...:  $url  ${url.headers["Cookie"]}")
 
         var result: VideoInfoWrapper? = null

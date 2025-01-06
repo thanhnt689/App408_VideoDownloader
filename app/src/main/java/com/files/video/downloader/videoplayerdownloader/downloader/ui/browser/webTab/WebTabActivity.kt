@@ -25,6 +25,7 @@ import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.annotation.OptIn
 import androidx.databinding.Observable
 import androidx.databinding.Observable.OnPropertyChangedCallback
 import androidx.databinding.ObservableField
@@ -32,10 +33,13 @@ import androidx.databinding.ObservableInt
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.util.UnstableApi
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
+import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.ProgressInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideFormatEntityList
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityWebTabBinding
@@ -52,16 +56,20 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.de
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.detectedVideos.VideoDetectionAlgVModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.progress.ProgressViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabsActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AdBlockerHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogger
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
+import com.files.video.downloader.videoplayerdownloader.downloader.util.ContextUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.CookieUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FaviconUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileNameCleaner
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
 import com.files.video.downloader.videoplayerdownloader.downloader.util.VideoUtils
+import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.custom_downloader.CustomRegularDownloader
+import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.youtubedl_downloader.YoutubeDlDownloader
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.CustomProxyController
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -72,6 +80,7 @@ import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -127,7 +136,7 @@ const val HOME_TAB_INDEX = 0
 const val TAB_INDEX_KEY = "TAB_INDEX_KEY"
 
 @AndroidEntryPoint
-class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
+class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListener {
 
     private lateinit var webTab: WebTab
 
@@ -161,15 +170,22 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
     @Inject
     lateinit var okHttpProxyClient: OkHttpProxyClient
 
+    @Inject
+    lateinit var fileUtil: FileUtil
+
     private lateinit var downloadBinding: LayoutBottomSheetDownloadBinding
 
     private lateinit var bottomSheetDialog: BottomSheetDialog
+
+    private lateinit var progressViewModel: ProgressViewModel
 
     var videoAlert: MaterialAlertDialogBuilder? = null
     private var lastSavedHistoryUrl: String = ""
     private var lastSavedTitleHistory: String = ""
     private var lastRegularCheckUrl = ""
     private val regularJobsStorage: MutableMap<String, List<Disposable>> = mutableMapOf()
+
+    private lateinit var videoInfoAdapter: VideoInfoAdapter
 
     private var webViewClient = object : WebViewClient() {
         override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
@@ -198,6 +214,17 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
                         title,
                         userAgent
                     )
+
+                    val pageTab =
+                        tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
+
+                    pageTab?.setUrl(url)
+
+                    withContext(Dispatchers.Main) {
+
+                        pageTab?.let { tabViewModels.updateCurrentTab(it) }
+
+                    }
                 }
             }
             super.doUpdateVisitedHistory(view, url, isReload)
@@ -1008,6 +1035,11 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
                 historyViewModel.saveHistory(
                     historyItemCurrent
                 )
+
+                withContext(Dispatchers.Main){
+                    Toast.makeText(this@WebTabActivity,
+                        getString(R.string.string_save_to_bookmarks_successfully),Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -1111,8 +1143,28 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
             }
         }
 
+
+        videoDetectionTabViewModel.detectedVideosList.addOnPropertyChangedCallback(object :
+            OnPropertyChangedCallback() {
+            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+
+            }
+        })
+        videoInfoAdapter = VideoInfoAdapter(
+            this@WebTabActivity,
+            videoDetectionTabViewModel?.detectedVideosList?.get()?.toList() ?: emptyList(),
+            videoDetectionTabViewModel,
+            this@WebTabActivity,
+            appUtil
+        )
+
+        downloadBinding.videoInfoList.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+
+        downloadBinding.videoInfoList.adapter = videoInfoAdapter
+
         downloadBinding.icEdit.setOnClickListener {
-            showDialogRename(videoInfo,titles[videoInfo.id].toString())
+            showDialogRename(videoInfo, titles[videoInfo.id].toString())
         }
 
         downloadBinding.imgClose.setOnClickListener {
@@ -1120,42 +1172,42 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
         }
 
         downloadBinding.cvImage.setOnClickListener {
-            startActivity(
-                Intent(
-                    this, PlayMediaActivity::class.java
-                ).apply {
-                    val selectedFormatsMap = videoDetectionTabViewModel.selectedFormats.get()
-                    val format = selectedFormatsMap?.get(videoInfo.id)
-
-                    val selectedFormatTitle = videoDetectionTabViewModel.formatsTitles.get()
-                    val title = selectedFormatTitle?.get(videoInfo.id)
-                    // you can add values(if any) to pass to the next class or avoid using `.apply`
-                    val currFormat = videoInfo.formats.formats.filter {
-                        format?.let { it1 ->
-                            it.format?.contains(
-                                it1 as CharSequence
-                            )
-                        } ?: false
-                    }
-
-                    putExtra(PlayMediaActivity.VIDEO_NAME, title)
-
-                    if (currFormat.isNotEmpty()) {
-                        val headers = currFormat.first().httpHeaders?.let {
-                            JSONObject(
-                                currFormat.first().httpHeaders ?: emptyMap<String, String>()
-                            ).toString()
-                        } ?: "{}"
-
-                        putExtra(
-                            PlayMediaActivity.VIDEO_URL, currFormat.first().url
-                        )
-                        val headersFinal = headers
-                        putExtra(
-                            PlayMediaActivity.VIDEO_HEADERS, headersFinal
-                        )
-                    }
-                })
+//            startActivity(
+//                Intent(
+//                    this, PlayMediaActivity::class.java
+//                ).apply {
+//                    val selectedFormatsMap = videoDetectionTabViewModel.selectedFormats.get()
+//                    val format = selectedFormatsMap?.get(videoInfo.id)
+//
+//                    val selectedFormatTitle = videoDetectionTabViewModel.formatsTitles.get()
+//                    val title = selectedFormatTitle?.get(videoInfo.id)
+//                    // you can add values(if any) to pass to the next class or avoid using `.apply`
+//                    val currFormat = videoInfo.formats.formats.filter {
+//                        format?.let { it1 ->
+//                            it.format?.contains(
+//                                it1 as CharSequence
+//                            )
+//                        } ?: false
+//                    }
+//
+//                    putExtra(PlayMediaActivity.VIDEO_NAME, title)
+//
+//                    if (currFormat.isNotEmpty()) {
+//                        val headers = currFormat.first().httpHeaders?.let {
+//                            JSONObject(
+//                                currFormat.first().httpHeaders ?: emptyMap<String, String>()
+//                            ).toString()
+//                        } ?: "{}"
+//
+//                        putExtra(
+//                            PlayMediaActivity.VIDEO_URL, currFormat.first().url
+//                        )
+//                        val headersFinal = headers
+//                        putExtra(
+//                            PlayMediaActivity.VIDEO_HEADERS, headersFinal
+//                        )
+//                    }
+//                })
         }
 
 
@@ -1174,6 +1226,10 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
             })
         )
 
+//        progressViewModel.downloadVideo(info)
+
+        downloadVideo(info)
+
 //        downloadVideoEvent.value = info
 
         Toast.makeText(
@@ -1182,12 +1238,39 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
 
     }
 
-    private fun showDialogRename(videoInfo: VideoInfo,name: String) {
+    fun downloadVideo(videoInfo: VideoInfo?) {
+        val context = ContextUtils.getApplicationContext()
+
+        videoInfo?.let {
+            if (!fileUtil.folderDir.exists() && !fileUtil.folderDir.mkdirs()) {
+                return
+            }
+
+            val downloadId = videoInfo.id.hashCode().toLong()
+            val progressInfo = ProgressInfo(
+                id = videoInfo.id,
+                downloadId = downloadId,
+                videoInfo = videoInfo,
+                isM3u8 = videoInfo.isM3u8
+            )
+
+
+                if (videoInfo.isRegularDownload) {
+                    CustomRegularDownloader.addDownload(context, videoInfo)
+                } else {
+                    YoutubeDlDownloader.startDownload(context, videoInfo)
+                }
+
+        }
+    }
+
+    private fun showDialogRename(videoInfo: VideoInfo, name: String) {
         val dialogRename = DialogRename(this, name) { it ->
             downloadBinding.nameFile.text = it
 
             val title = it.toString()
-            val titlesF = videoDetectionTabViewModel.formatsTitles.get()?.toMutableMap() ?: mutableMapOf()
+            val titlesF =
+                videoDetectionTabViewModel.formatsTitles.get()?.toMutableMap() ?: mutableMapOf()
             titlesF[videoInfo.id] = title
             videoDetectionTabViewModel.formatsTitles.set(titlesF)
         }
@@ -1201,5 +1284,58 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>() {
         tabViewModel.stop()
         videoDetectionModel.stop()
         videoDetectionTabViewModel.stop()
+    }
+
+    @OptIn(UnstableApi::class)
+    override fun onPreviewVideo(videoInfo: VideoInfo, format: String, isForce: Boolean) {
+        startActivity(
+            Intent(
+                this, PlayMediaActivity::class.java
+            ).apply {
+//                val selectedFormatsMap = videoDetectionTabViewModel.selectedFormats.get()
+//                val format = selectedFormatsMap?.get(videoInfo.id)
+
+                Log.d("ntt", "onPreviewVideo: format: $format")
+
+                val selectedFormatTitle = videoDetectionTabViewModel.formatsTitles.get()
+                val title = selectedFormatTitle?.get(videoInfo.id)
+                // you can add values(if any) to pass to the next class or avoid using `.apply`
+                val currFormat = videoInfo.formats.formats.filter {
+                    format?.let { it1 ->
+                        it.format?.contains(
+                            it1 as CharSequence
+                        )
+                    } ?: false
+                }
+
+                putExtra(PlayMediaActivity.VIDEO_NAME, title)
+
+                if (currFormat.isNotEmpty()) {
+                    val headers = currFormat.first().httpHeaders?.let {
+                        JSONObject(
+                            currFormat.first().httpHeaders ?: emptyMap<String, String>()
+                        ).toString()
+                    } ?: "{}"
+
+                    putExtra(
+                        PlayMediaActivity.VIDEO_URL, currFormat.first().url
+                    )
+                    val headersFinal = if (isForce) "{}" else headers
+                    putExtra(
+                        PlayMediaActivity.VIDEO_HEADERS, headersFinal
+                    )
+                }
+            })
+    }
+
+    override fun onDownloadVideo(videoInfo: VideoInfo, format: String, videoTitle: String) {
+        onVideoDownloadPropagate(videoInfo, videoTitle, format)
+    }
+
+    override fun onSelectFormat(videoInfo: VideoInfo, format: String) {
+        val formats =
+            videoDetectionTabViewModel.selectedFormats.get()?.toMutableMap() ?: mutableMapOf()
+        formats[videoInfo.id] = format
+        videoDetectionTabViewModel.selectedFormats.set(formats)
     }
 }

@@ -114,6 +114,8 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
             binding.tvName.text = it
         }
 
+        binding.tvName.isSelected = true
+
         Log.d("ntt", "initView: VIDEO_NAME: ${intent.getStringExtra(VIDEO_NAME)}")
 
         val iUrl = Uri.parse(intent.getStringExtra(VIDEO_URL))
@@ -166,14 +168,6 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
         player = ExoPlayer.Builder(this)
             .setRenderersFactory(createRenderFactory())
             .build()
-
-        player.setMediaItem(mediaItem)
-
-        player.prepare()
-
-        player.setMediaSource(mediaFactory.createMediaSource(mediaItem))
-
-        player.playWhenReady = false
 
         binding.playerView.player = player
         binding.playerView.setShowBuffering(SHOW_BUFFERING_ALWAYS)
@@ -245,6 +239,9 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
             }
         })
 
+        player.setMediaSource(mediaFactory.createMediaSource(mediaItem))
+        player.prepare()
+        player.playWhenReady = false
 
 
         binding.btnBack.setOnClickListener {

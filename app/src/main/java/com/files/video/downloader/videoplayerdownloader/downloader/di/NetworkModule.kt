@@ -60,7 +60,7 @@ object NetworkModule {
     fun provideVideoService(
         proxyController: CustomProxyController,
         youtubedlHelper: YoutubedlHelper
-    ): VideoService = VideoServiceLocal(
+    ) = VideoServiceLocal(
         proxyController,
         youtubedlHelper
     )

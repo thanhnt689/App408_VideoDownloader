@@ -2,6 +2,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.ui.tab
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +15,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActi
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityTabsBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTab
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabFactory
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryAdapter
 
 class TabsActivity : BaseActivity<ActivityTabsBinding>() {
@@ -42,11 +44,13 @@ class TabsActivity : BaseActivity<ActivityTabsBinding>() {
                     this@TabsActivity,
                     listTabs,
                     onClickItemTab = { webTab, position ->
-                        val intent = Intent(this@TabsActivity, WebTabActivity::class.java)
-                        val bundle = Bundle()
-                        bundle.putSerializable("webtab", webTab)
-                        intent.putExtras(bundle)
-                        startActivity(intent)
+//                        val intent = Intent(this@TabsActivity, WebTabActivity::class.java)
+//                        val bundle = Bundle()
+//                        bundle.putSerializable("webtab", webTab)
+//                        intent.putExtras(bundle)
+//                        startActivity(intent)
+                        openNewTab(webTab.getUrl())
+                        Log.d("ntt", "initView: $webTab")
                     },
                     onClickDeleteItemTab = { webTab, position ->
                         tabViewModels.removeTabAt(position)
@@ -69,6 +73,19 @@ class TabsActivity : BaseActivity<ActivityTabsBinding>() {
 
         binding.tvCloseAll.setOnClickListener {
             tabViewModels.clearAllTabs()
+        }
+    }
+
+    private fun openNewTab(input: String) {
+        if (input.isNotEmpty()) {
+            val webTab = WebTabFactory.createWebTabFromInput(input)
+
+            val intent = Intent(this, WebTabActivity::class.java)
+            val bundle = Bundle()
+            bundle.putSerializable("webtab", webTab)
+            intent.putExtras(bundle)
+            startActivity(intent)
+
         }
     }
 }

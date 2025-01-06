@@ -215,9 +215,35 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
 
     //exoplayer
-    implementation "androidx.media3:media3-exoplayer:1.2.0"
-    implementation "androidx.media3:media3-exoplayer-dash:1.2.0"
-    implementation "androidx.media3:media3-ui:1.2.0"
+    var media3_version = '1.4.0'
+
+    // For media playback using ExoPlayer
+    implementation "androidx.media3:media3-exoplayer:$media3_version"
+
+    // For DASH playback support with ExoPlayer
+    implementation "androidx.media3:media3-exoplayer-dash:$media3_version"
+    // For HLS playback support with ExoPlayer
+    implementation "androidx.media3:media3-exoplayer-hls:$media3_version"
+    // For RTSP playback support with ExoPlayer
+    implementation "androidx.media3:media3-exoplayer-rtsp:$media3_version"
+
+    // For building media playback UIs
+    implementation "androidx.media3:media3-ui:$media3_version"
+
+    // For exposing and controlling media sessions
+    implementation "androidx.media3:media3-session:$media3_version"
+
+    // For extracting data from media containers
+    implementation "androidx.media3:media3-extractor:$media3_version"
+
+    // Common functionality for media database components
+    implementation "androidx.media3:media3-database:$media3_version"
+    // Common functionality for media decoders
+    implementation "androidx.media3:media3-decoder:$media3_version"
+    // Common functionality for loading data
+    implementation "androidx.media3:media3-datasource:$media3_version"
+    // Common functionality used across multiple media libraries
+    implementation "androidx.media3:media3-common:$media3_version"
 
     implementation 'com.mikhaellopez:circularprogressbar:3.1.0'
 

@@ -107,6 +107,9 @@
     <string name="string_download_only">Download Only</string>
     <string name="string_this_video_supports_only_download">This video supports only download.</string>
     <string name="download_started">Video Download Started Successfully!!!</string>
+    <string name="string_you_need_to_enable_permission_to_use_this_features">You need to enable permission to use this features</string>
+    <string name="go_to_setting">Go to setting</string>
+    <string name="string_save_to_bookmarks_successfully">Save to bookmarks successfully</string>
 
 
 </resources>

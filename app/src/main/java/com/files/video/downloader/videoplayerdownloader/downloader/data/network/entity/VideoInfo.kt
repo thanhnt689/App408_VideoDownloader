@@ -76,7 +76,7 @@ data class VideoInfo(
 
     val isMaster get() = isM3u8 && formats.formats.size > 1
 
-    fun isTikTokVideo() : Boolean {
+    fun isTikTokVideo(): Boolean {
         return originalUrl.contains("tiktok.com")
     }
 

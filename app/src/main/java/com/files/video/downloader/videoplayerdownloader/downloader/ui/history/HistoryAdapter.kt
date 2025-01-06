@@ -60,7 +60,7 @@ class HistoryAdapter(
             holder.binding.btnShare.visibility = View.GONE
         }
 
-        holder.binding.root.setOnClickListener {
+        holder.binding.layoutMain.setOnClickListener {
             onClickItemHistory.invoke(listItemHistory[position], position)
         }
 

@@ -6,6 +6,9 @@ import android.os.Handler
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import androidx.lifecycle.lifecycleScope
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.FragmentBrowserBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.TabManagerProvider
@@ -16,6 +19,8 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.Hi
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabsActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.KeyboardUtils
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
@@ -36,6 +41,14 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        binding.tvGoogle.isSelected = true
+        binding.tvFacebook.isSelected = true
+        binding.tvInstagram.isSelected = true
+        binding.tvTiktok.isSelected = true
+        binding.tvVimeo.isSelected = true
+        binding.tvImdb.isSelected = true
+        binding.tvDailyMotion.isSelected = true
 
         binding.imgGuide.setOnClickListener {
             startActivity(GuideActivity.newIntent(requireContext()))
@@ -114,6 +127,26 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
 
         binding.layoutHistory.setOnClickListener {
             startActivity(HistoryActivity.newIntent(requireContext(), "history"))
+        }
+
+        binding.edtSearch.imeOptions = EditorInfo.IME_ACTION_DONE
+        binding.edtSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                binding.edtSearch.clearFocus()
+                lifecycleScope.launch {
+                    delay(400)
+                    openNewTab((binding.edtSearch as EditText).text.toString())
+                    binding.edtSearch.text.clear()
+                }
+                false
+            } else false
+        }
+
+        binding.imgSearch.setOnClickListener {
+            if (binding.edtSearch.text.isNotEmpty()) {
+                openNewTab((binding.edtSearch as EditText).text.toString())
+                binding.edtSearch.text.clear()
+            }
         }
     }
 

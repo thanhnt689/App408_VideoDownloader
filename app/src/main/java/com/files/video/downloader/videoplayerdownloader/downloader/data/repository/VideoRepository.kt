@@ -1,5 +1,6 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.data.repository
 
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.di.qualifier.RemoteData
@@ -19,12 +20,16 @@ interface VideoRepository {
     fun saveVideoInfo(videoInfo: VideoInfo)
 }
 
-class VideoRepositoryImpl() {
+@Singleton
+class VideoRepositoryImpl @Inject constructor() {
 
-    var cachedVideos: MutableMap<String, VideoInfo> = mutableMapOf()
+    private val cachedVideos: MutableMap<String, VideoInfo> = mutableMapOf()
 
     fun getVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
-        return cachedVideos[url.url.toString()] ?: getAndCacheRemoteVideo(url, isM3u8OrMpd)
+        Log.d("ntt", "getVideoInfo: ${cachedVideos[url.url.toString()]}")
+        cachedVideos[url.url.toString()]?.let { return it }
+
+        return getAndCacheRemoteVideo(url, isM3u8OrMpd)
     }
 
     fun saveVideoInfo(videoInfo: VideoInfo) {
@@ -32,8 +37,8 @@ class VideoRepositoryImpl() {
     }
 
     private fun getAndCacheRemoteVideo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
-        // Thực hiện xử lý lấy video từ nguồn bên ngoài
-        val videoInfo = fetchRemoteVideoInfo(url, isM3u8OrMpd)
+        // Logic lấy video từ nguồn từ xa
+        val videoInfo = fetchRemoteVideo(url, isM3u8OrMpd)
         if (videoInfo != null) {
             videoInfo.originalUrl = url.url.toString()
             cachedVideos[videoInfo.originalUrl] = videoInfo
@@ -41,8 +46,9 @@ class VideoRepositoryImpl() {
         return videoInfo
     }
 
-    private fun fetchRemoteVideoInfo(url: Request, isM3u8OrMpd: Boolean): VideoInfo? {
-        // Giả lập việc fetch thông tin video từ server hoặc nguồn bên ngoài
-        return VideoInfo(url.url.toString()) // Thay bằng logic thực tế
+    private fun fetchRemoteVideo(url: Request, isM3u8OrMpd: Boolean): VideoInfo {
+        // Giả lập fetch video từ remote
+        return VideoInfo(originalUrl = url.url.toString())
     }
+
 }

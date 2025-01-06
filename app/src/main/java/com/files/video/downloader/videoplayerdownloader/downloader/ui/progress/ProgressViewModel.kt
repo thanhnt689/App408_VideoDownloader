@@ -12,7 +12,9 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.custom_downloader.CustomRegularDownloader
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskState
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.youtubedl_downloader.YoutubeDlDownloader
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.BackpressureStrategy
+import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.asCoroutineDispatcher

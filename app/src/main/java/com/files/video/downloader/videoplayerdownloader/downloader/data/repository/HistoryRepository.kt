@@ -18,6 +18,12 @@ class HistoryRepositoryImpl @Inject constructor(
 
     suspend fun saveHistory(history: HistoryItem) {
         historyDao.insertHistoryItem(history)
+
+        val itemCount = historyDao.getItemCount()
+        if (itemCount > 400) {
+            val itemsToDelete = itemCount - 400
+            historyDao.deleteOldItems(itemsToDelete)
+        }
     }
 
     fun deleteHistory(history: HistoryItem) {

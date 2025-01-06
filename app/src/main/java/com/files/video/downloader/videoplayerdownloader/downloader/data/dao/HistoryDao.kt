@@ -33,4 +33,10 @@ interface HistoryDao {
        """
     )
     fun getLiveDataBookmarkByTextSearch(textSearch: String?): LiveData<List<HistoryItem>>
+
+    @Query("DELETE FROM HistoryItem WHERE id IN (SELECT id FROM historyitem ORDER BY id ASC LIMIT :count)")
+    suspend fun deleteOldItems(count: Int)
+
+    @Query("SELECT COUNT(*) FROM HistoryItem")
+    suspend fun getItemCount(): Int
 }

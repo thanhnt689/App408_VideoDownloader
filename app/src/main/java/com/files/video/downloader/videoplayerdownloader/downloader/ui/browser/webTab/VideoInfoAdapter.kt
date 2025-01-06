@@ -1,5 +1,6 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab
 
+import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -10,20 +11,23 @@ import androidx.databinding.Observable.OnPropertyChangedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Recycler
+import com.bumptech.glide.Glide
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ItemVideoInfoBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.detectedVideos.DetectedVideosTabViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class VideoInfoAdapter(
+    private var context: Context,
     private var videoInfoList: List<VideoInfo>,
     private val model: DetectedVideosTabViewModel,
     private val downloadVideoListener: DownloadTabListener,
     private val appUtil: AppUtil
 ) : RecyclerView.Adapter<VideoInfoAdapter.ViewHolder>() {
-    class ViewHolder(
+    inner class ViewHolder(
         var binding: ItemVideoInfoBinding, val model: DetectedVideosTabViewModel,
         private val candidateFormatListener: DownloadTabListener,
         private val appUtil: AppUtil
@@ -51,7 +55,7 @@ class VideoInfoAdapter(
                 }
 
 
-                videoInfo = info
+//                videoInfo = info
                 val typeText = if (info.isM3u8) {
                     val isMpd = info.formats.formats.firstOrNull()?.url?.contains(".mpd") == true
                     if (isMpd) "MPD List" else "M3U8 List"
@@ -70,32 +74,37 @@ class VideoInfoAdapter(
                         binding.txtSize.text = "Download Size: $size"
                     }
                 }
-                typeTextView.text = typeText
-                videoTitleRenameButton.setOnClickListener {
-                    videoTitleEdit.requestFocus()
-                    this.videoTitleEdit.selectAll()
-                    appUtil.showSoftKeyboard(videoTitleEdit)
-                }
 
-                this.videoTitleEdit.setOnEditorActionListener { _, actionId, _ ->
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        this.videoTitleEdit.clearFocus()
-                        appUtil.hideSoftKeyboard(videoTitleEdit)
+                txtType.text = typeText
 
-                        false
-                    } else false
-                }
+//                Glide.with(this.icFile).load(info.downloadUrls[0]).into(this.icFile)
 
-                nameFile.setText(titles[info.id])
 
-                viewModel = model
+//                videoTitleRenameButton.setOnClickListener {
+//                    videoTitleEdit.requestFocus()
+//                    this.videoTitleEdit.selectAll()
+//                    appUtil.showSoftKeyboard(videoTitleEdit)
+//                }
+//
+//                this.videoTitleEdit.setOnEditorActionListener { _, actionId, _ ->
+//                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+//                        this.videoTitleEdit.clearFocus()
+//                        appUtil.hideSoftKeyboard(videoTitleEdit)
+//
+//                        false
+//                    } else false
+//                }
+
+                nameFile.text = titles[info.id]
+
+//                viewModel = model
 
                 model.selectedFormats.addOnPropertyChangedCallback(object :
                     OnPropertyChangedCallback() {
                     override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                        val curSelected = model.selectedFormats.get()?.get(videoInfo?.id)
+                        val curSelected = model.selectedFormats.get()?.get(info?.id)
                         val foundFormat =
-                            videoInfo?.formats?.formats?.find { it.format == curSelected }
+                            info?.formats?.formats?.find { it.format == curSelected }
                         model.selectedFormatUrl.set(foundFormat?.url.toString())
                     }
                 })
@@ -113,51 +122,67 @@ class VideoInfoAdapter(
                     candidateFormatListener
                 )
 
-                dialogListener = object : DownloadTabListener {
-                    override fun onCancel() {
-                        candidateFormatListener.onCancel()
-                    }
+                this.cvImage.setOnClickListener {
+                    val selectedFormatsMap = model.selectedFormats.get()
+                    val format = selectedFormatsMap?.get(info.id)
+                    format?.let { it1 -> candidateFormatListener.onPreviewVideo(info, it1, false) }
+                }
 
-                    override fun onPreviewVideo(
-                        videoInfo: VideoInfo,
-                        format: String,
-                        isForce: Boolean
-                    ) {
-                        candidateFormatListener.onPreviewVideo(videoInfo, format, isForce)
-                    }
-
-                    override fun onDownloadVideo(
-                        videoInfo: VideoInfo,
-                        format: String,
-                        videoTitle: String
-                    ) {
-                        val text = model.formatsTitles.get()?.get(videoInfo.id)
-                        if (text != null) {
-                            candidateFormatListener.onDownloadVideo(videoInfo, format, text)
-                        }
-                    }
-
-                    override fun onSelectFormat(videoInfo: VideoInfo, format: String) {
-                        candidateFormatListener.onSelectFormat(videoInfo, format)
+                this.icEdit.setOnClickListener {
+//                    showDialogRename(info, titles[info.id].toString())
+                    val text = model.formatsTitles.get()?.get(info.id)
+                    val format = model.selectedFormats.get()?.get(info.id)
+                    if (text != null && format != null) {
+                        candidateFormatListener.onDownloadVideo(info, format, text)
                     }
                 }
 
-                videoTitleEdit.addTextChangedListener(object : TextWatcher {
-                    override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                    }
 
-                    override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                        val title = p0.toString()
-                        val titlesF = model.formatsTitles.get()?.toMutableMap() ?: mutableMapOf()
-                        titlesF[info.id] = title
-                        model.formatsTitles.set(titlesF)
-                    }
+//                dialogListener = object : DownloadTabListener {
+//                    override fun onCancel() {
+//                        candidateFormatListener.onCancel()
+//                    }
+//
+//                    override fun onPreviewVideo(
+//                        videoInfo: VideoInfo,
+//                        format: String,
+//                        isForce: Boolean
+//                    ) {
+//                        candidateFormatListener.onPreviewVideo(videoInfo, format, isForce)
+//                    }
+//
+//                    override fun onDownloadVideo(
+//                        videoInfo: VideoInfo,
+//                        format: String,
+//                        videoTitle: String
+//                    ) {
+//                        val text = model.formatsTitles.get()?.get(videoInfo.id)
+//                        if (text != null) {
+//                            candidateFormatListener.onDownloadVideo(videoInfo, format, text)
+//                        }
+//                    }
+//
+//                    override fun onSelectFormat(videoInfo: VideoInfo, format: String) {
+//                        candidateFormatListener.onSelectFormat(videoInfo, format)
+//                    }
+//                }
+//
+//                videoTitleEdit.addTextChangedListener(object : TextWatcher {
+//                    override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+//                    }
+//
+//                    override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+//                        val title = p0.toString()
+//                        val titlesF = model.formatsTitles.get()?.toMutableMap() ?: mutableMapOf()
+//                        titlesF[info.id] = title
+//                        model.formatsTitles.set(titlesF)
+//                    }
+//
+//                    override fun afterTextChanged(p0: Editable?) {
+//                    }
+//                })
 
-                    override fun afterTextChanged(p0: Editable?) {
-                    }
-                })
-
-                executePendingBindings()
+//                executePendingBindings()
             }
         }
     }
@@ -185,6 +210,22 @@ class VideoInfoAdapter(
         this.videoInfoList = localVideos.reversed()
         notifyDataSetChanged()
     }
+
+    private fun showDialogRename(videoInfo: VideoInfo, name: String) {
+        val dialogRename = DialogRename(context, name) { it ->
+//            downloadBinding.nameFile.text = it
+
+            val title = it.toString()
+            val titlesF =
+                model.formatsTitles.get()?.toMutableMap() ?: mutableMapOf()
+            titlesF[videoInfo.id] = title
+            model.formatsTitles.set(titlesF)
+            notifyDataSetChanged()
+        }
+
+        dialogRename.show()
+    }
+
 }
 
 interface DownloadVideoListener {
@@ -218,11 +259,9 @@ interface DownloadTabVideoListener {
 }
 
 interface DownloadDialogListener : DownloadVideoListener, CandidateFormatListener {
-    fun onCancel(dialog: BottomSheetDialog?)
 }
 
 interface DownloadTabListener : DownloadTabVideoListener, CandidateFormatListener {
-    fun onCancel()
 }
 
 interface CandidateFormatListener {

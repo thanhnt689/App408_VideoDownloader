@@ -22,6 +22,8 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.network.
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityHistoryBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogAddBookmark
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogConfirmDelete
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabFactory
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.language.LanguageActivity.Companion.FROM_SPLASH
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.permission.PermissionActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FaviconUtils
@@ -90,7 +92,7 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
                                 false,
                                 listHistory,
                                 onClickItemHistory = { historyItem, position ->
-
+                                    openNewTab(historyItem.url)
                                 },
                                 onClickDeleteItemHistory = { historyItem, position ->
                                     showDialogConfirmDelete(historyItem)
@@ -140,7 +142,7 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
                                 true,
                                 listHistory,
                                 onClickItemHistory = { historyItem, position ->
-
+                                    openNewTab(historyItem.url)
                                 },
                                 onClickDeleteItemHistory = { historyItem, position ->
                                     showDialogConfirmDelete(historyItem)
@@ -262,6 +264,21 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
         }
 
         dialogDelete.show()
+    }
+
+    private fun openNewTab(input: String) {
+        if (input.isNotEmpty()) {
+            val webTab = WebTabFactory.createWebTabFromInput(input)
+
+            tabViewModels.addNewTab(webTab)
+
+            val intent = Intent(this, WebTabActivity::class.java)
+            val bundle = Bundle()
+            bundle.putSerializable("webtab", webTab)
+            intent.putExtras(bundle)
+            startActivity(intent)
+
+        }
     }
 
     companion object {

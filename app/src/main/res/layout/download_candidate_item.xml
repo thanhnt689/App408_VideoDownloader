@@ -5,32 +5,29 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.google.android.material.card.MaterialCardView
+    <LinearLayout
         android:id="@+id/card_item"
-        android:layout_width="130dp"
-        android:layout_height="130dp"
-        android:layout_margin="4dp"
+        android:layout_width="120dp"
+        android:layout_height="80dp"
+        android:background="@drawable/bg_item_download_candidate_normal"
+        android:layout_marginEnd="@dimen/_8sdp"
         android:checkable="true"
-        android:checked="@{is_candidate_selected}"
-        android:onClick="@{() -> listener.onSelectFormat(videoInfo, download_candidate)}"
-        app:cardCornerRadius="20dp"
-        app:checkedIconTint="@color/colorPrimary"
+        android:gravity="center"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:strokeColor=""
-        app:strokeWidth="3dp">
+        app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:fontFamily="@font/sf_pro_display_regular"
             android:gravity="center"
-            android:paddingStart="@dimen/padding_small"
-            android:paddingEnd="@dimen/padding_small"
+            android:paddingHorizontal="@dimen/_10sdp"
             android:text="@string/player_resolution"
             android:textAlignment="center"
-            android:textSize="@dimen/text_xxxlarge" />
+            android:textColor="#404040"
+            android:textSize="@dimen/_12ssp" />
 
-    </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
 </LinearLayout>

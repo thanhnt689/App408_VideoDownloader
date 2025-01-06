@@ -15,6 +15,8 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.model.Vi
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideFormatEntityList
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoFormatEntity
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
+import com.files.video.downloader.videoplayerdownloader.downloader.data.remote.service.VideoServiceLocal
+import com.files.video.downloader.videoplayerdownloader.downloader.data.remote.service.YoutubedlHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.VideoRepository
 import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.VideoRepositoryImpl
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
@@ -29,6 +31,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogge
 import com.files.video.downloader.videoplayerdownloader.downloader.util.ContextUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.CookieUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
+import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.CustomProxyController
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
 import com.files.video.downloader.videoplayerdownloader.downloader.util.scheduler.BaseSchedulers
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,8 +53,8 @@ class DetectedVideosTabViewModel @Inject constructor(
     private val preferenceHelper: PreferenceHelper,
     private val baseSchedulers: BaseSchedulers,
     private val okHttpProxyClient: OkHttpProxyClient,
-
-) : BaseViewModel(), IVideoDetector {
+    private val customProxyController: CustomProxyController,
+    ) : BaseViewModel(), IVideoDetector {
     // key: videoInfo.id, value: format - string
     val selectedFormats = ObservableField<Map<String, String>>()
 
@@ -60,7 +63,7 @@ class DetectedVideosTabViewModel @Inject constructor(
 
     val selectedFormatUrl = ObservableField<String>()
 
-    val videoRepositoryImpl = VideoRepositoryImpl()
+//    val videoRepositoryImpl = VideoRepositoryImpl()
 
     @Volatile
     var m3u8LoadingList = ObservableField<MutableSet<String>>()
@@ -88,6 +91,8 @@ class DetectedVideosTabViewModel @Inject constructor(
 
     private val hasCheckLoadingsM3u8 = ObservableBoolean(false)
     private val hasCheckLoadingsRegular = ObservableBoolean(false)
+
+    private val videoServiceLocal = VideoServiceLocal(customProxyController, YoutubedlHelper(okHttpProxyClient, preferenceHelper))
 
     override fun start() {
         AppLogger.d("START")
@@ -195,7 +200,7 @@ class DetectedVideosTabViewModel @Inject constructor(
                 return
             }
 //            if (settingsViewModel.getIsFindVideoByUrl().get()) {
-                startVerifyProcess(resourceRequest, false)
+            startVerifyProcess(resourceRequest, false)
 //            }
         }
     }
@@ -239,10 +244,12 @@ class DetectedVideosTabViewModel @Inject constructor(
         m3u8LoadingList.set(loadings?.toMutableSet())
         setButtonState(DownloadButtonStateLoading())
 
+        Log.d("ntt", "startVerifyProcess: resourceRequest: $resourceRequest")
+
         verifyVideoLinkJobStorage[taskUrlCleaned] =
             io.reactivex.rxjava3.core.Observable.create { emitter ->
                 val info = try {
-                    videoRepositoryImpl.getVideoInfo(resourceRequest, isM3u8)
+                    videoServiceLocal.getVideoInfo(resourceRequest, isM3u8)?.videoInfo
                 } catch (e: Throwable) {
                     e.printStackTrace()
                     Log.d("ntt", "startVerifyProcess:Throwable: $e ")
@@ -287,6 +294,10 @@ class DetectedVideosTabViewModel @Inject constructor(
         if ((isTwitch) && !newInfo.isMaster) {
             return
         }
+//
+//        if(newInfo.downloadUrls.isNullOrEmpty()){
+//            return
+//        }
 
         val detected = detectedVideosList.get()?.toList() ?: emptyList()
         var contains = false

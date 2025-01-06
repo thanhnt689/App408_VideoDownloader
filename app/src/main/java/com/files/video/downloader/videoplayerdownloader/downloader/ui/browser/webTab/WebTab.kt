@@ -8,7 +8,7 @@ import java.io.Serializable
 import java.util.UUID
 
 class WebTab(
-    private val url: String,
+    private var url: String,
     private val title: String?,
     private val iconBytes: Bitmap? = null,
     private val headers: Map<String, String> = emptyMap(),
@@ -48,6 +48,10 @@ class WebTab(
 
     fun getUrl(): String {
         return this.url
+    }
+
+    fun setUrl(url: String) {
+        this.url = url
     }
 
     fun getTitle(): String {
