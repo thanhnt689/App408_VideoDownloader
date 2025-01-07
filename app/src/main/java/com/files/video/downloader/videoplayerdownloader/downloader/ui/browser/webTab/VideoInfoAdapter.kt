@@ -129,12 +129,19 @@ class VideoInfoAdapter(
                 }
 
                 this.icEdit.setOnClickListener {
-//                    showDialogRename(info, titles[info.id].toString())
+                    showDialogRename(info, titles[info.id].toString())
+                }
+
+                this.layoutDownloaded.setOnClickListener {
                     val text = model.formatsTitles.get()?.get(info.id)
                     val format = model.selectedFormats.get()?.get(info.id)
                     if (text != null && format != null) {
                         candidateFormatListener.onDownloadVideo(info, format, text)
                     }
+                }
+
+                this.imgClose.setOnClickListener {
+                    candidateFormatListener.onCancel()
                 }
 
 
@@ -262,6 +269,7 @@ interface DownloadDialogListener : DownloadVideoListener, CandidateFormatListene
 }
 
 interface DownloadTabListener : DownloadTabVideoListener, CandidateFormatListener {
+    fun onCancel()
 }
 
 interface CandidateFormatListener {

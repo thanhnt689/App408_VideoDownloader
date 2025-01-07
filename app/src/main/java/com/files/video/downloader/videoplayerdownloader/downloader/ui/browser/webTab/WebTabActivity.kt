@@ -240,10 +240,10 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         override fun shouldInterceptRequest(
             view: WebView?, request: WebResourceRequest?
         ): WebResourceResponse? {
-            val isAdBlockerOn = false
+            val isAdBlockerOn = true
             val url = request?.url.toString()
 
-            val isUrlAd: Boolean = isAdBlockerOn
+            val isUrlAd: Boolean = isAdBlockerOn && tabViewModel.isAd(url)
 
             if (isUrlAd) {
                 return AdBlockerHelper.createEmptyResource()
@@ -366,7 +366,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         override fun shouldOverrideUrlLoading(view: WebView, url: WebResourceRequest): Boolean {
 //            val isAdBlockerOn = settingsModel.isAdBlocker.get()
             val isAdBlockerOn = true
-            val isAd = false
+            val isAd = if (isAdBlockerOn) tabViewModel.isAd(url.url.toString()) else false
 
             return if (url.url.toString().startsWith("http") && url.isForMainFrame && !isAd) {
                 if (!tabViewModel.isTabInputFocused.get()) {
@@ -415,13 +415,14 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                 val href = view.handler.obtainMessage()
                 view.requestFocusNodeHref(href)
                 val url = href.data.getString("url") ?: ""
-//                val isAd = if (settingsViewModel.isAdBlocker.get()) {
-//                    tabViewModel.isAd(url)
-//                } else {
-//                    false
-//                }
 
-                val isAd = false
+                val isBlockAds = true
+
+                val isAd = if (isBlockAds) {
+                    tabViewModel.isAd(url)
+                } else {
+                    false
+                }
 
                 AppLogger.d("ON_CREATE_WINDOW::************* $url ${view.url} isAd:: $isAd  $isUserGesture")
                 if (url.isEmpty() || !url.startsWith("http") || isAd || !isUserGesture) {
@@ -1036,9 +1037,12 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                     historyItemCurrent
                 )
 
-                withContext(Dispatchers.Main){
-                    Toast.makeText(this@WebTabActivity,
-                        getString(R.string.string_save_to_bookmarks_successfully),Toast.LENGTH_SHORT).show()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@WebTabActivity,
+                        getString(R.string.string_save_to_bookmarks_successfully),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -1255,11 +1259,11 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
             )
 
 
-                if (videoInfo.isRegularDownload) {
-                    CustomRegularDownloader.addDownload(context, videoInfo)
-                } else {
-                    YoutubeDlDownloader.startDownload(context, videoInfo)
-                }
+            if (videoInfo.isRegularDownload) {
+                CustomRegularDownloader.addDownload(context, videoInfo)
+            } else {
+                YoutubeDlDownloader.startDownload(context, videoInfo)
+            }
 
         }
     }
@@ -1284,6 +1288,10 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         tabViewModel.stop()
         videoDetectionModel.stop()
         videoDetectionTabViewModel.stop()
+    }
+
+    override fun onCancel() {
+        bottomSheetDialog.dismiss()
     }
 
     @OptIn(UnstableApi::class)

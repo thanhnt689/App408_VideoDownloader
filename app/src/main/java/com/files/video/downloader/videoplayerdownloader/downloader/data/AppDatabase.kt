@@ -3,6 +3,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.data
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.AdHostDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.HistoryDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.AdHost
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.DownloadUrlsConverter
@@ -30,5 +31,5 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun historyDao(): HistoryDao
 
-//    abstract fun adHostDao(): AdHostDao
+    abstract fun adHostDao(): AdHostDao
 }

@@ -1,16 +1,22 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.data.remote.service
 
+import android.net.Uri
+import android.util.Log
+import com.files.video.downloader.videoplayerdownloader.downloader.R
+import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.AdHostDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.AdHost
-import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.AdBlockHostsRepository
-import com.files.video.downloader.videoplayerdownloader.downloader.util.AdBlockerHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdBlockerHelper.parseAdsLine
+import com.files.video.downloader.videoplayerdownloader.downloader.util.ContextUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
-
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
@@ -20,18 +26,58 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import javax.inject.Inject
-import javax.inject.Singleton
 
 const val AD_HOSTS_URL_LIST_ADAWAY = "https://adaway.org/hosts.txt"
 const val AD_HOSTS_URLS_LIST_ADMIRAL = "https://v.firebog.net/hosts/Admiral.txt"
 const val TRACKING_BLACK_LIST = "https://v.firebog.net/hosts/Easyprivacy.txt"
 const val AD_HOSTS_URLS_AD_GUARD = "https://v.firebog.net/hosts/AdguardDNS.txt"
 
-@Singleton
 class AdBlockHostsRemoteDataSource @Inject constructor(
-    private val okHttpClient: OkHttpProxyClient
-) : AdBlockHostsRepository {
-    override suspend fun fetchHosts(): Set<AdHost> {
+    private val okHttpClient: OkHttpProxyClient,
+    private val sharedPrefHelper: PreferenceHelper,
+    private val adHostDao: AdHostDao,
+) {
+
+    private val hostsCache = mutableSetOf<AdHost>()
+
+    suspend fun initialize(isUpdate: Boolean): Boolean {
+        val isPopulated = sharedPrefHelper.getIsPopulated()
+
+        if (isUpdate) {
+            val freshHosts = fetchHosts()
+
+            val freshHostLocal = fetchHostsLocal()
+
+            if (freshHosts.isNotEmpty()) {
+                adHostDao.insertAdHosts(freshHosts)
+            }
+
+            if (freshHostLocal.isNotEmpty()) {
+                adHostDao.insertAdHosts(freshHostLocal)
+            }
+
+            val remoteInitialized = freshHosts.isNotEmpty()
+
+            val localInitialized = freshHostLocal.isNotEmpty()
+
+            if (!isPopulated && !remoteInitialized && !localInitialized) {
+
+                initializeLocal(true)
+
+                return false
+            }
+
+            return remoteInitialized && localInitialized
+        } else {
+            return initializeLocal(false)
+        }
+    }
+
+    private suspend fun initializeLocal(isUpdate: Boolean): Boolean {
+        return fetchHostsLocal().isNotEmpty()
+    }
+
+    private suspend fun fetchHosts(): Set<AdHost> {
         val tasks = listOf(
             fetchListFromUrl(AD_HOSTS_URLS_AD_GUARD).catch { emit(emptySet()) }.cancellable(),
             fetchListFromUrl(AD_HOSTS_URL_LIST_ADAWAY).catch { emit(emptySet()) }.cancellable(),
@@ -46,7 +92,53 @@ class AdBlockHostsRemoteDataSource @Inject constructor(
         return result.toSet()
     }
 
-    private suspend fun fetchListFromUrl(url: String): kotlinx.coroutines.flow.Flow<Set<AdHost>> {
+    private suspend fun fetchHostsLocal(): Set<AdHost> {
+        val isPopulated = sharedPrefHelper.getIsPopulated()
+
+        if (isPopulated) {
+            hostsCache.addAll(adHostDao.getAdHosts())
+        } else {
+            var counter = 0
+
+            fetchHostsFromFiles().onEach { adHosts ->
+                counter += adHosts.size
+                adHostDao.insertAdHosts(adHosts)
+            }.onCompletion {
+                if (it == null && counter > 80000) {
+                    sharedPrefHelper.setIsPopulated(true)
+                }
+            }.collect()
+
+            hostsCache.addAll(adHostDao.getAdHosts())
+        }
+
+        return hostsCache
+    }
+
+    fun isAds(url: String): Boolean {
+        Log.d("ntt", "isAds: url: $url")
+        Log.d("ntt", "isAds: hostsCache: $hostsCache")
+
+//        val hostCache = adHostDao.getAdHosts()
+
+        val uri = try {
+            Uri.parse(url)
+        } catch (_: Throwable) {
+            null
+        }
+        val host = uri?.host.toString()
+            .replace("www.", "")
+            .replace("m.", "")
+            .trim()
+        if (host.isNotEmpty()) {
+            Log.d("ntt", "isAds: ${hostsCache.contains(AdHost(host))}")
+            return hostsCache.contains(AdHost(host))
+        }
+
+        return false
+    }
+
+    private suspend fun fetchListFromUrl(url: String): Flow<Set<AdHost>> {
         return flow {
             val response = try {
                 okHttpClient.getProxyOkHttpClient().newCall(Request.Builder().url(url).build())
@@ -63,40 +155,23 @@ class AdBlockHostsRemoteDataSource @Inject constructor(
         }
     }
 
-    override fun isAds(url: String): Boolean {
-        throw Exception("use isAds from local")
+    private suspend fun fetchHostsFromFiles(): Flow<Set<AdHost>> {
+        val tasks = listOf(
+            fetchHostsFromFileRaw(R.raw.adblockserverlist).catch { emit(emptySet()) },
+            fetchHostsFromFileRaw(R.raw.adblockserverlist2).catch { emit(emptySet()) },
+            fetchHostsFromFileRaw(R.raw.adblockserverlist3).catch { emit(emptySet()) }
+        )
+
+        return merge(tasks[0], tasks[1], tasks[2])
     }
 
-    override suspend fun addHosts(hosts: Set<AdHost>) {
-        throw Exception("To remote hosts forbidden to add")
-    }
+    private suspend fun fetchHostsFromFileRaw(resource: Int): Flow<Set<AdHost>> {
+        return flow {
+            val inputStream =
+                ContextUtils.getApplicationContext().resources.openRawResource(resource)
 
-    override suspend fun removeHosts(hosts: Set<AdHost>) {
-        throw Exception("To remote hosts forbidden to remove")
-    }
-
-    override suspend fun addHost(host: AdHost) {
-        throw Exception("To remote host forbidden to add")
-    }
-
-    override suspend fun removeHost(host: AdHost) {
-        throw Exception("To remote host forbidden to remove")
-    }
-
-    override suspend fun removeAllHost() {
-        throw Exception("To remote host forbidden to removeAllHost")
-    }
-
-    override suspend fun getHostsCount(): Int {
-        throw Exception("To remote host forbidden to getHostsCount")
-    }
-
-    override fun getCachedCount(): Int {
-        return 0
-    }
-
-    override suspend fun initialize(isUpdate: Boolean): Boolean {
-        throw Exception("no need to Initialize AdBlockHostsRemoteDataSource")
+            emit(readAdServersFromStream(inputStream))
+        }
     }
 
     private suspend fun readAdServersFromStream(inputStream: InputStream): Set<AdHost> {
@@ -112,7 +187,7 @@ class AdBlockHostsRemoteDataSource @Inject constructor(
                     br2.readLine()
                 }.also { line2 = it } != null) {
                 if (!line2.toString().startsWith("#")) {
-                    val parsedLine = AdBlockerHelper.parseAdsLine(line2)
+                    val parsedLine = parseAdsLine(line2)
                     if (parsedLine.contains(Regex(".+\\..+"))) {
                         result.add(AdHost(parsedLine))
                     }
@@ -120,10 +195,12 @@ class AdBlockHostsRemoteDataSource @Inject constructor(
             }
             yield()
         } catch (e: IOException) {
-            e.printStackTrace()
             yield()
+
+            e.printStackTrace()
         } finally {
             yield()
+
             withContext(Dispatchers.IO) {
                 br2.close()
             }
@@ -131,5 +208,10 @@ class AdBlockHostsRemoteDataSource @Inject constructor(
 
         return result
     }
+
+    fun getCachedCount(): Int {
+        return hostsCache.size
+    }
+
 
 }

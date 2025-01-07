@@ -6,11 +6,14 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import androidx.annotation.DrawableRes
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.data.remote.service.AdBlockHostsRemoteDataSource
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityMainBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.settings.SettingsFragment
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsInitializerHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -50,11 +53,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     private var posSelectedNavigation = 0
 
+    @Inject
+    lateinit var adBlockHostsRemoteDataSource: AdBlockHostsRemoteDataSource
+
     override fun setBinding(layoutInflater: LayoutInflater): ActivityMainBinding {
         return ActivityMainBinding.inflate(layoutInflater)
     }
 
     override fun initView() {
+
+        AdsInitializerHelper.initializeAdBlocker(
+            preferenceHelper,
+            lifecycleScope,
+            adBlockHostsRemoteDataSource
+        )
 
         drawableBrowserNormal = R.drawable.ic_browser_navigation_normal
         drawableBrowserSelected = R.drawable.ic_browser_navigation_selected

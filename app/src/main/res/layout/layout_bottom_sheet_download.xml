@@ -161,11 +161,12 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/video_info_list"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/_240sdp" />
+                android:layout_height="@dimen/_280sdp" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:layout_marginTop="@dimen/_16sdp">
 
                 <ImageView

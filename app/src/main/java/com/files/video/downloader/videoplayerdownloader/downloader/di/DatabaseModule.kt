@@ -3,6 +3,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.di
 import android.content.Context
 import androidx.room.Room
 import com.files.video.downloader.videoplayerdownloader.downloader.data.AppDatabase
+import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.AdHostDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.HistoryDao
 import dagger.Module
 import dagger.Provides
@@ -29,6 +30,12 @@ object DatabaseModule {
     @Singleton
     fun provideHistoryDao(appDatabase: AppDatabase): HistoryDao {
         return appDatabase.historyDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAdHostDao(appDatabase: AppDatabase): AdHostDao {
+        return appDatabase.adHostDao()
     }
 
     @Provides

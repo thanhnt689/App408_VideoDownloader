@@ -354,7 +354,7 @@ class DetectedVideosTabViewModel @Inject constructor(
 
         val uriString = request.url.toString()
 
-        val isAd = false
+        val isAd = webTabModel?.isAd(uriString) ?: false
         if (!uriString.startsWith("http") || isAd) {
             return null
         }

@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
-import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.AdBlockHostsRepository
+import com.files.video.downloader.videoplayerdownloader.downloader.data.remote.service.AdBlockHostsRemoteDataSource
 import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.HistoryRepositoryImpl
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
 import com.files.video.downloader.videoplayerdownloader.downloader.util.scheduler.BaseSchedulers
@@ -26,9 +26,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WebTabViewModel @Inject constructor(
-    private val historyRepository: HistoryRepositoryImpl,
     private val baseSchedulers: BaseSchedulers,
-//    private val adBlockHostsRepository: AdBlockHostsRepository,
+    private val adBlockHostsRemoteDataSource: AdBlockHostsRemoteDataSource,
 ) : BaseViewModel() {
     val isTabInputFocused = ObservableBoolean(false)
     val changeTabFocusEvent = SingleLiveEvent<Boolean>()
@@ -73,9 +72,9 @@ class WebTabViewModel @Inject constructor(
     override fun stop() {
     }
 
-//    fun isAd(url: String): Boolean {
-//        return adBlockHostsRepository.isAds(url)
-//    }
+    fun isAd(url: String): Boolean {
+        return adBlockHostsRemoteDataSource.isAds(url)
+    }
 
     fun finishPage(url: String) {
         setTabTextInput(url, true)

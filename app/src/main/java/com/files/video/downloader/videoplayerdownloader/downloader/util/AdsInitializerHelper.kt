@@ -1,7 +1,7 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.util
 
 import android.widget.Toast
-import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.AdBlockHostsRepository
+import com.files.video.downloader.videoplayerdownloader.downloader.data.remote.service.AdBlockHostsRemoteDataSource
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,15 +16,15 @@ class AdsInitializerHelper {
         private const val ADS_LIST_UPDATE_TIME_DAYS = 7
 
         fun initializeAdBlocker(
-            adBlockHostsRepository: AdBlockHostsRepository,
             sharedPrefHelper: PreferenceHelper,
-            lifecycleScope: CoroutineScope
+            lifecycleScope: CoroutineScope,
+            adBlockHostsRemoteDataSource: AdBlockHostsRemoteDataSource,
         ) {
             var handle: DisposableHandle? = null
             handle = lifecycleScope.launch(Dispatchers.IO) {
                 val isAdBlockerOn = sharedPrefHelper.getIsAdBlocker()
                 if (isAdBlockerOn) {
-                    val cachedCount = adBlockHostsRepository.getCachedCount()
+                    val cachedCount = adBlockHostsRemoteDataSource.getCachedCount()
                     if (cachedCount > 0) {
                         return@launch
                     }
@@ -46,7 +46,7 @@ class AdsInitializerHelper {
                                 Toast.LENGTH_LONG
                             ).show()
                         }
-                        isInitialized = adBlockHostsRepository.initialize(true)
+                        isInitialized = adBlockHostsRemoteDataSource.initialize(true)
                         if (isInitialized) {
                             sharedPrefHelper.setIsAdHostsUpdateTime(Date().time)
                             isUpdated = true
@@ -56,7 +56,7 @@ class AdsInitializerHelper {
                             isUpdated = false
                         }
                     } else {
-                        isInitialized = adBlockHostsRepository.initialize(false)
+                        isInitialized = adBlockHostsRemoteDataSource.initialize(false)
 
                         AppLogger.d("HOST LISTS INITIALIZED DONE, TIME: ${Date()}")
                     }
