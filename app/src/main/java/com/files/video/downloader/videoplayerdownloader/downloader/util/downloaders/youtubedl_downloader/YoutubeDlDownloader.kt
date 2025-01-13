@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Base64
+import android.util.Log
 import androidx.work.*
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.ProgressInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeUnit
 class YoutubeDlDownloader : GenericDownloader() {
     companion object {
         fun startDownload(context: Context, videoInfo: VideoInfo) {
+            Log.d("ntt", "startDownload: ")
             YoutubeDlDownloaderDisposableContainer.disposableContainer[videoInfo.id]?.dispose()
 
             val downloadWork = getWorkRequest(videoInfo.id)

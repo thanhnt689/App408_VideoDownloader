@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
@@ -39,7 +38,6 @@ import com.bumptech.glide.Glide
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
-import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.ProgressInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideFormatEntityList
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityWebTabBinding
@@ -56,20 +54,17 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.de
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.detectedVideos.VideoDetectionAlgVModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity
-import com.files.video.downloader.videoplayerdownloader.downloader.ui.progress.ProgressViewModel
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.processing.ProgressViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabsActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AdBlockerHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogger
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
-import com.files.video.downloader.videoplayerdownloader.downloader.util.ContextUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.CookieUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FaviconUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileNameCleaner
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
 import com.files.video.downloader.videoplayerdownloader.downloader.util.VideoUtils
-import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.custom_downloader.CustomRegularDownloader
-import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.youtubedl_downloader.YoutubeDlDownloader
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.CustomProxyController
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -77,14 +72,13 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.disposables.Disposable
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.json.JSONObject
-import java.text.SimpleDateFormat
 import javax.inject.Inject
+
 
 interface BrowserServicesProvider : TabManagerProvider, PageTabProvider, HistoryProvider,
     WorkerEventProvider, CurrentTabIndexProvider
@@ -177,7 +171,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
     private lateinit var bottomSheetDialog: BottomSheetDialog
 
-    private lateinit var progressViewModel: ProgressViewModel
+    private val progressViewModel: ProgressViewModel by viewModels()
 
     var videoAlert: MaterialAlertDialogBuilder? = null
     private var lastSavedHistoryUrl: String = ""
@@ -1230,42 +1224,17 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
             })
         )
 
-//        progressViewModel.downloadVideo(info)
+        progressViewModel.downloadVideo(info)
 
-        downloadVideo(info)
 
-//        downloadVideoEvent.value = info
+//        downloadVideo(info)
+//
+////        downloadVideoEvent.value = info
 
         Toast.makeText(
             this, getString(R.string.download_started), Toast.LENGTH_SHORT
         ).show()
 
-    }
-
-    fun downloadVideo(videoInfo: VideoInfo?) {
-        val context = ContextUtils.getApplicationContext()
-
-        videoInfo?.let {
-            if (!fileUtil.folderDir.exists() && !fileUtil.folderDir.mkdirs()) {
-                return
-            }
-
-            val downloadId = videoInfo.id.hashCode().toLong()
-            val progressInfo = ProgressInfo(
-                id = videoInfo.id,
-                downloadId = downloadId,
-                videoInfo = videoInfo,
-                isM3u8 = videoInfo.isM3u8
-            )
-
-
-            if (videoInfo.isRegularDownload) {
-                CustomRegularDownloader.addDownload(context, videoInfo)
-            } else {
-                YoutubeDlDownloader.startDownload(context, videoInfo)
-            }
-
-        }
     }
 
     private fun showDialogRename(videoInfo: VideoInfo, name: String) {

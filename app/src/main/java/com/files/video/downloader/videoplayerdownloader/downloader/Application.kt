@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.work.Configuration
 import androidx.work.WorkManager
+import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.ProgressRepository
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.google.firebase.FirebaseApp
 import com.nlbn.ads.util.Adjust
@@ -15,11 +16,16 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabVie
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogger
 import com.files.video.downloader.videoplayerdownloader.downloader.util.ContextUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
+import com.files.video.downloader.videoplayerdownloader.downloader.util.NotificationsHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SystemUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.DaggerWorkerFactory
+import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.CustomProxyController
+import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLException
+import dagger.android.AndroidInjector
+import dagger.android.DaggerApplication
 import dagger.hilt.android.HiltAndroidApp
 import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import kotlinx.coroutines.CoroutineScope
@@ -35,8 +41,9 @@ class Application : AdsApplication() {
     @Inject
     lateinit var sharedPrefHelper: PreferenceHelper
 
-//    @Inject
-//    lateinit var workerFactory: DaggerWorkerFactory
+    @Inject
+    lateinit var workerFactory: DaggerWorkerFactory
+
 
     @Inject
     lateinit var fileUtil: FileUtil
@@ -60,13 +67,12 @@ class Application : AdsApplication() {
         initializeFileUtils()
 
         val file: File = fileUtil.folderDir
-        val ctx = applicationContext
 
-//        WorkManager.initialize(
-//            ctx,
-//            Configuration.Builder()
-//                .setWorkerFactory(workerFactory).build()
-//        )
+        WorkManager.initialize(
+            applicationContext,
+            Configuration.Builder()
+                .setWorkerFactory(workerFactory).build()
+        )
 
         RxJavaPlugins.setErrorHandler { error: Throwable? ->
             AppLogger.e("RxJavaError unhandled $error")
@@ -141,6 +147,5 @@ class Application : AdsApplication() {
             e.printStackTrace()
         }
     }
-
 
 }

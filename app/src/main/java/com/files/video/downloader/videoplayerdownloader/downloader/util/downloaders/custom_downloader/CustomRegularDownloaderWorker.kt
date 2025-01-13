@@ -2,6 +2,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.util.downloa
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Environment
 import android.util.Base64
 import androidx.core.net.toUri
 import androidx.work.WorkerParameters
@@ -221,7 +222,7 @@ class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerPar
 
     @SuppressLint("RestrictedApi")
     private fun startDownload(taskItem: VideoTaskItem, headers: Map<String, String>) {
-        AppLogger.d("Start download regular: $taskItem")
+        AppLogger.d("Start download regular: $taskItem, Header: $headers")
 
 
         val taskId = inputData.getString(GenericDownloader.TASK_ID_KEY)!!

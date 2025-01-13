@@ -116,8 +116,6 @@ class AdBlockHostsRemoteDataSource @Inject constructor(
     }
 
     fun isAds(url: String): Boolean {
-        Log.d("ntt", "isAds: url: $url")
-        Log.d("ntt", "isAds: hostsCache: $hostsCache")
 
 //        val hostCache = adHostDao.getAdHosts()
 
@@ -131,7 +129,6 @@ class AdBlockHostsRemoteDataSource @Inject constructor(
             .replace("m.", "")
             .trim()
         if (host.isNotEmpty()) {
-            Log.d("ntt", "isAds: ${hostsCache.contains(AdHost(host))}")
             return hostsCache.contains(AdHost(host))
         }
 

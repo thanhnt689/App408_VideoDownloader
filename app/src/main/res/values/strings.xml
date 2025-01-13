@@ -110,6 +110,12 @@
     <string name="string_you_need_to_enable_permission_to_use_this_features">You need to enable permission to use this features</string>
     <string name="go_to_setting">Go to setting</string>
     <string name="string_save_to_bookmarks_successfully">Save to bookmarks successfully</string>
+    <string name="string_notification">Notification</string>
+    <string name="settings_message_open_folder">You don\'t have any file explorer app installed on your device</string>
+    <string name="video_share_message">You don\'t have any video player app installed on your device</string>
+    <string name="cookies_cleared">Cookies cleared</string>
+    <string name="string_paste">Paste</string>
+    <string name="string_paste_link_here">Paste link here</string>
 
 
 </resources>

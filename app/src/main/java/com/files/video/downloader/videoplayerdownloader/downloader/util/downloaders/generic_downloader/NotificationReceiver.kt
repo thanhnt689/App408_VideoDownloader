@@ -1,4 +1,4 @@
-package com.myAllVideoBrowser.util.downloaders.generic_downloader
+package com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader
 
 import android.Manifest
 import android.app.Notification

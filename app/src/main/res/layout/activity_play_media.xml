@@ -232,7 +232,7 @@
                         app:layout_constraintTop_toTopOf="parent"
                         app:thumbRadius="@dimen/_7sdp"
                         app:thumbStrokeColor="#A264FF"
-                        app:trackHeight="@dimen/_4sdp" />
+                        app:trackHeight="@dimen/_5sdp" />
 
                     <TextView
                         android:id="@+id/tv_duration"

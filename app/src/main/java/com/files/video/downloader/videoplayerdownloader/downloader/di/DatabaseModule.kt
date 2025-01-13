@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.files.video.downloader.videoplayerdownloader.downloader.data.AppDatabase
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.AdHostDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.HistoryDao
+import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.ProgressDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,6 +37,12 @@ object DatabaseModule {
     @Singleton
     fun provideAdHostDao(appDatabase: AppDatabase): AdHostDao {
         return appDatabase.adHostDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideProgressDao(appDatabase: AppDatabase): ProgressDao {
+        return appDatabase.progressDao()
     }
 
     @Provides

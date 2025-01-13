@@ -92,6 +92,7 @@ dependencies {
     // Hilt
     implementation "com.google.dagger:hilt-android:$hilt_version"
     implementation 'androidx.activity:activity:1.9.3'
+    implementation 'androidx.hilt:hilt-common:1.2.0'
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
     // Retrofit for networking
@@ -184,7 +185,7 @@ dependencies {
 
     //ads
     implementation 'com.google.android.gms:play-services-ads:23.6.0'
-    implementation 'com.github.devvtn:vtn_ads_libs:1.8.4'
+    implementation 'com.github.devvtn:vtn_ads_libs:1.9.6'
 
 //    implementation 'com.facebook.infer.annotation:infer-annotation:0.18.0'
 
@@ -249,11 +250,14 @@ dependencies {
 
     implementation "com.github.skydoves:balloon:1.4.3"
 
-//    implementation "com.google.dagger:dagger:2.54"
-//    kapt "com.google.dagger:dagger-compiler:2.54"
-//
-//    implementation "com.google.dagger:dagger-android:2.54"
-//    implementation "com.google.dagger:dagger-android-support:2.54" // Dùng khi bạn sử dụng các thành phần AndroidX
-//    kapt "com.google.dagger:dagger-android-processor:2.54"
-//    kapt "com.google.dagger:dagger-compiler:2.54"
+    implementation "com.google.dagger:dagger:2.50"
+    kapt "com.google.dagger:dagger-compiler:2.50"
+
+    // Hilt dependencies (Hilt là wrapper của Dagger)
+    implementation "com.google.dagger:hilt-android:2.50"
+    kapt "com.google.dagger:hilt-compiler:2.50"
+
+    implementation "com.google.dagger:dagger-android:2.50"
+    implementation "com.google.dagger:dagger-android-support:2.50"
+    kapt "com.google.dagger:dagger-android-processor:2.50"
 }

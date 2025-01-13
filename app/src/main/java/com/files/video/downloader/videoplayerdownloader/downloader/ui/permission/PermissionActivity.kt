@@ -29,8 +29,10 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
     lateinit var preferenceHelper: PreferenceHelper
 
     private val REQUEST_CODE_STORAGE = 3
+    private val REQUEST_CODE_NOTIFICATION = 4
 
     private var isPermissionStorage = false
+    private var isPermissionNotification = false
 
     private var checkOpen = false
 
@@ -41,6 +43,8 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
     override fun initView() {
 
         checkStoragePermission()
+        checkNotificationPermission()
+        checkTextGo()
 
         binding.btnSkip.setOnClickListener {
             preferenceHelper.hidePermission()
@@ -49,6 +53,10 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
 
         binding.btnAllowStorage.setOnClickListener {
             requestPermissionStorage()
+        }
+
+        binding.btnAllowNotification.setOnClickListener {
+            requestPermissionNotification()
         }
     }
 
@@ -64,12 +72,10 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                 isPermissionStorage = true
                 binding.btnAllowStorage.isEnabled = false
                 binding.btnAllowStorage.setBackgroundResource(R.drawable.ic_switch_on)
-                binding.btnSkip.setText(R.string.string_continue)
             } else {
                 isPermissionStorage = false
                 binding.btnAllowStorage.isEnabled = true
                 binding.btnAllowStorage.setBackgroundResource(R.drawable.ic_switch_off)
-                binding.btnSkip.setText(R.string.string_skip)
             }
         } else {
             if (
@@ -85,13 +91,38 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                 isPermissionStorage = true
                 binding.btnAllowStorage.isEnabled = false
                 binding.btnAllowStorage.setBackgroundResource(R.drawable.ic_switch_on)
-                binding.btnSkip.setText(R.string.string_continue)
             } else {
                 isPermissionStorage = false
                 binding.btnAllowStorage.isEnabled = true
                 binding.btnAllowStorage.setBackgroundResource(R.drawable.ic_switch_off)
+            }
+        }
+
+    }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+            binding.llNotificationPermission.visibility = View.VISIBLE
+            if (
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                isPermissionNotification = true
+                binding.btnAllowNotification.isEnabled = false
+                binding.btnAllowNotification.setBackgroundResource(R.drawable.ic_switch_on)
+                binding.btnSkip.setText(R.string.string_continue)
+            } else {
+                isPermissionNotification = false
+                binding.btnAllowNotification.isEnabled = true
+                binding.btnAllowNotification.setBackgroundResource(R.drawable.ic_switch_off)
                 binding.btnSkip.setText(R.string.string_skip)
             }
+        } else {
+            isPermissionNotification = true
+            binding.llNotificationPermission.visibility = View.GONE
         }
 
     }
@@ -109,6 +140,19 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                     Manifest.permission.READ_EXTERNAL_STORAGE
                 ),
                 REQUEST_CODE_STORAGE
+            )
+        }
+    }
+
+    private fun requestPermissionNotification() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.POST_NOTIFICATIONS
+                ),
+                REQUEST_CODE_NOTIFICATION
             )
         }
     }
@@ -184,7 +228,45 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                         val uri = Uri.fromParts("package", packageName, null)
                         intent.data = uri
 
-                        startActivityForResult(intent, 1234)
+//                        startActivityForResult(intent, 1234)
+                        startActivityResult.launch(intent)
+
+                        checkOpen = true
+
+                        alertDialog.dismiss()
+                    }
+
+                    alertDialog.show()
+                }
+            }
+
+        } else if (requestCode == REQUEST_CODE_NOTIFICATION) {
+            if (grantResults.isNotEmpty()) {
+                val notificationPer = grantResults[0] == PackageManager.PERMISSION_GRANTED
+
+                if (notificationPer) {
+                    isPermissionNotification = true
+                    binding.btnAllowNotification.setBackgroundResource(R.drawable.ic_switch_on)
+                    binding.btnAllowNotification.isEnabled = false
+                } else {
+                    isPermissionNotification = false
+                    binding.btnAllowNotification.setBackgroundResource(R.drawable.ic_switch_off)
+                    binding.btnAllowNotification.isEnabled = true
+
+                    val alertDialog = AlertDialog.Builder(this).create()
+                    alertDialog.setCancelable(false)
+
+                    alertDialog.setMessage(getString(R.string.string_you_need_to_enable_permission_to_use_this_features))
+                    alertDialog.setButton(
+                        -1,
+                        getString(R.string.go_to_setting)
+                    ) { _, _ ->
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                        val uri = Uri.fromParts("package", packageName, null)
+                        intent.data = uri
+
+                        startActivityResult.launch(intent)
+//                        startActivityForResult(intent, 1234)
 
                         checkOpen = true
 
@@ -200,8 +282,24 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
         checkTextGo()
     }
 
+    val startActivityResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        checkNotificationPermission()
+
+        checkStoragePermission()
+
+        checkTextGo()
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+
+    }
+
     private fun checkTextGo() {
-        if (!isPermissionStorage) {
+        if (!isPermissionStorage || !isPermissionNotification) {
             binding.btnSkip.text = getString(R.string.string_skip)
         } else {
             binding.btnSkip.text = getString(R.string.string_continue)

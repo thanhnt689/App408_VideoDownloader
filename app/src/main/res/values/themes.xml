@@ -64,4 +64,9 @@
         <!--        <item name="colorPrimary">@color/ba</item>-->
         <!--        <item name="colorOnPrimary">@color/color_pr_8</item>-->
     </style>
+
+    <style name="customImageViewRounded" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/_10sdp</item>
+    </style>
 </resources>

@@ -14,14 +14,13 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_ut
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
 import javax.inject.Inject
 
-
 class DaggerWorkerFactory @Inject constructor(
     private val progress: ProgressRepository,
     private val fileUtil: FileUtil,
     private val notificationsHelper: NotificationsHelper,
     private val proxyController: CustomProxyController,
     private val okHttpProxyClient: OkHttpProxyClient,
-    private val sharedPrefHelper: PreferenceHelper
+    private val sharedPrefHelper: PreferenceHelper,
 ) : WorkerFactory() {
 
     override fun createWorker(

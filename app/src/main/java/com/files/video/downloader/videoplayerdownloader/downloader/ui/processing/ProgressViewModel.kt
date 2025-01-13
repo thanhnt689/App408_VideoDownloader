@@ -1,4 +1,4 @@
-package com.files.video.downloader.videoplayerdownloader.downloader.ui.progress
+package com.files.video.downloader.videoplayerdownloader.downloader.ui.processing
 
 import androidx.annotation.VisibleForTesting
 import androidx.databinding.ObservableField
@@ -14,7 +14,6 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.download
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.youtubedl_downloader.YoutubeDlDownloader
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.BackpressureStrategy
-import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -24,6 +23,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 //@OpenForTesting
+@HiltViewModel
 class ProgressViewModel @Inject constructor(
     private val fileUtil: FileUtil,
     private val progressRepository: ProgressRepository,

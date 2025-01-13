@@ -2,6 +2,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.util.downloa
 
 import android.content.Context
 import android.util.Base64
+import android.util.Log
 import androidx.work.*
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.ProgressInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
@@ -15,6 +16,7 @@ class CustomRegularDownloader : GenericDownloader() {
     // TODO REMOVE DUPLICATE CODE
     companion object {
         fun addDownload(context: Context, videoInfo: VideoInfo, withoutHeaders: Boolean = false) {
+            Log.d("ntt", "addDownload: ")
             val downloadWork = getWorkRequest(videoInfo.id)
 
             val downloaderData = try {

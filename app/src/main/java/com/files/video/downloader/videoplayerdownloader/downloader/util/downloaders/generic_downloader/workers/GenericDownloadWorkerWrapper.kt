@@ -17,12 +17,12 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.download
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.CustomProxyController
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.GenericDownloader
-import com.myAllVideoBrowser.util.downloaders.generic_downloader.NotificationReceiver
+import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.NotificationReceiver
 import io.reactivex.rxjava3.disposables.Disposable
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
-open class GenericDownloadWorkerWrapper(
+open class GenericDownloadWorkerWrapper @Inject constructor(
     appContext: Context, workerParams: WorkerParameters
 ) : GenericDownloadWorker(appContext, workerParams) {
     @Inject

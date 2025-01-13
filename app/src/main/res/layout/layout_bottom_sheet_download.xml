@@ -38,11 +38,11 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/ll_main"
-                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="@dimen/_3sdp"
-                android:paddingVertical="@dimen/_5sdp">
+                android:paddingVertical="@dimen/_5sdp"
+                android:visibility="gone">
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cv_image"
@@ -158,16 +158,28 @@
                 android:background="#EDEDED" />
 
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/video_info_list"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/_280sdp" />
+                android:layout_height="wrap_content">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/video_info_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintHeight_max="@dimen/_280sdp"
+                    app:layout_constrainedHeight="true"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:layout_marginTop="@dimen/_16sdp">
+                android:layout_marginTop="@dimen/_16sdp"
+                android:visibility="gone">
 
                 <ImageView
                     android:id="@+id/img_close"
