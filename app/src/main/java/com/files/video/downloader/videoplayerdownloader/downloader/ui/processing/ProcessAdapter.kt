@@ -26,12 +26,9 @@ class ProcessAdapter(
             val thumbnail = progressInfo.videoInfo.thumbnail
             val placeholder = R.drawable.ic_play_download
             val size = getScreenResolution(itemView.context)
-            val color =
-                MaterialColors.getColor(itemView.context, R.attr.colorSurfaceVariant, Color.YELLOW)
 
             with(binding)
             {
-                this.cardProgress.setCardBackgroundColor(color)
 
                 var isPlay = true
 
@@ -46,17 +43,17 @@ class ProcessAdapter(
                     .into(this.ivThumbnail)
 
                 tvTitle.text = progressInfo.videoInfo.name
-                progressBar.progress = progressInfo.progress
+                progressBar.progress = progressInfo.progress.toFloat()
                 tvProgress.text = progressInfo.progressSize
                 infoLine.text = progressInfo.infoLine
                 imgClose.setOnClickListener {
                     videoListener.onCloseClicked(downloadId, isRegular)
                 }
 
-                if(progressInfo.infoLine.isEmpty()){
+                if (progressInfo.infoLine.isEmpty()) {
                     isPlay = false
                     imgPlayPause.setImageResource(R.drawable.ic_play_download)
-                }else{
+                } else {
                     isPlay = true
                     imgPlayPause.setImageResource(R.drawable.ic_pause_download)
                 }

@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.files.video.downloader.videoplayerdownloader.downloader.MainActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.R
@@ -68,6 +69,8 @@ class NotificationsHelper @Inject constructor(@ApplicationContext private val co
                 val actionOpenInApp = notificationActionOpen(true)
                 val actionWatch = notificationActionWatch(task.fileName)
                 val actionWatchIntent = notificationIntentWatch(task.fileName)
+
+                Log.d("ntt", "createNotificationBuilder: ${task.fileName}")
 
                 builder.setContentIntent(actionWatchIntent)
                 builder.setSubText("success!!!").setProgress(0, 0, false)

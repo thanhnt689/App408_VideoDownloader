@@ -1,8 +1,12 @@
 package com.files.video.downloader.videoplayerdownloader.downloader
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import androidx.annotation.DrawableRes
 import androidx.fragment.app.Fragment
@@ -12,8 +16,11 @@ import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActi
 import com.files.video.downloader.videoplayerdownloader.downloader.data.remote.service.AdBlockHostsRemoteDataSource
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityMainBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.downloaded.DownloadedFragment
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.processing.ProcessingFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.settings.SettingsFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsInitializerHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.youtubedl_downloader.YoutubeDlDownloaderWorker
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -95,7 +102,86 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         initListener()
 
+        if (intent?.getBooleanExtra(
+                YoutubeDlDownloaderWorker.IS_FINISHED_DOWNLOAD_ACTION_KEY,
+                false
+            ) == true
+        ) {
+            if (intent.getBooleanExtra(
+                    YoutubeDlDownloaderWorker.IS_FINISHED_DOWNLOAD_ACTION_ERROR_KEY,
+                    false
+                )
+            ) {
+                if (posSelectedNavigation != 1) {
+                    posSelectedNavigation = 1
+                    changeImageIconWhenTap(
+                        drawableBrowserNormal,
+                        drawableProcessingSelected,
+                        drawableDownloadedNormal,
+                        drawableSettingsNormal
+                    )
+                    changeTextColorWhenTap(colorNormal, colorSelected, colorNormal, colorNormal)
+
+                    replaceFragment(ProcessingFragment())
+                }
+            } else {
+                if (posSelectedNavigation != 2) {
+                    posSelectedNavigation = 2
+                    changeImageIconWhenTap(
+                        drawableBrowserNormal,
+                        drawableProcessingNormal,
+                        drawableDownloadedSelected,
+                        drawableSettingsNormal
+                    )
+                    changeTextColorWhenTap(colorNormal, colorNormal, colorSelected, colorNormal)
+
+                    replaceFragment(DownloadedFragment())
+                }
+            }
+
+            if (intent.hasExtra(YoutubeDlDownloaderWorker.DOWNLOAD_FILENAME_KEY)) {
+                val downloadFileName =
+                    intent.getStringExtra(YoutubeDlDownloaderWorker.DOWNLOAD_FILENAME_KEY)
+                        .toString()
+
+                Log.d("ntt", "initView: $downloadFileName")
+
+                Handler(Looper.getMainLooper()).postDelayed({
+                    tabViewModels.openDownloadedVideoEvent.value = downloadFileName
+                }, 1000)
+            }
+        } else {
+            if (intent?.hasExtra(YoutubeDlDownloaderWorker.IS_FINISHED_DOWNLOAD_ACTION_KEY) == true) {
+                if (posSelectedNavigation != 1) {
+                    posSelectedNavigation = 1
+                    changeImageIconWhenTap(
+                        drawableBrowserNormal,
+                        drawableProcessingSelected,
+                        drawableDownloadedNormal,
+                        drawableSettingsNormal
+                    )
+                    changeTextColorWhenTap(colorNormal, colorSelected, colorNormal, colorNormal)
+
+                    replaceFragment(ProcessingFragment())
+                }
+            } else {
+                if (posSelectedNavigation != 0) {
+                    posSelectedNavigation = 0
+                    changeImageIconWhenTap(
+                        drawableBrowserSelected,
+                        drawableProcessingNormal,
+                        drawableDownloadedNormal,
+                        drawableSettingsNormal
+                    )
+                    changeTextColorWhenTap(colorSelected, colorNormal, colorNormal, colorNormal)
+
+                    replaceFragment(BrowserFragment())
+                }
+            }
+        }
+
     }
+
 
     private fun initListener() {
         binding.layoutBrowser.setOnClickListener {
@@ -124,6 +210,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     drawableSettingsNormal
                 )
                 changeTextColorWhenTap(colorNormal, colorSelected, colorNormal, colorNormal)
+
+                replaceFragment(ProcessingFragment())
             }
         }
 
@@ -137,6 +225,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     drawableSettingsNormal
                 )
                 changeTextColorWhenTap(colorNormal, colorNormal, colorSelected, colorNormal)
+
+                replaceFragment(DownloadedFragment())
             }
         }
 

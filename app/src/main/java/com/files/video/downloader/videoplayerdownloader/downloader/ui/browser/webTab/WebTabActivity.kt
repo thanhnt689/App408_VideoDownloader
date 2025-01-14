@@ -1226,6 +1226,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
         progressViewModel.downloadVideo(info)
 
+        bottomSheetDialog.dismiss()
+
 
 //        downloadVideo(info)
 //

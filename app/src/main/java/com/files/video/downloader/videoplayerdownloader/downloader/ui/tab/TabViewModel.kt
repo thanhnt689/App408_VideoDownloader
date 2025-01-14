@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTab
+import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
 
 
 class TabViewModel(application: Application) : AndroidViewModel(application) {
@@ -16,6 +17,8 @@ class TabViewModel(application: Application) : AndroidViewModel(application) {
     var listTabWeb = MutableLiveData<MutableList<WebTab>>()
 
     var currentPositionTabWeb = MutableLiveData<Int>(0)
+
+    val openDownloadedVideoEvent = SingleLiveEvent<String>()
 
     fun addNewTab(tab: WebTab) {
         val currentList = listTabWeb.value ?: mutableListOf()

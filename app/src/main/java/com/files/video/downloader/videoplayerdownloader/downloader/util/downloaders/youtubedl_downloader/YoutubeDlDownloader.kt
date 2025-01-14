@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit
 class YoutubeDlDownloader : GenericDownloader() {
     companion object {
         fun startDownload(context: Context, videoInfo: VideoInfo) {
-            Log.d("ntt", "startDownload: ")
             YoutubeDlDownloaderDisposableContainer.disposableContainer[videoInfo.id]?.dispose()
 
             val downloadWork = getWorkRequest(videoInfo.id)

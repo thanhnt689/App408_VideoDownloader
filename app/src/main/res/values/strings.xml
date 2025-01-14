@@ -116,6 +116,11 @@
     <string name="cookies_cleared">Cookies cleared</string>
     <string name="string_paste">Paste</string>
     <string name="string_paste_link_here">Paste link here</string>
+    <string name="video_rename_invalid">Invalid name. Please try again!</string>
+    <string name="video_rename_exist">Video name already exists!</string>
+    <string name="string_remove_from_private">Remove from Private</string>
+    <string name="string_delete_from_device">Delete from Device</string>
+    <string name="string_num_files">%s files</string>
 
 
 </resources>

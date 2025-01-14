@@ -6,13 +6,18 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.databinding.Observable
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Recycler
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.FragmentProcessingBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.guide.GuideActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogger
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressListener {
@@ -28,23 +33,39 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.pbLoading.visibility = View.VISIBLE
+
+        progressViewModel.start()
+
         progressAdapter = ProcessAdapter(emptyList(), this)
 
         progressViewModel.progressInfos.addOnPropertyChangedCallback(object :
             Observable.OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                val manager =
-                    WrapContentLinearLayoutManager(
-                        requireContext(),
-                        LinearLayoutManager.VERTICAL,
-                        false
-                    )
-                binding.rcvProcess.layoutManager = manager
-                binding.rcvProcess.adapter = progressAdapter
-                progressViewModel.progressInfos.get()?.let { progressAdapter.setData(it) }
+
+                lifecycleScope.launch(Dispatchers.Main) {
+
+                    progressViewModel.progressInfos.get()?.let {
+                        progressAdapter.setData(it)
+                        binding.pbLoading.visibility = View.GONE
+                    }
+
+                    val manager =
+                        WrapContentLinearLayoutManager(
+                            requireContext(),
+                            LinearLayoutManager.VERTICAL,
+                            false
+                        )
+                    binding.rcvProcess.layoutManager = manager
+                    binding.rcvProcess.adapter = progressAdapter
+                }
             }
 
         })
+
+        binding.imgGuide.setOnClickListener {
+            startActivity(GuideActivity.newIntent(requireContext()))
+        }
 
     }
 
@@ -63,6 +84,11 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
         } else {
             progressViewModel.resumeDownload(downloadId)
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        progressViewModel.stop()
     }
 }
 

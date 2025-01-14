@@ -140,13 +140,28 @@
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rcv_process"
-                app:layout_constraintTop_toBottomOf="@id/layout_download"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:layout_marginTop="@dimen/_10sdp"
-                app:layout_constraintStart_toStartOf="parent"
                 android:layout_width="match_parent"
-                android:layout_height="0dp" />
+                android:layout_height="0dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/layout_download" />
 
+            <com.mikhaellopez.circularprogressbar.CircularProgressBar
+                android:id="@+id/pb_loading"
+                android:layout_width="@dimen/_40sdp"
+                android:layout_height="@dimen/_40sdp"
+                android:layout_centerHorizontal="true"
+                app:cpb_background_progressbar_color="@android:color/transparent"
+                app:cpb_background_progressbar_width="5dp"
+                app:cpb_indeterminate_mode="true"
+                app:cpb_progress_direction="to_left"
+                app:cpb_progressbar_color="#A264FF"
+                app:cpb_progressbar_width="@dimen/_4sdp"
+                app:cpb_round_border="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>

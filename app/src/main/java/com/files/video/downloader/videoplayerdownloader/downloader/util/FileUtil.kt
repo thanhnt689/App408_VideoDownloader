@@ -15,14 +15,19 @@ import android.os.StatFs
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.net.toFile
 import androidx.core.net.toUri
+import org.apache.commons.io.FilenameUtils
 import java.io.File
 import java.io.FileNotFoundException
 import java.text.DecimalFormat
+import java.text.SimpleDateFormat
 import java.util.Arrays
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 //@OpenForTesting
@@ -37,7 +42,7 @@ class FileUtil @Inject constructor() {
         // For downloads
         var IS_APP_DATA_DIR_USE = false
 
-        const val FOLDER_NAME = "App408"
+        const val FOLDER_NAME = "SuperVideoDownloader"
         const val TMP_DATA_FOLDER_NAME = "video_downloader_pro_max"
 
         private const val KB = 1024
@@ -51,6 +56,34 @@ class FileUtil @Inject constructor() {
                 length > MB -> decimalFormat.format(length / MB) + " MB"
                 length > KB -> decimalFormat.format(length / KB) + " KB"
                 else -> decimalFormat.format(length) + " B"
+            }
+        }
+
+        fun getVideoDuration(context: Context, fileUri: Uri): Long {
+            val retriever = MediaMetadataRetriever()
+            return try {
+                retriever.setDataSource(context, fileUri)
+                val durationStr =
+                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                durationStr?.toLong() ?: 0L
+            } finally {
+                retriever.release()
+            }
+        }
+
+        fun getFileCreationDate(context: Context, fileUri: Uri): String? {
+            return context.contentResolver.query(fileUri, null, null, null, null)?.use { cursor ->
+                val dateIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATE_ADDED)
+                if (dateIndex != -1 && cursor.moveToFirst()) {
+                    val timestamp = cursor.getLong(dateIndex) * 1000L
+                    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(
+                        Date(
+                            timestamp
+                        )
+                    )
+                } else {
+                    null
+                }
             }
         }
 
@@ -237,6 +270,7 @@ class FileUtil @Inject constructor() {
 
         return null
     }
+
 
     @Deprecated("This old")
     fun scanMedia(context: Context, uri: Uri) {
