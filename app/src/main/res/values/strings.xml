@@ -121,6 +121,7 @@
     <string name="string_remove_from_private">Remove from Private</string>
     <string name="string_delete_from_device">Delete from Device</string>
     <string name="string_num_files">%s files</string>
+    <string name="string_download_not_found">Download not found</string>
 
 
 </resources>

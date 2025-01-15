@@ -33,7 +33,9 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.pbLoading.visibility = View.VISIBLE
+        binding.pbLoading.visibility = View.GONE
+
+        binding.layoutNoData.visibility = View.VISIBLE
 
         progressViewModel.start()
 
@@ -47,7 +49,12 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
 
                     progressViewModel.progressInfos.get()?.let {
                         progressAdapter.setData(it)
-                        binding.pbLoading.visibility = View.GONE
+                    }
+
+                    if(progressViewModel.progressInfos.get().isNullOrEmpty()){
+                        binding.layoutNoData.visibility = View.VISIBLE
+                    }else{
+                        binding.layoutNoData.visibility = View.GONE
                     }
 
                     val manager =

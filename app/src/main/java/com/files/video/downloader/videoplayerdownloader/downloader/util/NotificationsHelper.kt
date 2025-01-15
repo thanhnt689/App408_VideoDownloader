@@ -21,7 +21,7 @@ import javax.inject.Singleton
 @Singleton
 class NotificationsHelper @Inject constructor(@ApplicationContext private val context: Context) {
     companion object {
-        const val NOTIFICATION_CHANNEL_ID = "NOTIFICATION_CHANNEL_ID_ALL_DOWNLOADER"
+        const val NOTIFICATION_CHANNEL_ID = "NOTIFICATION_CHANNEL_ID_ALL_DOWNLOADER_SUPER"
     }
 
     private val notificationManager =
@@ -153,7 +153,9 @@ class NotificationsHelper @Inject constructor(@ApplicationContext private val co
     }
 
     private fun notificationIntentWatch(filename: String): PendingIntent {
-        val filenameFixed = File(filename).name
+//        val filenameFixed = File(filename).name
+        Log.d("ntt", "notificationIntentWatch: filename: $filename")
+        val filenameFixed = filename
         val intent = Intent(
             context, MainActivity::class.java
         )
