@@ -122,6 +122,8 @@
     <string name="string_delete_from_device">Delete from Device</string>
     <string name="string_num_files">%s files</string>
     <string name="string_download_not_found">Download not found</string>
+    <string name="string_no_text_in_clipboard">No text in clipboard</string>
+    <string name="string_clipboard_is_empty">Clipboard is empty</string>
 
 
 </resources>

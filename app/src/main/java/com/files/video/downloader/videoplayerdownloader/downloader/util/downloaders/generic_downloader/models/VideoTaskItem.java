@@ -1,38 +1,69 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models;
 
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+@Entity(tableName = "VideoTaskItem")
 public class VideoTaskItem implements Cloneable {
-
+    @ColumnInfo(name = "url")
     private String mUrl;                 //下载视频的url
+    @ColumnInfo(name = "cover_url")
     private String mCoverUrl;            //封面图的url
+    @ColumnInfo(name = "cover_path")
     private String mCoverPath;           //封面图存储的位置
+    @ColumnInfo(name = "title")
     private String mTitle;               //视频的标题
+    @ColumnInfo(name = "group_name")
     private String mGroupName;           //下载分组的名称
+    @ColumnInfo(name = "download_create_time")
     private long mDownloadCreateTime;    //下载创建的时间
+    @ColumnInfo(name = "task_state")
     private int mTaskState;              //当前任务的状态
+    @ColumnInfo(name = "mime_type")
     private String mMimeType;            // 视频url的mime type
+    @ColumnInfo(name = "final_url")
     private String mFinalUrl;            //30x跳转之后的url
+    @ColumnInfo(name = "error_code")
     private int mErrorCode;              //当前任务下载错误码
+    @ColumnInfo(name = "video_type")
     private int mVideoType;              //当前文件类型
+    @ColumnInfo(name = "total_ts")
     private int mTotalTs;                //当前M3U8的总分片
+    @ColumnInfo(name = "cur_ts")
     private int mCurTs;                  //当前M3U8已缓存的分片
+    @ColumnInfo(name = "speed")
     private float mSpeed;                //当前下载速度, getSpeedString 函数可以将速度格式化
+    @ColumnInfo(name = "percent")
     private float mPercent;              //当前下载百分比, 0 ~ 100,是浮点数
+    @ColumnInfo(name = "download_size")
     private long mDownloadSize;          //已下载大小, getDownloadSizeString 函数可以将大小格式化
+    @ColumnInfo(name = "total_size")
     private long mTotalSize;             //文件总大小, M3U8文件无法准确获知
+    @ColumnInfo(name = "file_hash")
     private String mFileHash;            //文件名的md5
+    @ColumnInfo(name = "save_dir")
     private String mSaveDir;             //保存视频文件的文件目录名
+    @ColumnInfo(name = "is_completed")
     private boolean mIsCompleted;        //是否下载完成
+    @ColumnInfo(name = "is_in_database")
     private boolean mIsInDatabase;       //是否存到数据库中
+    @ColumnInfo(name = "last_update_time")
     private long mLastUpdateTime;        //上一次更新数据库的时间
+    @ColumnInfo(name = "file_name")
     private String mFileName;            //文件名
+    @ColumnInfo(name = "file_path")
     private String mFilePath;            //文件完整路径(包括文件名)
+    @ColumnInfo(name = "is_paused")
     private boolean mPaused;
-
+    @ColumnInfo(name = "error_message")
     private String mErrorMessage;
-
+    @PrimaryKey(autoGenerate = true)
     private String mId;
-
+    @ColumnInfo(name = "line_info")
     private String lineInfo;
+    @ColumnInfo(name = "is_security")
+    private boolean mSecurity;
 
     public float getPercentFromBytes() {
         if (getTotalSize() == 0) return 0;

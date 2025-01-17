@@ -12,12 +12,14 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.network.
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.ProgressInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
+import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.Video
+import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
 
 
 const val DB_VERSION = 1
 
 @Database(
-    entities = [VideoInfo::class, HistoryItem::class, AdHost::class, ProgressInfo::class],
+    entities = [HistoryItem::class, AdHost::class, ProgressInfo::class, VideoTaskItem::class],
     version = DB_VERSION,
 )
 @TypeConverters(FormatsConverter::class, DownloadUrlsConverter::class)
@@ -36,5 +38,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun adHostDao(): AdHostDao
 
     abstract fun progressDao(): ProgressDao
+
+    abstract fun videoTaskItemDao(): VideoTaskItem
 
 }

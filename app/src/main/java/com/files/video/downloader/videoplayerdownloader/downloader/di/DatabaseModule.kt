@@ -6,6 +6,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.AppDatab
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.AdHostDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.HistoryDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.ProgressDao
+import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,6 +44,12 @@ object DatabaseModule {
     @Singleton
     fun provideProgressDao(appDatabase: AppDatabase): ProgressDao {
         return appDatabase.progressDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideVideoTaskItemDao(appDatabase: AppDatabase): VideoTaskItem {
+        return appDatabase.videoTaskItemDao()
     }
 
     @Provides

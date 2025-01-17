@@ -212,7 +212,7 @@ class PreferenceHelper @Inject constructor(
     }
 
     fun getIsAppDirUse(): Boolean {
-        return sharedPreferences.getBoolean(IS_APP_DIR_USE, false)
+        return sharedPreferences.getBoolean(IS_APP_DIR_USE, true)
     }
 
     fun setIsAppDirUse(isAppDirUse: Boolean) {

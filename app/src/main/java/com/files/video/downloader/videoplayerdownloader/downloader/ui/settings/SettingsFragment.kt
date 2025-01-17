@@ -14,6 +14,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseFrag
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.FragmentSettingsBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.RatingDialog
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.language.LanguageActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.google.android.play.core.review.ReviewManagerFactory
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -24,6 +25,9 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
     lateinit var preferenceHelper: PreferenceHelper
 
     private var isShareDialogOpen = false
+
+    @Inject
+    lateinit var fileUtil: FileUtil
 
     override fun getViewBinding(): FragmentSettingsBinding {
         return FragmentSettingsBinding.inflate(layoutInflater)
@@ -53,6 +57,8 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
         binding.layoutPolicy.setOnClickListener {
             onClickLayoutPrivatePolicy()
         }
+
+        binding.tvDesDownloadLocation.text = fileUtil.folderDir.path.toString()
     }
 
     private fun showDialogRate() {

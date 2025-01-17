@@ -1,6 +1,7 @@
 package com.files.video.downloader.videoplayerdownloader.downloader
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.work.Configuration
@@ -123,6 +124,9 @@ class Application : AdsApplication() {
     private fun initializeFileUtils() {
         val isExternal = sharedPrefHelper.getIsExternalUse()
         val isAppDir = sharedPrefHelper.getIsAppDirUse()
+
+        Log.d("ntt", "initializeFileUtils: isExternal: $isExternal")
+        Log.d("ntt", "initializeFileUtils: isAppDir: $isAppDir")
 
         FileUtil.IS_EXTERNAL_STORAGE_USE = isExternal
         FileUtil.IS_APP_DATA_DIR_USE = isAppDir

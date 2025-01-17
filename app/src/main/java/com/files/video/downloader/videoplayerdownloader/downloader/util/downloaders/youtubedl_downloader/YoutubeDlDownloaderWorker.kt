@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
