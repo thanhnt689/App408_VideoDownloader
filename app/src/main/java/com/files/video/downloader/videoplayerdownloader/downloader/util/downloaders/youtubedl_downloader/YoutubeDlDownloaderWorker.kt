@@ -575,7 +575,7 @@ class YoutubeDlDownloaderWorker(appContext: Context, workerParams: WorkerParamet
         if (item != null) {
             showNotification(
                 taskId.hashCode() + 1, notificationsHelper.createNotificationBuilder(item.also {
-                    it.mId = taskId
+                    it.mId = taskId.toString()
                 }).second
             )
         }

@@ -74,15 +74,15 @@ abstract class GenericDownloadWorker(appContext: Context, workerParams: WorkerPa
         val title = inputData.getString(GenericDownloader.TITLE_KEY)
         val ext = inputData.getString(GenericDownloader.EXT_KEY)
 
-        val task = VideoTaskItem(url)
+        val task = VideoTaskItem(url.toString())
 
         task.mId = try {
-            inputData.getString(GenericDownloader.TASK_ID_KEY)
+            inputData.getString(GenericDownloader.TASK_ID_KEY).toString()
         } catch (e: Throwable) {
-            null
+            "null"
         }
 
-        task.title = title
+        task.title = title.toString()
         task.fileName = fileName
         task.saveDir = fileDir
         task.filePath = "${task.saveDir}/${task.fileName}"

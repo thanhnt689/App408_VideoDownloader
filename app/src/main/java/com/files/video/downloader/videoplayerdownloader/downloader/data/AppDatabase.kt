@@ -6,6 +6,7 @@ import androidx.room.TypeConverters
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.AdHostDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.HistoryDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.ProgressDao
+import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.VideoTaskItemDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.AdHost
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.DownloadUrlsConverter
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.FormatsConverter
@@ -39,6 +40,6 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun progressDao(): ProgressDao
 
-    abstract fun videoTaskItemDao(): VideoTaskItem
+    abstract fun videoTaskItemDao(): VideoTaskItemDao
 
 }

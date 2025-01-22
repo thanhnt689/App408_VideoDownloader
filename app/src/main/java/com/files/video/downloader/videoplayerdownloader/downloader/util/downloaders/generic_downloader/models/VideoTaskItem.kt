@@ -3,6 +3,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.util.downloa
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.util.UUID
 
 @Entity(tableName = "VideoTaskItem")
 data class VideoTaskItem(
@@ -84,8 +85,9 @@ data class VideoTaskItem(
     @ColumnInfo(name = "error_message")
     var errorMessage: String = "",
 
-    @PrimaryKey(autoGenerate = true)
-    var id: String = "",
+    @PrimaryKey()
+    @ColumnInfo(name = "_id")
+    var mId: String = "",
 
     @ColumnInfo(name = "line_info")
     var lineInfo: String = "",

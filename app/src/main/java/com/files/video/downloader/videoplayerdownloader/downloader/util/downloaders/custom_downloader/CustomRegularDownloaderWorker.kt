@@ -7,18 +7,23 @@ import android.util.Base64
 import androidx.core.net.toUri
 import androidx.work.WorkerParameters
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.ProgressInfo
+import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.VideoTaskItemRepository
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogger
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.GenericDownloader
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskState
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.workers.GenericDownloadWorkerWrapper
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.workers.Progress
+import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.core.Flowable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URL
 import java.util.Date
+import javax.inject.Inject
 import kotlin.coroutines.resume
-
 
 class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerParameters) :
     GenericDownloadWorkerWrapper(appContext, workerParams) {
@@ -52,7 +57,7 @@ class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerPar
                 CustomFileDownloader.cancel(tmpFile)
 
                 finishWork(task.also {
-                    it.mId = taskId
+                    it.mId = taskId.toString()
                     it.taskState = VideoTaskState.CANCELED
                 })
             }
@@ -65,7 +70,7 @@ class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerPar
                 CustomFileDownloader.stop(tmpFile)
 
                 finishWork(task.also {
-                    it.mId = taskId
+                    it.mId = taskId.toString()
                     it.taskState = VideoTaskState.PAUSE
                     it.filePath = task.filePath
                 })
@@ -138,7 +143,7 @@ class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerPar
                                         finishWork(item.also {
                                             it.mId = taskId
                                             it.taskState = VideoTaskState.ERROR
-                                            it.errorMessage = e.message
+                                            it.errorMessage = e.message.toString()
                                         })
                                         return
                                     }
@@ -266,7 +271,7 @@ class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerPar
                         finishWork(taskItem.also {
                             it.taskState = VideoTaskState.SUCCESS
                             it.mId = taskId
-                            it.filePath = outputFileName
+                            it.filePath = outputFileName.toString()
                         })
                     }
 
@@ -285,7 +290,7 @@ class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerPar
 
                         finishWork(taskItem.also {
                             it.taskState = taskState
-                            it.errorMessage = e.message
+                            it.errorMessage = e.message.toString()
                             it.mId = taskId
                         })
                     }
@@ -297,7 +302,7 @@ class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerPar
                             if (downloadedBytes > totalBytes) downloadedBytes else totalBytes
                         onProgress(Progress(downloadedBytes, ttlBytes), taskItem.also {
                             it.mId = taskId
-                            it.filePath = outputFileName
+                            it.filePath = outputFileName.toString()
                         })
                     }
 
@@ -371,9 +376,11 @@ class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerPar
 
                 showProgress(taskItem, progress)
 
-                saveProgress(
-                    downloadTask.mId, progress, VideoTaskState.DOWNLOADING
-                )
+                downloadTask.mId?.let {
+                    saveProgress(
+                        it, progress, VideoTaskState.DOWNLOADING
+                    )
+                }
             }
         }
     }

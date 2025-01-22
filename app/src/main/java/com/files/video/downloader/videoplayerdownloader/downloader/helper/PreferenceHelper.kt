@@ -69,6 +69,10 @@ class PreferenceHelper @Inject constructor(
         private const val USER_PROXY = "USER_PROXY"
         private const val IS_CHECK_IF_IN_LIST = "IS_CHECK_IF_IN_LIST"
         private const val IS_CHECK_EVERY_ON_M3U8 = "IS_CHECK_EVERY_ON_M3U8"
+        private const val IS_SETUP_PIN_CODE = "IS_SETUP_PIN_CODE"
+        private const val NUM_SECURITY_QUESTION = "NUM_SECURITY_QUESTION"
+        private const val SECURITY_ANSWER = "SECURITY_ANSWER"
+        private const val PIN_CODE = "PIN_CODE"
 
     }
 
@@ -408,6 +412,50 @@ class PreferenceHelper @Inject constructor(
     fun setIsFillMedia(isFillMedia: Boolean) {
         sharedPreferences.edit().let {
             it.putBoolean(FILL, isFillMedia)
+            it.apply()
+        }
+    }
+
+    fun getIsSetupPinCode(): Boolean {
+        return sharedPreferences.getBoolean(IS_SETUP_PIN_CODE, false)
+    }
+
+    fun setIsSetupPinCode(isSetupPinCode: Boolean) {
+        sharedPreferences.edit().let {
+            it.putBoolean(IS_SETUP_PIN_CODE, isSetupPinCode)
+            it.apply()
+        }
+    }
+
+    fun getNumSecurityQuestion(): Int {
+        return sharedPreferences.getInt(NUM_SECURITY_QUESTION, 1)
+    }
+
+    fun setNumSecurityQuestion(numSecurityQuestion: Int) {
+        sharedPreferences.edit().let {
+            it.putInt(NUM_SECURITY_QUESTION, numSecurityQuestion)
+            it.apply()
+        }
+    }
+
+    fun getSecurityAnswer(): String? {
+        return sharedPreferences.getString(SECURITY_ANSWER, "")
+    }
+
+    fun setSecurityAnswer(securityAnswer: String) {
+        sharedPreferences.edit().let {
+            it.putString(SECURITY_ANSWER, securityAnswer)
+            it.apply()
+        }
+    }
+
+    fun getPinCode(): String? {
+        return sharedPreferences.getString(PIN_CODE, "")
+    }
+
+    fun setPinCode(pinCode: String) {
+        sharedPreferences.edit().let {
+            it.putString(PIN_CODE, pinCode)
             it.apply()
         }
     }

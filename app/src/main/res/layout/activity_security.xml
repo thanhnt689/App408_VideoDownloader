@@ -111,7 +111,7 @@
             android:hint="@string/string_enter_your_answer"
             android:imeOptions="actionDone"
             android:paddingHorizontal="@dimen/_10sdp"
-            android:paddingVertical="@dimen/_14sdp"
+            android:paddingVertical="@dimen/_13sdp"
             android:singleLine="true"
             android:textColor="@color/black"
             android:textColorHint="#BFBFBF"

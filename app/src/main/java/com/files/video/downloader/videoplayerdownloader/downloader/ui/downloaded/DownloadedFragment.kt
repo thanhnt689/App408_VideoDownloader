@@ -34,9 +34,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
+import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.helper.SharedPreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.VIDEO_NAME
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.VIDEO_URL
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.pin.PinActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.KeyboardUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.ViewUtils
 import com.skydoves.balloon.ArrowOrientation
@@ -59,6 +62,9 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
 
     @Inject
     lateinit var fileUtil: FileUtil
+
+    @Inject
+    lateinit var preferenceHelper: PreferenceHelper
 
     private lateinit var videoAdapter: VideoAdapter
 
@@ -133,6 +139,10 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
 
             }
         })
+
+        binding.imgSecurity.setOnClickListener {
+            startActivity(Intent(requireContext(), PinActivity::class.java))
+        }
 
 
     }

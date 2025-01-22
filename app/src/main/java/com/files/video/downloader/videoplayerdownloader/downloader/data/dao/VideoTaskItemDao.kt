@@ -22,4 +22,7 @@ interface VideoTaskItemDao {
 
     @Delete
     fun deleteVideoTaskItem(videoTaskItem: VideoTaskItem)
+
+    @Query("UPDATE VideoTaskItem SET is_security = :isSecurity WHERE _id = :id")
+    suspend fun updateIsSecurity(id: Int, isSecurity: Boolean)
 }

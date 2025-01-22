@@ -3,6 +3,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.di.module
 import android.app.DownloadManager
 import android.content.Context
 import com.files.video.downloader.videoplayerdownloader.downloader.Application
+import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.VideoTaskItemRepository
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.IntentUtil
@@ -38,8 +39,8 @@ object UtilModule {
 
     @Provides
     @Singleton
-    fun provideNotificationsHelper(@ApplicationContext application: Context): NotificationsHelper {
-        return NotificationsHelper(application)
+    fun provideNotificationsHelper(@ApplicationContext application: Context, videoTaskItemRepository: VideoTaskItemRepository): NotificationsHelper {
+        return NotificationsHelper(application,videoTaskItemRepository)
     }
 
     @Singleton

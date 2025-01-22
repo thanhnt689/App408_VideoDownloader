@@ -6,6 +6,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.AppDatab
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.AdHostDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.HistoryDao
 import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.ProgressDao
+import com.files.video.downloader.videoplayerdownloader.downloader.data.dao.VideoTaskItemDao
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
 import dagger.Module
 import dagger.Provides
@@ -48,7 +49,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideVideoTaskItemDao(appDatabase: AppDatabase): VideoTaskItem {
+    fun provideVideoTaskItemDao(appDatabase: AppDatabase): VideoTaskItemDao {
         return appDatabase.videoTaskItemDao()
     }
 
