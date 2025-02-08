@@ -7,6 +7,7 @@ import androidx.core.net.toFile
 import androidx.databinding.ObservableField
 import androidx.lifecycle.viewModelScope
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseViewModel
+import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.VideoTaskItemRepository
 import com.files.video.downloader.videoplayerdownloader.downloader.model.LocalVideo
 import com.files.video.downloader.videoplayerdownloader.downloader.util.ContextUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
@@ -28,6 +29,7 @@ import javax.inject.Inject
 class VideoViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val fileUtil: FileUtil,
+    private val videoTaskItemRepository: VideoTaskItemRepository,
 ) : BaseViewModel() {
 
     companion object {
@@ -112,6 +114,10 @@ class VideoViewModel @Inject constructor(
                         localVideos.get()?.find { it.uri.toString() == uri.toString() }?.let {
                             it.uri = newMediaNameUri.second
                             it.name = newMediaNameUri.first
+
+                            Log.d("ntt", "renameVideo: newMediaNameUri.second ${{newMediaNameUri.second}}")
+
+                            Log.d("ntt", "renameVideo: path:  ${newMediaNameUri.second.path}")
 
                             localVideos.get().let { list ->
                                 list?.set(list.indexOf(it), it)

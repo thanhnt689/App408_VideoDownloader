@@ -7,14 +7,14 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="@dimen/_170sdp"
+        android:layout_width="@dimen/_180sdp"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_dialog_rate"
         android:orientation="vertical"
         android:padding="@dimen/_8sdp">
 
         <LinearLayout
-            android:id="@+id/layout_rename"
+            android:id="@+id/layout_change_pin_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1">
@@ -23,11 +23,11 @@
                 android:layout_width="@dimen/_28sdp"
                 android:layout_height="@dimen/_28sdp"
                 android:padding="@dimen/_5sdp"
-                android:src="@drawable/ic_edit"
+                android:src="@drawable/ic_pin_code"
                 app:tint="#A264FF" />
 
             <TextView
-                android:id="@+id/tv_rename"
+                android:id="@+id/tv_change_pin_code"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -40,7 +40,7 @@
                 android:marqueeRepeatLimit="marquee_forever"
                 android:scrollHorizontally="true"
                 android:singleLine="true"
-                android:text="@string/string_rename"
+                android:text="@string/string_change_pin_code"
                 android:textColor="#404040"
                 android:textSize="@dimen/_14ssp" />
 
@@ -54,61 +54,20 @@
             android:background="#EDEDED" />
 
         <LinearLayout
-            android:id="@+id/layout_share"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_6sdp">
-
-            <ImageView
-                android:layout_width="@dimen/_28sdp"
-                android:layout_height="@dimen/_28sdp"
-                android:padding="@dimen/_5sdp"
-                android:src="@drawable/ic_share"
-                app:tint="#A264FF" />
-
-            <TextView
-                android:id="@+id/tv_share"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginStart="@dimen/_8sdp"
-                android:layout_weight="9"
-                android:ellipsize="marquee"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:fontFamily="@font/sf_pro_display_regular"
-                android:marqueeRepeatLimit="marquee_forever"
-                android:scrollHorizontally="true"
-                android:singleLine="true"
-                android:text="@string/string_share"
-                android:textColor="#404040"
-                android:textSize="@dimen/_14ssp" />
-
-
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/_2sdp"
-            android:layout_marginTop="@dimen/_6sdp"
-            android:background="#EDEDED" />
-
-        <LinearLayout
-            android:id="@+id/layout_private"
+            android:id="@+id/layout_change_security_question"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_6sdp">
 
             <ImageView
-                android:id="@+id/img_private"
                 android:layout_width="@dimen/_28sdp"
                 android:layout_height="@dimen/_28sdp"
                 android:padding="@dimen/_5sdp"
-                android:src="@drawable/ic_remove_private"
+                android:src="@drawable/ic_question"
                 app:tint="#A264FF" />
 
             <TextView
-                android:id="@+id/tv_private"
+                android:id="@+id/tv_change_security_question"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -121,7 +80,7 @@
                 android:marqueeRepeatLimit="marquee_forever"
                 android:scrollHorizontally="true"
                 android:singleLine="true"
-                android:text="@string/string_remove_from_private"
+                android:text="@string/string_change_security_question"
                 android:textColor="#404040"
                 android:textSize="@dimen/_14ssp" />
 
@@ -161,7 +120,7 @@
                 android:marqueeRepeatLimit="marquee_forever"
                 android:scrollHorizontally="true"
                 android:singleLine="true"
-                android:text="@string/string_delete_from_device"
+                android:text="@string/string_delete_private_folder"
                 android:textColor="#FF6666"
                 android:textSize="@dimen/_14ssp" />
 

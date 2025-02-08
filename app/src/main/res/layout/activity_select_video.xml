@@ -28,11 +28,11 @@
                 android:visibility="visible">
 
                 <ImageView
-                    android:id="@+id/img_security"
+                    android:id="@+id/img_back"
                     android:layout_width="@dimen/_26sdp"
                     android:layout_height="@dimen/_26sdp"
                     android:padding="@dimen/_4sdp"
-                    android:src="@drawable/ic_security"
+                    android:src="@drawable/ic_close"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -44,23 +44,22 @@
                     android:layout_marginEnd="@dimen/_5sdp"
                     android:fontFamily="@font/sf_pro_display_bold"
                     android:gravity="center"
-                    android:text="@string/string_downloaded"
-                    android:textColor="#A264FF"
+                    android:text="@string/string_num_video_selected"
+                    android:textColor="#000000"
                     android:textSize="@dimen/_16ssp"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/img_search"
-                    app:layout_constraintStart_toEndOf="@id/img_security"
+                    app:layout_constraintEnd_toStartOf="@id/img_check"
+                    app:layout_constraintStart_toEndOf="@id/img_back"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <ImageView
-                    android:id="@+id/img_search"
-                    android:layout_width="@dimen/_26sdp"
-                    android:layout_height="@dimen/_26sdp"
-                    android:src="@drawable/ic_search"
+                    android:id="@+id/img_check"
+                    android:layout_width="@dimen/_20sdp"
+                    android:layout_height="@dimen/_20sdp"
+                    android:src="@drawable/ic_check_box_normal"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:tint="#404040" />
+                    app:layout_constraintTop_toTopOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -153,7 +152,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:paddingBottom="@dimen/_10sdp"
+        app:layout_constraintBottom_toTopOf="@id/tv_add_to_private"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar">
@@ -164,57 +164,13 @@
             android:layout_marginHorizontal="@dimen/_12sdp"
             android:layout_marginTop="@dimen/_4sdp">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/layout_information"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <TextView
-                    android:id="@+id/tv_num_files"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/sf_pro_display_regular"
-                    android:text="@string/string_num_files"
-                    android:textColor="#808080"
-                    android:textSize="@dimen/_11ssp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageView
-                    android:id="@+id/img_selected"
-                    android:layout_width="@dimen/_26sdp"
-                    android:layout_height="@dimen/_26sdp"
-                    android:padding="@dimen/_4sdp"
-                    android:src="@drawable/ic_selected"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageView
-                    android:id="@+id/img_sort"
-                    android:layout_width="@dimen/_26sdp"
-                    android:layout_height="@dimen/_26sdp"
-                    android:layout_marginEnd="@dimen/_5sdp"
-                    android:padding="@dimen/_4sdp"
-                    android:src="@drawable/ic_sort"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/img_selected"
-                    app:layout_constraintTop_toTopOf="parent" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rcv_files"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginTop="@dimen/_10sdp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/layout_information" />
-
+                app:layout_constraintTop_toTopOf="parent" />
 
             <LinearLayout
                 android:id="@+id/layout_no_data"
@@ -241,11 +197,47 @@
                     android:layout_gravity="center"
                     android:fontFamily="@font/sf_pro_display_regular"
                     android:gravity="center"
-                    android:text="@string/string_no_files_have_been_downloaded_yet"
+                    android:text="@string/string_no_videos_downloaded"
                     android:textColor="#808080"
                     android:textSize="@dimen/_12ssp" />
+
+                <TextView
+                    android:id="@+id/tv_go_to_browser"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:layout_marginBottom="@dimen/_18sdp"
+                    android:background="@drawable/bg_item_turnon_stroke"
+                    android:fontFamily="@font/sf_pro_display_medium"
+                    android:gravity="center"
+                    android:paddingVertical="@dimen/_10sdp"
+                    android:text="@string/string_go_to_browser"
+                    android:textColor="#6368EF"
+                    android:textSize="@dimen/_14ssp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
             </LinearLayout>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <TextView
+        android:id="@+id/tv_add_to_private"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/_10sdp"
+        android:layout_marginBottom="@dimen/_18sdp"
+        android:background="@drawable/bg_btn_skip_permission"
+        android:fontFamily="@font/sf_pro_display_medium"
+        android:gravity="center"
+        android:paddingVertical="@dimen/_11sdp"
+        android:text="@string/string_add_to_private"
+        android:textColor="@color/white"
+        android:textSize="@dimen/_14ssp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

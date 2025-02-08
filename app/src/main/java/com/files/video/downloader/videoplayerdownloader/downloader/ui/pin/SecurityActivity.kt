@@ -1,5 +1,6 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.ui.pin
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Toast
@@ -39,6 +40,10 @@ class SecurityActivity : BaseActivity<ActivitySecurityBinding>() {
             showDialogQuestion(selectQuestion)
         }
 
+        binding.imgBack.setOnClickListener {
+            finish()
+        }
+
         binding.imgDone.setOnClickListener {
             if (binding.edtSearch.text.toString().trim().isEmpty()) {
                 Toast.makeText(
@@ -46,9 +51,38 @@ class SecurityActivity : BaseActivity<ActivitySecurityBinding>() {
                     getString(R.string.string_please_enter_your_answer), Toast.LENGTH_SHORT
                 ).show()
             } else {
+                if (intent.getStringExtra("status") == "forgot") {
+                    if (binding.edtSearch.text.toString()
+                            .trim() == preferences.getSecurityAnswer() && selectQuestion == preferences.getNumSecurityQuestion()
+                    ) {
+                        Toast.makeText(
+                            this,
+                            getString(R.string.string_correct_security_question), Toast.LENGTH_SHORT
+                        ).show()
 
-                showDialogSuccessfully()
+                        preferences.setIsSetupPinCode(false)
 
+                        preferences.setNumSecurityQuestion(1)
+
+                        preferences.setPinCode("")
+
+                        preferences.setSecurityAnswer("")
+
+                        startActivity(Intent(this, PinActivity::class.java).apply {
+                            putExtra("status", "security")
+                        })
+
+                        finish()
+                    } else {
+                        Toast.makeText(
+                            this,
+                            getString(R.string.string_incorrect_security_question),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    showDialogSuccessfully()
+                }
             }
         }
     }

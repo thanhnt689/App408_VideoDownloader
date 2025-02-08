@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
-
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -13,18 +12,31 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"
         tools:ignore="ScopedStorage" />
-
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+
+            <data android:scheme="http" />
+        </intent>
+    </queries>
+
     <application
-        android:name="com.files.video.downloader.videoplayerdownloader.downloader.Application"
+        android:name=".Application"
         android:allowBackup="true"
         android:extractNativeLibs="true"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
-        android:usesCleartextTraffic="true"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Main">
+        android:theme="@style/Theme.Main"
+        android:usesCleartextTraffic="true">
+        <activity
+            android:name=".ui.privateVideo.SelectVideoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.privateVideo.PrivateVideoActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.media.PlayMediaActivity"
             android:exported="false" />
@@ -119,12 +131,5 @@
             android:name="com.facebook.sdk.ClientToken"
             android:value="@string/facebook_client_token" />
     </application>
-
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="http" />
-        </intent>
-    </queries>
 
 </manifest>

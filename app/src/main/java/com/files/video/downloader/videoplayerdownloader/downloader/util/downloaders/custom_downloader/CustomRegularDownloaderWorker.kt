@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Environment
 import android.util.Base64
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.work.WorkerParameters
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.ProgressInfo
@@ -138,6 +139,18 @@ class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerPar
                                             throw Error("File Move error")
                                         } else {
                                             sourcePath.parent?.let { File(it).deleteRecursively() }
+
+                                            item.filePath = target
+
+                                            val result = extractFileName(target)
+
+                                            Log.d("ntt", "finishWork: $result")
+
+                                            result?.let {
+                                                item.fileName = extractFileName(target)!!.first
+                                                item.title = extractFileName(target)!!.second
+                                            }
+
                                         }
                                     } catch (e: Throwable) {
                                         finishWork(item.also {
@@ -223,6 +236,14 @@ class CustomRegularDownloaderWorker(appContext: Context, workerParams: WorkerPar
                 e.printStackTrace()
             }
         }
+    }
+
+    fun extractFileName(path: String): Triple<String, String, String> {
+        val fullFileName = path.substringAfterLast("/")  // Tên file có đuôi
+        val fileNameWithoutExt = fullFileName.substringBeforeLast(".") // Tên file không có đuôi
+        val parentFolder = path.substringBeforeLast("/") // Thư mục chứa file
+
+        return Triple(fullFileName, fileNameWithoutExt, parentFolder)
     }
 
     @SuppressLint("RestrictedApi")

@@ -271,6 +271,47 @@ class FileUtil @Inject constructor() {
         return null
     }
 
+    fun renameMedia(context: Context, filePath: String, newName: String): Pair<String, String>? {
+        try {
+            // Làm sạch tên file và đảm bảo có đuôi .mp4
+            val cleanedFileName = FileNameCleaner.cleanFileName(newName) + ".mp4"
+
+            // Kiểm tra tên file mới có rỗng không
+            if (cleanedFileName.isEmpty()) {
+                throw Error("Tên file không được để trống")
+            }
+
+            val oldFile = File(filePath)
+
+            // Kiểm tra file cũ có tồn tại không
+            if (!oldFile.exists()) {
+                throw FileNotFoundException("Không tìm thấy file: $filePath")
+            }
+
+            val newFile = File(oldFile.parent, cleanedFileName)
+
+            // Kiểm tra file mới đã tồn tại chưa
+            if (newFile.exists()) {
+                throw Exception("File đã tồn tại: ${newFile.absolutePath}")
+            }
+
+            // Đổi tên file
+            val renamed = oldFile.renameTo(newFile)
+            if (renamed) {
+                // Trả về tên file mới và đường dẫn đầy đủ mới
+                return Pair(newFile.name, newFile.absolutePath)
+            } else {
+                throw Exception("Không thể đổi tên file: ${oldFile.absolutePath}")
+            }
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            Toast.makeText(context, "Lỗi khi đổi tên file", Toast.LENGTH_SHORT).show()
+        }
+
+        return null
+    }
+
+
 
     @Deprecated("This old")
     fun scanMedia(context: Context, uri: Uri) {
@@ -283,38 +324,86 @@ class FileUtil @Inject constructor() {
         }
     }
 
-    fun deleteMedia(context: Context, uri: Uri) {
-        try {
+    fun deleteMedia(context: Context, uri: Uri): Boolean {
+        return try {
             if (!isUriExists(context, uri)) {
                 throw FileNotFoundException("File not found: $uri")
             }
-            if (isFileApiSupportedByUri(context, uri)) {
+            val deleted = if (isFileApiSupportedByUri(context, uri)) {
                 uri.toFile().delete()
             } else {
                 deleteDownloadedVideoContent(context, uri)
             }
+            deleted
         } catch (e: Throwable) {
             e.printStackTrace()
-
             Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
+            false
         }
     }
 
-    fun isUriExists(context: Context, uri: Uri): Boolean {
-        if (isFileApiSupportedByUri(context, uri)) {
-            return uri.toFile().exists()
-        }
+    fun deleteMedia(context: Context, filePath: String): Boolean {
+        return try {
+            val file = File(filePath)
 
-        try {
-            context.contentResolver.openInputStream(uri)?.close()
-        } catch (e: FileNotFoundException) {
-            return false
+            // Kiểm tra nếu file tồn tại
+            if (!file.exists()) {
+                Log.e("FileUtil", "File not found: $filePath")
+                return false
+            }
+
+            // Nếu file là loại "content://", cần dùng contentResolver để xóa
+            if (filePath.startsWith("content://")) {
+                val uri = Uri.parse(filePath)
+                val deleted = context.contentResolver.delete(uri, null, null) > 0
+                Log.d("FileUtil", "Xóa file bằng contentResolver: $deleted")
+                return deleted
+            }
+
+            // Xóa file trực tiếp từ hệ thống
+            file.setWritable(true) // Đảm bảo có quyền ghi
+            val deleted = file.delete()
+
+            if (!deleted) {
+                Log.e("FileUtil", "Không thể xóa file: $filePath")
+            } else {
+                Log.d("FileUtil", "File đã được xóa: $filePath")
+            }
+
+            return deleted
         } catch (e: Exception) {
-            // Handle other exceptions as needed
+            e.printStackTrace()
+            Toast.makeText(context, "Lỗi khi xóa file!", Toast.LENGTH_SHORT).show()
+            false
         }
+    }
 
-        // If there were no exceptions, the URI exists
-        return true
+
+    fun isUriExists(context: Context, uri: Uri): Boolean {
+//        if (isFileApiSupportedByUri(context, uri)) {
+//            return uri.toFile().exists()
+//        }
+//
+//        try {
+//            context.contentResolver.openInputStream(uri)?.close()
+//        } catch (e: FileNotFoundException) {
+//            return false
+//        } catch (e: Exception) {
+//            // Handle other exceptions as needed
+//        }
+//
+//        // If there were no exceptions, the URI exists
+//        return true
+
+        return try {
+            when (uri.scheme) {
+                "file" -> File(uri.path!!).exists()
+                "content" -> context.contentResolver.openInputStream(uri)?.use { true } ?: false
+                else -> false
+            }
+        } catch (e: Exception) {
+            false
+        }
     }
 
     fun getContentLength(context: Context, uri: Uri): Long {
@@ -493,13 +582,29 @@ class FileUtil @Inject constructor() {
         return filesMap
     }
 
-    private fun deleteDownloadedVideoContent(context: Context, uri: Uri) {
-        if (DocumentsContract.isDocumentUri(context, uri)) {
-            DocumentsContract.deleteDocument(context.contentResolver, uri)
-        } else {
-            context.contentResolver.delete(uri, null, null)
+//    private fun deleteDownloadedVideoContent(context: Context, uri: Uri) {
+//        if (DocumentsContract.isDocumentUri(context, uri)) {
+//            DocumentsContract.deleteDocument(context.contentResolver, uri)
+//        } else {
+//            context.contentResolver.delete(uri, null, null)
+//        }
+//    }
+
+    private fun deleteDownloadedVideoContent(context: Context, uri: Uri): Boolean {
+        return try {
+            val deletedRows = if (DocumentsContract.isDocumentUri(context, uri)) {
+                DocumentsContract.deleteDocument(context.contentResolver, uri)
+                1 // Giả sử xóa thành công, do API không trả về trạng thái
+            } else {
+                context.contentResolver.delete(uri, null, null)
+            }
+            deletedRows > 0
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
     }
+
 
     private fun isExternalUri(uri: Uri): Boolean {
         val context = ContextUtils.getApplicationContext()

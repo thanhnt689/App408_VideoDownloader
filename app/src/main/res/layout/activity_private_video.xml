@@ -28,11 +28,11 @@
                 android:visibility="visible">
 
                 <ImageView
-                    android:id="@+id/img_security"
+                    android:id="@+id/img_back"
                     android:layout_width="@dimen/_26sdp"
                     android:layout_height="@dimen/_26sdp"
                     android:padding="@dimen/_4sdp"
-                    android:src="@drawable/ic_security"
+                    android:src="@drawable/ic_arrow_back"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -44,26 +44,66 @@
                     android:layout_marginEnd="@dimen/_5sdp"
                     android:fontFamily="@font/sf_pro_display_bold"
                     android:gravity="center"
-                    android:text="@string/string_downloaded"
-                    android:textColor="#A264FF"
+                    android:text="@string/string_private_video"
+                    android:textColor="#000000"
                     android:textSize="@dimen/_16ssp"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/img_search"
-                    app:layout_constraintStart_toEndOf="@id/img_security"
+                    app:layout_constraintEnd_toStartOf="@id/img_option"
+                    app:layout_constraintStart_toEndOf="@id/img_back"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <ImageView
-                    android:id="@+id/img_search"
+                    android:id="@+id/img_option"
                     android:layout_width="@dimen/_26sdp"
                     android:layout_height="@dimen/_26sdp"
-                    android:src="@drawable/ic_search"
+                    android:src="@drawable/ic_option"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:tint="#404040" />
+                    app:layout_constraintTop_toTopOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layout_selected"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/img_close"
+                    android:layout_width="@dimen/_26sdp"
+                    android:layout_height="@dimen/_26sdp"
+                    android:padding="@dimen/_4sdp"
+                    android:src="@drawable/ic_close"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_title_selected"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/_5sdp"
+                    android:fontFamily="@font/sf_pro_display_bold"
+                    android:gravity="center"
+                    android:text="@string/string_num_video_selected"
+                    android:textColor="#000000"
+                    android:textSize="@dimen/_16ssp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/img_check"
+                    app:layout_constraintStart_toEndOf="@id/img_close"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/img_check"
+                    android:layout_width="@dimen/_20sdp"
+                    android:layout_height="@dimen/_20sdp"
+                    android:src="@drawable/ic_check_box_normal"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/ll_search"
@@ -194,16 +234,6 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <ImageView
-                    android:id="@+id/img_sort"
-                    android:layout_width="@dimen/_26sdp"
-                    android:layout_height="@dimen/_26sdp"
-                    android:layout_marginEnd="@dimen/_5sdp"
-                    android:padding="@dimen/_4sdp"
-                    android:src="@drawable/ic_sort"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/img_selected"
-                    app:layout_constraintTop_toTopOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.recyclerview.widget.RecyclerView
@@ -214,7 +244,6 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/layout_information" />
-
 
             <LinearLayout
                 android:id="@+id/layout_no_data"
@@ -241,11 +270,25 @@
                     android:layout_gravity="center"
                     android:fontFamily="@font/sf_pro_display_regular"
                     android:gravity="center"
-                    android:text="@string/string_no_files_have_been_downloaded_yet"
+                    android:text="@string/string_no_files_have_been_added_to_the_private_folder_yet"
                     android:textColor="#808080"
                     android:textSize="@dimen/_12ssp" />
             </LinearLayout>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/_20sdp"
+        android:backgroundTint="#6368EF"
+        android:elevation="0dp"
+        android:src="@drawable/ic_add"
+        app:elevation="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/white" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

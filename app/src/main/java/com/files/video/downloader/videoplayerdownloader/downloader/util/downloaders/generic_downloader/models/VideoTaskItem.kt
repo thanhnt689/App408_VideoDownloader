@@ -2,6 +2,7 @@ package com.files.video.downloader.videoplayerdownloader.downloader.util.downloa
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import java.util.UUID
 
@@ -93,7 +94,13 @@ data class VideoTaskItem(
     var lineInfo: String = "",
 
     @ColumnInfo(name = "is_security")
-    var isSecurity: Boolean = false
+    var isSecurity: Boolean = false,
+
+    @Ignore
+    var isChecked: Boolean = false,
+
+    @Ignore
+    var isEditable: Boolean = false,
 ) {
     fun getPercentFromBytes(): Float =
         if (totalSize == 0L) 0f else (1f * downloadSize / totalSize) * 100f

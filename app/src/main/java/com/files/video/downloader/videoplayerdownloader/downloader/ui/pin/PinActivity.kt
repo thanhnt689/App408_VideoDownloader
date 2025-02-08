@@ -11,6 +11,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityPinBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.PrivateVideoActivity
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -48,7 +49,7 @@ class PinActivity : BaseActivity<ActivityPinBinding>() {
 
         isSetupPinCode = preferenceHelper.getIsSetupPinCode()
 
-        if (isSetupPinCode) {
+        if (isSetupPinCode && intent.getStringExtra("action") != "changePinCode") {
             binding.tvForgotPassword.visibility = View.VISIBLE
             binding.tvTitlePin.text = getString(R.string.string_enter_your_pin)
             binding.tvDesPin.text = getString(R.string.string_enter_your_pin_to_confirm)
@@ -56,6 +57,12 @@ class PinActivity : BaseActivity<ActivityPinBinding>() {
             binding.tvForgotPassword.visibility = View.GONE
             binding.tvTitlePin.text = getString(R.string.string_enter_your_new_pin)
             binding.tvDesPin.text = getString(R.string.string_des_pin)
+        }
+
+        binding.imgBack.setOnClickListener {
+
+            finish()
+
         }
 
         binding.btn0.setOnClickListener {
@@ -133,7 +140,11 @@ class PinActivity : BaseActivity<ActivityPinBinding>() {
         }
 
         binding.tvForgotPassword.setOnClickListener {
+            startActivity(Intent(this, SecurityActivity::class.java).apply {
+                putExtra("status", "forgot")
+            })
 
+            finish()
         }
     }
 
@@ -183,51 +194,79 @@ class PinActivity : BaseActivity<ActivityPinBinding>() {
             currentEditTextIndex++
         }
 
-        if (!isSetPassFirst) {
-            passCodeFirst = ""
-            for (i in passcode.indices) {
-                passCodeFirst += passcode[i]
-            }
-
+        if (isSetupPinCode && intent.getStringExtra("action") != "changePinCode") {
             if (passcode.size == 4) {
-                isSetPassFirst = true
-
-                binding.tvTitlePin.text = getString(R.string.string_re_enter_your_pin)
-
-                binding.tvDesPin.text = getString(R.string.string_re_enter_your_pin_to_confirm)
-
-                for (i in 0..<passcode.size) {
-                    editTexts[i].setImageDrawable(
-                        ContextCompat.getDrawable(
-                            this,
-                            R.drawable.ic_circle_unselected
-                        )
-                    )
+                var passCodeSetup = ""
+                for (i in passcode.indices) {
+                    passCodeSetup += passcode[i]
                 }
 
-                passcode.clear()
+                if (passCodeSetup == preferenceHelper.getPinCode()) {
+                    Toast.makeText(this, "PassCode true", Toast.LENGTH_SHORT).show()
 
-                currentEditTextIndex = 0
-            }
-        } else {
-            passCodeSecond = ""
-            for (i in passcode.indices) {
-                passCodeSecond += passcode[i]
-            }
+                    startActivity(Intent(this, PrivateVideoActivity::class.java))
 
-            if (passcode.size == 4) {
-                if (passCodeFirst == passCodeSecond) {
-                    Toast.makeText(this, "true", Toast.LENGTH_SHORT).show()
-
-                    startActivity(Intent(this, SecurityActivity::class.java).apply {
-                        putExtra("pass", passCodeFirst)
-                    })
                     finish()
                 } else {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.string_password_does_not_match), Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, "PassCode false", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            if (!isSetPassFirst) {
+                passCodeFirst = ""
+                for (i in passcode.indices) {
+                    passCodeFirst += passcode[i]
+                }
+
+                if (passcode.size == 4) {
+                    isSetPassFirst = true
+
+                    binding.tvTitlePin.text = getString(R.string.string_re_enter_your_pin)
+
+                    binding.tvDesPin.text = getString(R.string.string_re_enter_your_pin_to_confirm)
+
+                    for (i in 0..<passcode.size) {
+                        editTexts[i].setImageDrawable(
+                            ContextCompat.getDrawable(
+                                this,
+                                R.drawable.ic_circle_unselected
+                            )
+                        )
+                    }
+
+                    passcode.clear()
+
+                    currentEditTextIndex = 0
+                }
+            } else {
+                passCodeSecond = ""
+                for (i in passcode.indices) {
+                    passCodeSecond += passcode[i]
+                }
+
+                if (passcode.size == 4) {
+                    if (passCodeFirst == passCodeSecond) {
+                        Toast.makeText(this, "true", Toast.LENGTH_SHORT).show()
+
+                        if (intent.getStringExtra("action") == "changePinCode") {
+                            preferenceHelper.setIsSetupPinCode(true)
+
+                            preferenceHelper.setPinCode(passCodeFirst)
+
+                            finish()
+                        } else {
+                            startActivity(Intent(this, SecurityActivity::class.java).apply {
+                                putExtra("pass", passCodeFirst)
+                            })
+
+                            finish()
+                        }
+                    } else {
+                        Toast.makeText(
+                            this,
+                            getString(R.string.string_password_does_not_match), Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }

@@ -142,6 +142,18 @@
     <string name="string_ok">OK</string>
     <string name="string_enter_your_pin">Enter your PIN</string>
     <string name="string_enter_your_pin_to_confirm">Enter your PIN to confirm</string>
-
+    <string name="string_incorrect_security_question">Incorrect security question</string>
+    <string name="string_correct_security_question">Correct security question</string>
+    <string name="string_private_video">Private video</string>
+    <string name="string_no_videos_downloaded">No videos downloaded</string>
+    <string name="string_no_files_have_been_downloaded_yet">No files have been downloaded yet.</string>
+    <string name="string_no_files_have_been_added_to_the_private_folder_yet">No files have been added to the Private folder yet.</string>
+    <string name="string_move_to_private">Move to private</string>
+    <string name="string_change_pin_code">Change PIN code</string>
+    <string name="string_change_security_question">Change security question</string>
+    <string name="string_delete_private_folder">Delete Private folder</string>
+    <string name="string_num_video_selected">%s Video selected</string>
+    <string name="string_add_to_private">Add to private</string>
+    <string name="string_go_to_browser">Go to browser</string>
 
 </resources>
