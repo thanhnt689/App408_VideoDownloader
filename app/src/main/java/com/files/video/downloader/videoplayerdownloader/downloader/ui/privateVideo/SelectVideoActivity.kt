@@ -34,6 +34,9 @@ class SelectVideoActivity : BaseActivity<ActivitySelectVideoBinding>(), VideoLis
 
     private val privateVideoViewModel: PrivateVideoViewModel by viewModels()
 
+    private var fileType: String = "all"
+
+
     @Inject
     lateinit var fileUtil: FileUtil
 
@@ -44,11 +47,13 @@ class SelectVideoActivity : BaseActivity<ActivitySelectVideoBinding>(), VideoLis
     override fun initView() {
 
         lifecycleScope.launch {
-            privateVideoViewModel.queryVideoTaskItem().observe(this@SelectVideoActivity) {
+            privateVideoViewModel.queryVideoTaskItem(fileType).observe(this@SelectVideoActivity) {
                 if (it.isEmpty()) {
                     binding.layoutNoData.visibility = View.VISIBLE
+                    binding.tvAddToPrivate.visibility = View.GONE
                 } else {
                     binding.layoutNoData.visibility = View.GONE
+                    binding.tvAddToPrivate.visibility = View.VISIBLE
                 }
 //
                 listVideoTaskItem.clear()
@@ -108,15 +113,15 @@ class SelectVideoActivity : BaseActivity<ActivitySelectVideoBinding>(), VideoLis
         }
     }
 
-    fun setStatusSelectAll() {
+    override fun setStatusSelectAll() {
         binding.imgCheck.setImageResource(R.drawable.ic_check_box_selected)
     }
 
-    fun setStatusUnSelectAll() {
+    override fun setStatusUnSelectAll() {
         binding.imgCheck.setImageResource(R.drawable.ic_check_box_normal)
     }
 
-    fun updateStatusNumSelect() {
+    override fun updateStatusNumSelect() {
         val listPhotoSelect = videoAdapter.getCountSelectFile()
 
         binding.tvTitle.text =

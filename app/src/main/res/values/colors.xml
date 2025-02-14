@@ -11,4 +11,17 @@
     <color name="color_bg_select">#F6F2FE</color>
 
     <color name="color_normal">#F2F2F2</color>
+
+    <color name="color_tab_light_normal">#949494</color>
+    <color name="color_tab_light_selected">#262626</color>
+
+    <color name="color_tab_indicator">#FFFFFF</color>
+    <color name="color_tab_indicator_light">#DA0A19</color>
+    <color name="color_tab_normal">#80FFFFFF</color>
+    <color name="color_tab_selected">#FFFFFF</color>
+    <color name="color_all">#FFFFFF</color>
+
+    <color name="color_background">#FFFFFF</color>
+    <color name="color_pdf">#DA0A19</color>
+    <color name="color_word">#2F80ED</color>
 </resources>

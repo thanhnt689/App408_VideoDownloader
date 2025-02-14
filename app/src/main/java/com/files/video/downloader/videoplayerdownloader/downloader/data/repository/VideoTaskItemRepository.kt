@@ -21,17 +21,32 @@ class VideoTaskItemRepository @Inject constructor(
     }
 
     fun queryVideoTaskItem(
+        isAll: Boolean?,
+        typeItem: String?,
         textSearch: String,
+        typeSort: Int
     ): LiveData<List<VideoTaskItem>> {
         return videoTaskItemDao
-            .getLiveDataVideoTaskItemByTextSearch("%" + textSearch.trim() + "%")
+            .getLiveDataVideoTaskItemByTextSearch(
+                isAll,
+                typeItem,
+                "%" + textSearch.trim() + "%",
+                typeSort
+            )
     }
 
     fun queryVideoTaskItemSecurity(
+        isAll: Boolean?,
+        typeItem: String?,
         textSearch: String,
+        typeSort: Int
     ): LiveData<List<VideoTaskItem>> {
         return videoTaskItemDao
-            .getLiveDataVideoTaskItemSecurityByTextSearch("%" + textSearch.trim() + "%")
+            .getLiveDataVideoTaskItemSecurityByTextSearch(
+                isAll, typeItem,
+                "%" + textSearch.trim() + "%",
+                typeSort
+            )
     }
 
     fun getAllVideoSecurityTaskItem(): LiveData<List<VideoTaskItem>> {
@@ -58,7 +73,7 @@ class VideoTaskItemRepository @Inject constructor(
         return videoTaskItemDao.findVideoTaskItemByName(name)
     }
 
-    suspend fun resetSecurityFlag(){
+    suspend fun resetSecurityFlag() {
         videoTaskItemDao.resetSecurityFlag()
     }
 }

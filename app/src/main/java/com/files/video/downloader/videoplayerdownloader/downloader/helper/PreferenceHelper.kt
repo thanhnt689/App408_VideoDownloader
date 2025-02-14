@@ -60,6 +60,7 @@ class PreferenceHelper @Inject constructor(
         private const val IS_APP_DIR_USE = "IS_APP_DIR_USE"
         private const val IS_DARK_MODE = "IS_DARK_MODE"
         const val REGULAR_THREAD_COUNT = "REGULAR_THREAD_COUNT"
+        const val TYPE_SORT = "TYPE_SORT"
         const val SPEED = "SPEED"
         const val LOOP = "LOOP_MEDIA"
         const val FILL = "FILL_MEDIA"
@@ -216,7 +217,7 @@ class PreferenceHelper @Inject constructor(
     }
 
     fun getIsAppDirUse(): Boolean {
-        return sharedPreferences.getBoolean(IS_APP_DIR_USE, true)
+        return sharedPreferences.getBoolean(IS_APP_DIR_USE, false)
     }
 
     fun setIsAppDirUse(isAppDirUse: Boolean) {
@@ -456,6 +457,17 @@ class PreferenceHelper @Inject constructor(
     fun setPinCode(pinCode: String) {
         sharedPreferences.edit().let {
             it.putString(PIN_CODE, pinCode)
+            it.apply()
+        }
+    }
+
+    fun getTypeSort(): Int {
+        return sharedPreferences.getInt(TYPE_SORT, 1)
+    }
+
+    fun setTypeSort(typeSort: Int) {
+        sharedPreferences.edit().let {
+            it.putInt(TYPE_SORT, typeSort)
             it.apply()
         }
     }

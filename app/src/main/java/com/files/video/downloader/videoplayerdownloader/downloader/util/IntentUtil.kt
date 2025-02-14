@@ -46,14 +46,26 @@ class IntentUtil @Inject constructor(private val fileUtil: FileUtil) {
     }
 
     fun shareVideo(context: Context, uri: Uri) {
+
+        val file = if (uri.scheme == null || uri.scheme == "file") {
+            File(uri.path ?: "")
+        } else {
+            throw IllegalArgumentException("Unsupported URI scheme: ${uri.scheme}")
+        }
+
         val intent = Intent(Intent.ACTION_SEND)
         intent.type = "video/*"
         val fileSupported = fileUtil.isFileApiSupportedByUri(context, uri)
         if (fileSupported) {
+//            val fileUri = FileProvider.getUriForFile(
+//                context,
+//                context.applicationContext.packageName + ".provider",
+//                uri.toFile()
+//            )
             val fileUri = FileProvider.getUriForFile(
                 context,
                 context.applicationContext.packageName + ".provider",
-                uri.toFile()
+                file
             )
             intent.setDataAndType(fileUri, "video/mp4")
             intent.clipData = ClipData.newRawUri("", fileUri)

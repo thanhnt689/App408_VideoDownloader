@@ -20,6 +20,8 @@ class PinActivity : BaseActivity<ActivityPinBinding>() {
 
     private var isSetupPinCode = false
 
+    private var isInCorrectPass = false
+
     private var currentEditTextIndex = 0
 
     private var passcode = mutableListOf<String>()
@@ -181,7 +183,22 @@ class PinActivity : BaseActivity<ActivityPinBinding>() {
     private fun setPassword(currentEdit: ImageView, number: String) {
         passcode.add(currentEditTextIndex, number)
 
+        if (isInCorrectPass) {
+            isInCorrectPass = false
+
+            for (i in 0..<4) {
+                editTexts[i].setImageDrawable(
+                    ContextCompat.getDrawable(
+                        this,
+                        R.drawable.ic_circle_unselected
+                    )
+                )
+            }
+        }
+
         binding.btnRemove.setImageResource(R.drawable.ic_remove)
+
+        binding.tvIncorrect.visibility = View.GONE
 
         currentEdit.setImageDrawable(
             ContextCompat.getDrawable(
@@ -202,13 +219,14 @@ class PinActivity : BaseActivity<ActivityPinBinding>() {
                 }
 
                 if (passCodeSetup == preferenceHelper.getPinCode()) {
-                    Toast.makeText(this, "PassCode true", Toast.LENGTH_SHORT).show()
 
                     startActivity(Intent(this, PrivateVideoActivity::class.java))
 
                     finish()
                 } else {
-                    Toast.makeText(this, "PassCode false", Toast.LENGTH_SHORT).show()
+
+                    binding.tvIncorrect.visibility = View.VISIBLE
+
                 }
             }
         } else {

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
@@ -83,6 +84,7 @@ open class GenericDownloadWorkerWrapper @Inject constructor(
 
     override fun onDownloadSuccess(item: VideoTaskItem?) {
         super.onDownloadSuccess(item)
+        Log.d("ntt", "onDownloadSuccess: item: $item")
 
         disposable?.dispose()
         disposable = progressRepository.getProgressInfos().subscribe { infos ->

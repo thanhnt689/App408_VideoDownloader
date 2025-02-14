@@ -40,7 +40,7 @@ class FileUtil @Inject constructor() {
         var IS_EXTERNAL_STORAGE_USE = true
 
         // For downloads
-        var IS_APP_DATA_DIR_USE = true
+        var IS_APP_DATA_DIR_USE = false
 
         const val FOLDER_NAME = "SuperVideoDownloader"
         const val TMP_DATA_FOLDER_NAME = "video_downloader_pro_max"

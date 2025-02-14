@@ -1,13 +1,22 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Message
+import android.provider.MediaStore
+import android.util.Base64
 import android.util.Log
+import android.view.ContextMenu
+import android.view.ContextMenu.ContextMenuInfo
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
@@ -20,6 +29,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.webkit.WebView.HitTestResult
 import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -42,6 +52,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.network.
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityWebTabBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetDownloadBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogInformationImage
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.ContentType
@@ -54,6 +65,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.de
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.detectedVideos.VideoDetectionAlgVModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.PrivateVideoViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.processing.ProgressViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabsActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AdBlockerHelper
@@ -65,6 +77,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.FileName
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
 import com.files.video.downloader.videoplayerdownloader.downloader.util.VideoUtils
+import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.CustomProxyController
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -76,7 +89,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
+import java.net.URL
 import javax.inject.Inject
 
 
@@ -135,6 +153,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     private lateinit var webTab: WebTab
 
     private val tabViewModel: WebTabViewModel by viewModels()
+
+    private val privateVideoViewModel: PrivateVideoViewModel by viewModels()
 
     private val settingsViewModel: SettingsViewModel by viewModels()
 
@@ -334,10 +354,6 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
             val pageTab = tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
 
-            Log.d("ntt", "onPageStarted:")
-
-            Log.d("ntt", "onPageStarted: pageTab: $pageTab")
-
             val headers = pageTab?.getHeaders() ?: emptyMap()
             val favi = pageTab?.getFavicon() ?: view.favicon ?: favicon
 
@@ -349,8 +365,6 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                 view,
                 id = pageTab!!.id
             )
-
-            Log.d("ntt", "onPageStarted: updateTab: $updateTab")
 
             tabViewModels.updateCurrentTab(updateTab)
 
@@ -453,11 +467,9 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 //            )
 //            updateTabEvent.value = updateTab
 
-            Log.d("ntt", "onReceivedIcon: ")
 
             val pageTab = tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
 
-            Log.d("ntt", "onReceivedIcon: pageTab: $pageTab")
 
             val headers = pageTab?.getHeaders() ?: emptyMap()
             val updateTab = WebTab(
@@ -469,7 +481,6 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                 id = pageTab.id
             )
 
-            Log.d("ntt", "onReceivedIcon: updateTab: $updateTab")
             tabViewModels.updateCurrentTab(updateTab)
         }
 
@@ -808,13 +819,11 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     }
 
     override fun onPause() {
-        AppLogger.d("onPause Webview::::::::: ${webTab.getUrl()}")
         super.onPause()
         onWebViewPause()
     }
 
     override fun onResume() {
-        AppLogger.d("onResume Webview::::::::: ${webTab.getUrl()}")
         super.onResume()
         onWebViewResume()
     }
@@ -858,7 +867,253 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
             webTab.getWebView(),
             LinearLayout.LayoutParams(-1, -1)
         )
+
+
+//        binding.webviewContainer.setOnLongClickListener {
+//            val result = webView?.hitTestResult
+//            if (result?.type == WebView.HitTestResult.IMAGE_TYPE || result?.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+//                val imageUrl = result.extra // URL của ảnh
+//                Log.d("ntt", "configureWebView: imageUrl: ${imageUrl}")
+//                true
+//            } else {
+//                false
+//            }
+//        }
     }
+
+    override fun onCreateContextMenu(menu: ContextMenu?, v: View, menuInfo: ContextMenuInfo?) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+
+        val webView = v as WebView
+        val result = webView.hitTestResult
+
+        if (result?.type == WebView.HitTestResult.IMAGE_TYPE || result?.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+            val imageUrl = result.extra // URL của ảnh
+            Log.d("ntt", "configureWebView: imageUrl: ${imageUrl}")
+
+            if (imageUrl != null) {
+                val dialogInformationImage =
+                    DialogInformationImage(this@WebTabActivity,
+                        imageUrl.toString(),
+                        onClickOpenNewTab = {
+                            if (imageUrl.startsWith("http")) {
+                                webTab.getWebView()?.stopLoading()
+                                webTab.getWebView()?.loadUrl(imageUrl)
+
+                            }
+                        },
+                        onClickShare = {
+                            shareUrl(this@WebTabActivity, imageUrl)
+                        },
+                        onClickCopyLink = {
+                            val clipboard =
+                                getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("copied_text", imageUrl)
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(this, "Đã sao chép vào clipboard", Toast.LENGTH_SHORT)
+                                .show()
+                        },
+                        onClickDownloadImage = {
+                            lifecycleScope.launch(Dispatchers.Main) {
+                                downloadImage(this@WebTabActivity, imageUrl)
+                            }
+                        })
+
+                dialogInformationImage.show()
+            }
+        } else {
+            false
+        }
+    }
+
+    private fun shareUrl(context: Context, url: String) {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, url)
+        }
+        context.startActivity(Intent.createChooser(intent, "Chia sẻ liên kết qua:"))
+    }
+
+    private suspend fun downloadImage(context: Context, imageUrl: String): File? {
+        return withContext(Dispatchers.IO) {
+            try {
+                if (imageUrl.startsWith("data:image")) {
+                    return@withContext saveBase64Image(context, imageUrl)
+                }
+
+                val client = OkHttpClient()
+                val request = Request.Builder().url(imageUrl).build()
+                val response = client.newCall(request).execute()
+
+                if (!response.isSuccessful) {
+                    Log.e("Download", "Download failed: ${response.code}")
+                    return@withContext null
+                }
+
+                val url = URL(imageUrl)
+                var fileName = url.file.substringAfterLast("/")
+                if (fileName.isBlank()) fileName = "downloaded_image.jpg"
+
+                val outputFile: File
+                val fileSize: Long
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val resolver = context.contentResolver
+                    val contentValues = ContentValues().apply {
+                        put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                        put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                    }
+
+                    val uri =
+                        resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                            ?: return@withContext null
+
+                    val fileDescriptor =
+                        resolver.openFileDescriptor(uri, "w") ?: return@withContext null
+                    fileSize = response.body?.contentLength() ?: 0
+
+                    FileOutputStream(fileDescriptor.fileDescriptor).use { outputStream ->
+                        response.body?.byteStream()?.copyTo(outputStream)
+                    }
+
+                    fileDescriptor.close()
+
+                    outputFile = File(getRealPathFromURI(context, uri) ?: return@withContext null)
+                } else {
+                    val downloadsDir =
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    outputFile = File(downloadsDir, fileName)
+
+                    response.body?.byteStream()?.use { input ->
+                        FileOutputStream(outputFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+
+                    fileSize = outputFile.length()
+                }
+
+                // Lưu vào Database
+                val fileDate = System.currentTimeMillis()
+
+                // 🔥 **Lưu vào Database**
+                val videoTaskItem = VideoTaskItem(
+                    mId = outputFile.absolutePath.hashCode().toString(),
+                    fileName = fileName,
+                    filePath = outputFile.absolutePath,
+                    fileSize = fileSize,
+                    fileDate = fileDate,
+                    url = imageUrl,
+                    mimeType = "image"
+                )
+                privateVideoViewModel.insertVideoTaskItem(videoTaskItem)
+
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        "File saved: ${outputFile.absolutePath}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                return@withContext outputFile
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return@withContext null
+            }
+        }
+    }
+
+
+    private suspend fun saveBase64Image(
+        context: Context,
+        base64String: String,
+    ): File? {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Tách dữ liệu base64
+                val base64Data = base64String.substringAfter("base64,", "")
+
+                if (base64Data.isBlank()) {
+                    Log.e("ntt", "Invalid base64 data")
+                    return@withContext null
+                }
+
+                // Giải mã base64 thành mảng byte
+                val decodedBytes = Base64.decode(base64Data, Base64.DEFAULT)
+                val fileName = "downloaded_base64_image_${System.currentTimeMillis()}.jpg"
+
+                val outputFile: File?
+                val fileSize: Long
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // ✅ Android 10+ (API 29+): Lưu bằng MediaStore
+                    val resolver = context.contentResolver
+                    val contentValues = ContentValues().apply {
+                        put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                        put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                    }
+
+                    val uri =
+                        resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                            ?: return@withContext null
+
+                    val fileDescriptor =
+                        resolver.openFileDescriptor(uri, "w") ?: return@withContext null
+                    FileOutputStream(fileDescriptor.fileDescriptor).use { it.write(decodedBytes) }
+                    fileDescriptor.close()
+
+                    outputFile = File(getRealPathFromURI(context, uri) ?: return@withContext null)
+                    fileSize = decodedBytes.size.toLong()
+                } else {
+                    // ✅ Android 9 trở xuống (API < 29): Lưu vào thư mục Pictures
+                    val picturesDir =
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                    outputFile = File(picturesDir, fileName)
+
+                    FileOutputStream(outputFile).use { it.write(decodedBytes) }
+                    fileSize = outputFile.length()
+                }
+
+                val fileDate = System.currentTimeMillis()
+
+                // 🔥 **Lưu vào Database**
+                val videoTaskItem = VideoTaskItem(
+                    mId = outputFile.absolutePath.hashCode().toString(),
+                    fileName = fileName,
+                    filePath = outputFile.absolutePath,
+                    fileSize = fileSize,
+                    fileDate = fileDate,
+                    url = base64String,
+                    mimeType = "image"
+                )
+                privateVideoViewModel.insertVideoTaskItem(videoTaskItem)
+
+                Log.d("ntt", "File saved at: ${outputFile.absolutePath}")
+
+                return@withContext outputFile
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return@withContext null
+            }
+        }
+    }
+
+
+    private fun getRealPathFromURI(context: Context, uri: Uri): String? {
+        val projection = arrayOf(MediaStore.Images.Media.DATA)
+        context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+            val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+            if (cursor.moveToFirst()) {
+                return cursor.getString(columnIndex)
+            }
+        }
+        return null
+    }
+
 
     private fun onWebViewPause() {
         webTab.getWebView()?.onPause()
@@ -873,6 +1128,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
             if (tab.getUrl().startsWith("http")) {
                 webTab.getWebView()?.stopLoading()
                 webTab.getWebView()?.loadUrl(tab.getUrl())
+
+                registerForContextMenu(webTab.getWebView())
             }
         }
     }

@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -20,6 +22,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -76,10 +80,22 @@ class NotificationsHelper @Inject constructor(@ApplicationContext private val co
                 val actionWatch = notificationActionWatch(task.fileName)
                 val actionWatchIntent = notificationIntentWatch(task.fileName)
 
-                Log.d("ntt", "createNotificationBuilder: ${task.fileName}")
+                Log.d("ntt", "createNotificationBuilder: ${task}")
 
-                CoroutineScope(Dispatchers.IO).launch {
-                    videoTaskItemRepository.insertVideoTaskItem(task)
+                val file = File(task.filePath)
+                if (file.exists()) {
+                    val fileSize = file.length()
+                    val lastModified = file.lastModified()
+
+                    task.mimeType = "video"
+                    task.fileDuration = getVideoDuration(context, task.filePath)
+
+                    task.fileSize = fileSize
+                    task.fileDate = lastModified
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        videoTaskItemRepository.insertVideoTaskItem(task)
+                    }
                 }
 
                 builder.setContentIntent(actionWatchIntent)
@@ -116,6 +132,21 @@ class NotificationsHelper @Inject constructor(@ApplicationContext private val co
         }
 
         return Pair(task.mId.hashCode(), builder)
+    }
+
+    private fun getVideoDuration(context: Context, filePath: String): Long {
+        return try {
+            val retriever = MediaMetadataRetriever()
+            retriever.setDataSource(context, Uri.fromFile(File(filePath)))
+            val durationMs =
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                    ?.toLongOrNull() ?: 0
+            retriever.release()
+
+           durationMs
+        } catch (e: Exception) {
+            0
+        }
     }
 
     fun showNotification(builderPair: Pair<Int, NotificationCompat.Builder>) {
@@ -164,7 +195,6 @@ class NotificationsHelper @Inject constructor(@ApplicationContext private val co
 
     private fun notificationIntentWatch(filename: String): PendingIntent {
 //        val filenameFixed = File(filename).name
-        Log.d("ntt", "notificationIntentWatch: filename: $filename")
         val filenameFixed = filename
         val intent = Intent(
             context, MainActivity::class.java

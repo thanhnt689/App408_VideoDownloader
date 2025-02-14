@@ -155,5 +155,22 @@
     <string name="string_num_video_selected">%s Video selected</string>
     <string name="string_add_to_private">Add to private</string>
     <string name="string_go_to_browser">Go to browser</string>
+    <string name="string_please_select_file">Please select file</string>
+    <string name="string_incorrect_password_please_try_again">Incorrect password, please try again</string>
+    <string name="string_open_in_new_tab">Open in new tab</string>
+    <string name="string_copy_link">Copy link</string>
+    <string name="string_download_image">Download image</string>
+    <string name="string_all">ALL</string>
+    <string name="string_video">VIDEO</string>
+    <string name="string_image">IMAGE</string>
+    <string name="string_sort_by">Sort by</string>
+    <string name="string_last_modified">Last modified</string>
+    <string name="string_new_to_old">(new to old)</string>
+    <string name="string_old_to_new">(old to new)</string>
+    <string name="string_a_z">(A - Z)</string>
+    <string name="string_z_a">(Z -A)</string>
+    <string name="string_file_size">File size</string>
+    <string name="string_large_to_small">(large to small)</string>
+    <string name="string_small_to_large">(small to large)</string>
 
 </resources>

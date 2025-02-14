@@ -188,7 +188,6 @@ class VideoDetectionAlgVModel @Inject constructor(
     private fun startVerifyProcess(
         resourceRequest: Request, isM3u8: Boolean, hlsTitle: String? = null
     ) {
-        Log.d("ntt", "startVerifyProcess: ")
         val job = verifyVideoLinkJobStorage[resourceRequest.url.toString()]
         if (job != null && !job.isDisposed) {
             return

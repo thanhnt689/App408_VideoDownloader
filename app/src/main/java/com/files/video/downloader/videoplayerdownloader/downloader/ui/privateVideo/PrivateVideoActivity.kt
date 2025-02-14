@@ -4,11 +4,13 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
@@ -51,6 +53,8 @@ class PrivateVideoActivity : BaseActivity<ActivityPrivateVideoBinding>(), VideoL
 
     private lateinit var videoAdapter: VideoAdapter
 
+    private var listVideoTaskItem = arrayListOf<VideoTaskItem>()
+
     @Inject
     lateinit var preferenceHelper: PreferenceHelper
 
@@ -75,9 +79,12 @@ class PrivateVideoActivity : BaseActivity<ActivityPrivateVideoBinding>(), VideoL
 //                listHistory.clear()
 //                listHistory.addAll(it.reversed())
 
+            listVideoTaskItem.clear()
+            listVideoTaskItem.addAll(it)
+
             binding.tvNumFiles.text =
                 getString(R.string.string_num_files, it.size.toString())
-            videoAdapter.setData(it)
+            videoAdapter.setData(listVideoTaskItem)
 
             val managerL =
                 WrapContentLinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
@@ -99,16 +106,69 @@ class PrivateVideoActivity : BaseActivity<ActivityPrivateVideoBinding>(), VideoL
 
         binding.imgSelected.setOnClickListener {
             ViewUtils.showView(true, binding.layoutSelected, 300)
+            ViewUtils.showView(false, binding.layoutSelectOption, 300)
             ViewUtils.hideView(true, binding.layout, 300)
+            ViewUtils.hideView(false, binding.fabAdd, 300)
 
             videoAdapter.setIsChecked(true)
+
+            updateStatusNumSelect()
+
+            Log.d("ntt", "initView: num: ${videoAdapter.getCountSelectFile()}")
         }
 
         binding.imgClose.setOnClickListener {
             ViewUtils.hideView(true, binding.layoutSelected, 300)
+            ViewUtils.hideView(false, binding.layoutSelectOption, 300)
             ViewUtils.showView(true, binding.layout, 300)
+            ViewUtils.showView(false, binding.fabAdd, 300)
 
             videoAdapter.setIsChecked(false)
+        }
+
+        binding.imgCheck.setOnClickListener {
+            if (videoAdapter.getSelectedFile().size == listVideoTaskItem.size) {
+                videoAdapter.deSelectAllItem()
+            } else {
+                videoAdapter.selectAllItem()
+            }
+        }
+
+        binding.llDelete.setOnClickListener {
+
+            if (videoAdapter.getSelectedFile().isEmpty()) {
+                Toast.makeText(
+                    this,
+                    getString(R.string.string_please_select_file), Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                for (videoTaskItem in videoAdapter.getSelectedFile()) {
+                    lifecycleScope.launch {
+                        privateVideoViewModel.updateIsCheckSecurity(
+                            videoTaskItem.mId,
+                            !videoTaskItem.isSecurity
+                        )
+                    }
+                }
+
+                ViewUtils.hideView(true, binding.layoutSelected, 300)
+                ViewUtils.hideView(false, binding.layoutSelectOption, 300)
+                ViewUtils.showView(true, binding.layout, 300)
+                ViewUtils.showView(false, binding.fabAdd, 300)
+
+                videoAdapter.setIsChecked(false)
+            }
+        }
+
+        binding.llShare.setOnClickListener {
+            if (videoAdapter.getSelectedFile().isEmpty()) {
+                Toast.makeText(
+                    this,
+                    getString(R.string.string_please_select_file), Toast.LENGTH_SHORT
+                ).show()
+            } else {
+
+            }
         }
 
     }
@@ -266,6 +326,22 @@ class PrivateVideoActivity : BaseActivity<ActivityPrivateVideoBinding>(), VideoL
     }
 
     override fun onClickItemChecked(videoTaskItem: VideoTaskItem) {
+
+    }
+
+    override fun setStatusSelectAll() {
+        binding.imgCheck.setImageResource(R.drawable.ic_check_box_selected)
+    }
+
+    override fun setStatusUnSelectAll() {
+        binding.imgCheck.setImageResource(R.drawable.ic_check_box_normal)
+    }
+
+    override fun updateStatusNumSelect() {
+        val listPhotoSelect = videoAdapter.getCountSelectFile()
+
+        binding.tvTitleSelected.text =
+            getString(R.string.string_num_video_selected, listPhotoSelect.toString())
 
     }
 

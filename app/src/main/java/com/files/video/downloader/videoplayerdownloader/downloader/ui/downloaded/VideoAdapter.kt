@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -21,9 +22,11 @@ import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.module.AppGlideModule
 import com.bumptech.glide.request.RequestOptions
+import com.files.video.downloader.videoplayerdownloader.downloader.MainActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ItemVideoBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.model.LocalVideo
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.PrivateVideoActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.SelectVideoActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.Video
@@ -61,36 +64,71 @@ class VideoAdapter(
             with(binding) {
                 var isEdit = false
                 tvName.text = videoTaskItem.fileName
-                txtDuration.text = getVideoDuration(context, videoTaskItem.filePath)
 
-                var date = ""
+                when (videoTaskItem.mimeType) {
+                    "video" -> {
 
-                val file = File(videoTaskItem.filePath)
-                if (file.exists()) {
-                    val fileSize = formatFileSize(file.length())
-                    val lastModified = Date(file.lastModified())
+                        val fileSize = formatFileSize(videoTaskItem.fileSize)
+                        val lastModified = Date(videoTaskItem.fileDate)
 
-                    date = SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(lastModified)
+                        txtDuration.text = getVideoDuration(videoTaskItem.fileDuration)
 
-                    txtSize.text = fileSize
-                    txtDate.text = date
+                        val date = SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(lastModified)
+
+                        txtSize.text = fileSize
+                        txtDate.text = date
+
+                        if (date.isEmpty()) {
+                            txtDate.visibility = View.GONE
+                            view2.visibility = View.GONE
+                        } else {
+                            txtDate.visibility = View.VISIBLE
+                            view2.visibility = View.VISIBLE
+                        }
+
+                        Glide.with(this@VideoViewHolder.itemView.context)
+                            .load(getVideoThumbnail(videoTaskItem.filePath)).fitCenter()
+                            .error(R.drawable.ic_play_download)
+                            .placeholder(R.drawable.ic_play_download)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .apply(RequestOptions().override(size.first / 8, size.second / 8))
+                            .into(this.ivThumbnail)
+                    }
+
+                    "image" -> {
+                        val fileSize = formatFileSize(videoTaskItem.fileSize)
+
+                        val lastModified = Date(videoTaskItem.fileDate)
+
+                        val date = SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(lastModified)
+
+                        txtSize.text = fileSize
+                        txtDate.text = date
+
+                        txtDuration.visibility = View.GONE
+
+                        view1.visibility = View.GONE
+
+                        if (date.isEmpty()) {
+                            txtDate.visibility = View.GONE
+                            view2.visibility = View.GONE
+                        } else {
+                            txtDate.visibility = View.VISIBLE
+                            view2.visibility = View.VISIBLE
+                        }
+
+                        icPlay.visibility = View.GONE
+
+                        Glide.with(this@VideoViewHolder.itemView.context)
+                            .load(videoTaskItem.filePath).fitCenter()
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .apply(RequestOptions().override(size.first / 8, size.second / 8))
+                            .into(this.ivThumbnail)
+                    }
                 }
 
-                if (date.isEmpty()) {
-                    txtDate.visibility = View.GONE
-                    view2.visibility = View.GONE
-                } else {
-                    txtDate.visibility = View.VISIBLE
-                    view2.visibility = View.VISIBLE
-                }
 
-                Glide.with(this@VideoViewHolder.itemView.context)
-                    .load(getVideoThumbnail(videoTaskItem.filePath)).fitCenter()
-                    .error(R.drawable.ic_play_download)
-                    .placeholder(R.drawable.ic_play_download)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .apply(RequestOptions().override(size.first / 8, size.second / 8))
-                    .into(this.ivThumbnail)
+
 
                 if (videoTaskItem.isChecked) {
                     binding.icSelect.setImageResource(R.drawable.ic_check_box_selected)
@@ -118,7 +156,7 @@ class VideoAdapter(
                             binding.icSelect.setImageResource(R.drawable.ic_check_box_normal)
                         }
 
-                        videoListener.onItemClicked(videoTaskItem)
+                        videoListener.onClickItemChecked(videoTaskItem)
 
                         checkIfAllFilesDeselected()
                     } else {
@@ -135,7 +173,7 @@ class VideoAdapter(
                         binding.icSelect.setImageResource(R.drawable.ic_check_box_normal)
                     }
 
-                    videoListener.onItemClicked(videoTaskItem)
+                    videoListener.onClickItemChecked(videoTaskItem)
 
                     checkIfAllFilesDeselected()
                 }
@@ -187,17 +225,11 @@ class VideoAdapter(
             return String.format("%.2f %s", fileSize, units[index])
         }
 
-        private fun getVideoDuration(context: Context, filePath: String): String {
+        private fun getVideoDuration(duration: Long): String {
             return try {
-                val retriever = MediaMetadataRetriever()
-                retriever.setDataSource(context, Uri.fromFile(File(filePath)))
-                val durationMs =
-                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                        ?.toLongOrNull() ?: 0
-                retriever.release()
 
-                val minutes = durationMs / 1000 / 60
-                val seconds = (durationMs / 1000) % 60
+                val minutes = duration / 1000 / 60
+                val seconds = (duration / 1000) % 60
                 String.format("%02d:%02d", minutes, seconds)
             } catch (e: Exception) {
                 "00:00"
@@ -284,21 +316,66 @@ class VideoAdapter(
     private fun checkIfAllFilesDeselected() {
         val selectedVideo = getSelectedFile()
 
-        (context as SelectVideoActivity).updateStatusNumSelect()
+//        when (context) {
+//            is SelectVideoActivity -> {
+//                (context as SelectVideoActivity).updateStatusNumSelect()
+//
+//                when (selectedVideo.size) {
+//                    0 -> {
+//                        (context as SelectVideoActivity).setStatusUnSelectAll()
+//                    }
+//
+//                    this.videoTaskItems.size -> {
+//                        (context as SelectVideoActivity).setStatusSelectAll()
+//                    }
+//
+//                    else -> {
+//                        (context as SelectVideoActivity).setStatusUnSelectAll()
+//                    }
+//                }
+//            }
+//
+//            is PrivateVideoActivity -> {
+//                (context as PrivateVideoActivity).updateStatusNumSelect()
+//
+//                when (selectedVideo.size) {
+//                    0 -> {
+//                        (context as PrivateVideoActivity).setStatusUnSelectAll()
+//                    }
+//
+//                    this.videoTaskItems.size -> {
+//                        (context as PrivateVideoActivity).setStatusSelectAll()
+//                    }
+//
+//                    else -> {
+//                        (context as PrivateVideoActivity).setStatusUnSelectAll()
+//                    }
+//                }
+//            }
+//
+//            else -> {
+
+        videoListener.updateStatusNumSelect()
 
         when (selectedVideo.size) {
             0 -> {
-                (context as SelectVideoActivity).setStatusUnSelectAll()
+                videoListener.setStatusUnSelectAll()
             }
 
             this.videoTaskItems.size -> {
-                (context as SelectVideoActivity).setStatusSelectAll()
+                videoListener.setStatusSelectAll()
             }
 
             else -> {
-                (context as SelectVideoActivity).setStatusUnSelectAll()
+                videoListener.setStatusUnSelectAll()
             }
+//                }
+//            }
         }
+
+//        (context as SelectVideoActivity).updateStatusNumSelect()
+
+
     }
 }
 
@@ -306,6 +383,10 @@ interface VideoListener {
     fun onItemClicked(videoTaskItem: VideoTaskItem)
     fun onMenuClicked(view: View, videoTaskItem: VideoTaskItem)
     fun onClickItemChecked(videoTaskItem: VideoTaskItem)
+
+    fun updateStatusNumSelect()
+    fun setStatusSelectAll()
+    fun setStatusUnSelectAll()
 }
 
 @GlideModule

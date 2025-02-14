@@ -27,7 +27,7 @@ android {
 
         multiDexEnabled true
         def formattedDate = new Date().format('MM.dd.yyyy')
-        archivesBaseName = "App294_ZipperLockScreen_v${versionName}(${versionCode})_${formattedDate}"
+        archivesBaseName = "App408-VideoDownloader_v${versionName}(${versionCode})_${formattedDate}"
     }
 
     buildTypes {

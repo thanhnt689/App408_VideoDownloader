@@ -18,6 +18,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.downloaded
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.downloaded.VideoViewModel.Companion
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
+import com.files.video.downloader.videoplayerdownloader.downloader.util.SortState
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.Video
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,6 +37,10 @@ class PrivateVideoViewModel @Inject constructor(
 ) :
     ViewModel() {
 
+    val sortStateObservable: MutableLiveData<SortState> = MutableLiveData(SortState.NAME)
+
+    val fileTabLiveData: MutableLiveData<Int> = MutableLiveData(0)
+
     companion object {
         const val FILE_EXIST_ERROR_CODE = 1
         const val FILE_INVALID_ERROR_CODE = 2
@@ -46,21 +51,36 @@ class PrivateVideoViewModel @Inject constructor(
 
     val searchCharObservable: MutableLiveData<String> = MutableLiveData("")
 
-    suspend fun queryVideoTaskItem(): LiveData<List<VideoTaskItem>> {
-        return searchCharObservable.switchMap { query ->
-            videoTaskItemRepository.queryVideoTaskItem(
-                query
-            )
+    suspend fun queryVideoTaskItem(fileType: String): LiveData<List<VideoTaskItem>> {
+        return sortStateObservable.switchMap { sortState ->
+            return@switchMap searchCharObservable.switchMap { query ->
+                videoTaskItemRepository.queryVideoTaskItem(
+                    fileType == "all",
+                    fileType,
+                    query,
+                    sortState.value
+                )
+            }
         }
     }
 
-    suspend fun queryVideoTaskItemSecurity(): LiveData<List<VideoTaskItem>> {
-        return searchCharObservable.switchMap { query ->
-            videoTaskItemRepository.queryVideoTaskItemSecurity(
-                query
-            )
+    suspend fun queryVideoTaskItemSecurity(fileType: String): LiveData<List<VideoTaskItem>> {
+        return sortStateObservable.switchMap { sortState ->
+            return@switchMap searchCharObservable.switchMap { query ->
+                videoTaskItemRepository.queryVideoTaskItemSecurity(
+                    fileType == "all",
+                    fileType,
+                    query,
+                    sortState.value
+                )
+            }
         }
     }
+
+    suspend fun insertVideoTaskItem(videoTaskItem: VideoTaskItem) {
+        videoTaskItemRepository.insertVideoTaskItem(videoTaskItem)
+    }
+
 
     suspend fun updateIsCheckSecurity(id: String, isSecurity: Boolean) {
         videoTaskItemRepository.updateIsCheckSecurity(id, isSecurity)

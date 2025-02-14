@@ -184,7 +184,6 @@ class DetectedVideosTabViewModel @Inject constructor(
 
     override fun verifyLinkStatus(resourceRequest: Request, hlsTitle: String?, isM3u8: Boolean) {
         // TODO list of sites, where youtube dl should be disabled
-        Log.d("ntt", "verifyLinkStatus: ")
         if (resourceRequest.url.toString().contains("tiktok.")) {
             return
         }
@@ -231,7 +230,6 @@ class DetectedVideosTabViewModel @Inject constructor(
     private fun startVerifyProcess(
         resourceRequest: Request, isM3u8: Boolean, hlsTitle: String? = null
     ) {
-        Log.d("ntt", "startVerifyProcess: ")
         val taskUrlCleaned = resourceRequest.url.toString().split("?").firstOrNull()?.trim() ?: ""
 
         val job = verifyVideoLinkJobStorage[taskUrlCleaned]
@@ -243,8 +241,6 @@ class DetectedVideosTabViewModel @Inject constructor(
         loadings?.add(resourceRequest.url.toString())
         m3u8LoadingList.set(loadings?.toMutableSet())
         setButtonState(DownloadButtonStateLoading())
-
-        Log.d("ntt", "startVerifyProcess: resourceRequest: $resourceRequest")
 
         verifyVideoLinkJobStorage[taskUrlCleaned] =
             io.reactivex.rxjava3.core.Observable.create { emitter ->

@@ -98,6 +98,7 @@ class YoutubeDlDownloaderWorker(appContext: Context, workerParams: WorkerParamet
     }
 
     private fun stopAndSave(task: VideoTaskItem) {
+        Log.d("ntt", "stopAndSave: task: $task")
         val taskId = inputData.getString(GenericDownloader.DOWNLOAD_ID_KEY)
 
         if (taskId != null) {
@@ -280,7 +281,7 @@ class YoutubeDlDownloaderWorker(appContext: Context, workerParams: WorkerParamet
 
             val freeSpace = FileUtil.getFreeDiskSpace(fileUtil.folderDir)
             if (freeSpace < TRESHOLD) {
-                finishWork(task.also {
+                (task.also {
                     task.mId = taskId
                     task.taskState = VideoTaskState.ERROR
                     task.errorMessage = "Not enough space"
@@ -355,21 +356,33 @@ class YoutubeDlDownloaderWorker(appContext: Context, workerParams: WorkerParamet
                     null
                 }
                 if (dlResponse.exitCode == 0 && finalFile != null) {
+
+                    val toUri =
+                        Uri.fromFile(File(fixFileName("${downloadDir.absolutePath}/${finalFile.name}")))
+
                     val moved = fileUtil.moveMedia(
                         this@YoutubeDlDownloaderWorker.applicationContext,
                         Uri.fromFile(finalFile),
-                        Uri.fromFile(File(fixFileName("${downloadDir.absolutePath}/${finalFile.name}")))
+                        toUri
                     )
 
                     if (this@YoutubeDlDownloaderWorker.cookieFile != null) {
                         this@YoutubeDlDownloaderWorker.cookieFile!!.delete()
                     }
 
+                    var movedFilePath = ""
+
                     if (moved) {
                         tmpFile.deleteRecursively()
+
+                        movedFilePath = toUri.path.toString()
+
                     }
+
                     finishWork(VideoTaskItem(url).also { f ->
-                        f.fileName = finalFile.name
+                        f.filePath = movedFilePath
+                        f.fileName = extractFileName(movedFilePath).first
+                        f.title = extractFileName(movedFilePath).second
                         f.errorCode = if (moved) 0 else 1
                         f.percent = 100F
                         f.taskState =
@@ -389,6 +402,7 @@ class YoutubeDlDownloaderWorker(appContext: Context, workerParams: WorkerParamet
                                 f.taskState = VideoTaskState.ERROR
                             })
                         } else {
+                            Log.d("ntt", "startDownload: ")
                             finishWork(VideoTaskItem(url).also { f ->
                                 f.errorCode = 1
                                 f.taskState = VideoTaskState.ERROR
@@ -404,6 +418,14 @@ class YoutubeDlDownloaderWorker(appContext: Context, workerParams: WorkerParamet
             }
             handleError(taskId, url, progressCached, e, tmpFile.name, name)
         }
+    }
+
+    fun extractFileName(path: String): Triple<String, String, String> {
+        val fullFileName = path.substringAfterLast("/")  // Tên file có đuôi
+        val fileNameWithoutExt = fullFileName.substringBeforeLast(".") // Tên file không có đuôi
+        val parentFolder = path.substringBeforeLast("/") // Thư mục chứa file
+
+        return Triple(fullFileName, fileNameWithoutExt, parentFolder)
     }
 
     private fun calculateFolderSize(directory: File): Long {
@@ -556,6 +578,7 @@ class YoutubeDlDownloaderWorker(appContext: Context, workerParams: WorkerParamet
 
     @SuppressLint("CheckResult")
     override fun finishWork(item: VideoTaskItem?) {
+        Log.d("ntt", "finishWork: $item")
         if (getDone()) {
             try {
                 getContinuation().resume(Result.success())
@@ -681,6 +704,7 @@ class YoutubeDlDownloaderWorker(appContext: Context, workerParams: WorkerParamet
     }
 
     private fun pauseDownload(task: VideoTaskItem, headers: Map<String, String>) {
+        Log.d("ntt", "pauseDownload: task: $task")
         if (getDone()) return
 
         val id = inputData.getString(GenericDownloader.DOWNLOAD_ID_KEY)
@@ -699,6 +723,7 @@ class YoutubeDlDownloaderWorker(appContext: Context, workerParams: WorkerParamet
     }
 
     private fun cancelDownload(task: VideoTaskItem, headers: Map<String, String>) {
+        Log.d("ntt", "cancelDownload: task: $task")
         val taskId = inputData.getString(GenericDownloader.DOWNLOAD_ID_KEY)
         val isFileRemove = inputData.getBoolean(GenericDownloader.IS_FILE_REMOVE_KEY, false)
 

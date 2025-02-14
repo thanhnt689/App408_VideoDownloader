@@ -14,7 +14,6 @@ object SystemUtil {
     // Load lại ngôn ngữ đã lưu và thay đổi chúng
     fun setLocale(context: Context) {
         val language = getPreLanguage(context)
-        Log.d("ntt", "setLocale: $language")
         if (language == "") {
             val config = Configuration()
             val locale = Locale.getDefault()

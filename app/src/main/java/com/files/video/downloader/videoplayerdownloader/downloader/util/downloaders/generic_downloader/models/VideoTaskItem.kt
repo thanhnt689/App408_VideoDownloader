@@ -96,6 +96,15 @@ data class VideoTaskItem(
     @ColumnInfo(name = "is_security")
     var isSecurity: Boolean = false,
 
+    @ColumnInfo(name = "file_size")
+    var fileSize: Long = 0,
+
+    @ColumnInfo(name = "file_date")
+    var fileDate: Long = 0,
+
+    @ColumnInfo(name = "file_duration")
+    var fileDuration: Long = 0,
+
     @Ignore
     var isChecked: Boolean = false,
 

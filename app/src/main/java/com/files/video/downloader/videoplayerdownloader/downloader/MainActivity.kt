@@ -89,7 +89,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         colorNormal = Color.parseColor("#BFBFBF")
         colorSelected = Color.parseColor("#A264FF")
 
-        replaceFragment(BrowserFragment())
+        replaceFragment(BrowserFragment(),"BrowserFragment")
 
         changeImageIconWhenTap(
             drawableBrowserSelected,
@@ -122,7 +122,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     )
                     changeTextColorWhenTap(colorNormal, colorSelected, colorNormal, colorNormal)
 
-                    replaceFragment(ProcessingFragment())
+                    replaceFragment(ProcessingFragment(),"ProcessingFragment")
                 }
             } else {
                 if (posSelectedNavigation != 2) {
@@ -135,7 +135,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     )
                     changeTextColorWhenTap(colorNormal, colorNormal, colorSelected, colorNormal)
 
-                    replaceFragment(DownloadedFragment())
+                    replaceFragment(DownloadedFragment(),"DownloadedFragment")
                 }
             }
 
@@ -162,7 +162,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     )
                     changeTextColorWhenTap(colorNormal, colorSelected, colorNormal, colorNormal)
 
-                    replaceFragment(ProcessingFragment())
+                    replaceFragment(ProcessingFragment(),"ProcessingFragment")
                 }
             } else {
                 if (posSelectedNavigation != 0) {
@@ -175,7 +175,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     )
                     changeTextColorWhenTap(colorSelected, colorNormal, colorNormal, colorNormal)
 
-                    replaceFragment(BrowserFragment())
+                    replaceFragment(BrowserFragment(),"BrowserFragment")
                 }
             }
         }
@@ -196,7 +196,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 )
                 changeTextColorWhenTap(colorSelected, colorNormal, colorNormal, colorNormal)
 
-                replaceFragment(BrowserFragment())
+                replaceFragment(BrowserFragment(),"BrowserFragment")
             }
         }
 
@@ -211,7 +211,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 )
                 changeTextColorWhenTap(colorNormal, colorSelected, colorNormal, colorNormal)
 
-                replaceFragment(ProcessingFragment())
+                replaceFragment(ProcessingFragment(),"ProcessingFragment")
             }
         }
 
@@ -226,7 +226,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 )
                 changeTextColorWhenTap(colorNormal, colorNormal, colorSelected, colorNormal)
 
-                replaceFragment(DownloadedFragment())
+                replaceFragment(DownloadedFragment(),"DownloadedFragment")
             }
         }
 
@@ -241,7 +241,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 )
                 changeTextColorWhenTap(colorNormal, colorNormal, colorNormal, colorSelected)
 
-                replaceFragment(SettingsFragment())
+                replaceFragment(SettingsFragment(),"SettingsFragment")
             }
         }
 
@@ -272,10 +272,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.ivSetting.setImageResource(image4)
     }
 
-    private fun replaceFragment(fragment: Fragment) {
+    private fun replaceFragment(fragment: Fragment, tag: String) {
         val fragmentManager = supportFragmentManager
         val fragmentTransaction = fragmentManager.beginTransaction()
-        fragmentTransaction.replace(R.id.frame_layout, fragment)
+        fragmentTransaction.replace(R.id.frame_layout, fragment, tag)
         fragmentTransaction.commit()
     }
 

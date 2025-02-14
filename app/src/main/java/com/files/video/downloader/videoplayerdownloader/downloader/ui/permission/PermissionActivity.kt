@@ -130,7 +130,8 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
     private fun requestPermissionStorage() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            storageActivityResultLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
+            storageImageActivityResultLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+//            storageActivityResultLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
         } else {
             //Android is below 13(R)
             ActivityCompat.requestPermissions(
@@ -156,6 +157,11 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
             )
         }
     }
+
+    private val storageImageActivityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            storageActivityResultLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
+        }
 
     private val storageActivityResultLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
