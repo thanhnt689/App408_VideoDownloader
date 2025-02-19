@@ -10,7 +10,7 @@ import java.util.UUID
 class WebTab(
     private var url: String,
     private val title: String?,
-    private val iconBytes: Bitmap? = null,
+    private var iconBytes: Bitmap? = null,
     private val headers: Map<String, String> = emptyMap(),
     private var webview: WebView? = null,
     private var resultMsg: Message? = null,
@@ -60,6 +60,10 @@ class WebTab(
 
     fun getFavicon(): Bitmap? {
         return iconBytes
+    }
+
+    fun setFavicon(iconBytes: Bitmap?) {
+        this.iconBytes = iconBytes
     }
 
     fun isHome(): Boolean {

@@ -11,13 +11,16 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.WebResourceRequest
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.databinding.Observable
 import androidx.databinding.Observable.OnPropertyChangedCallback
 import androidx.fragment.app.viewModels
@@ -45,14 +48,19 @@ import com.files.video.downloader.videoplayerdownloader.downloader.dialog.Dialog
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.SharedPreferenceHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.detectedVideos.DetectedVideosTabViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.VideoInfoAdapter
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryAdapter
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.IS_DOWNLOADED
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.ITEM_TYPE
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.VIDEO_ITEM
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.VIDEO_NAME
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.VIDEO_URL
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.pin.PinActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.PrivateVideoViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.util.KeyboardUtils
+import com.files.video.downloader.videoplayerdownloader.downloader.util.SortState
 import com.files.video.downloader.videoplayerdownloader.downloader.util.ViewUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -105,6 +113,34 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
 
         bottomSheetDialog = BottomSheetDialog(requireContext(), R.style.CustomAlertBottomSheet)
 
+        when (preferenceHelper.getTypeSort()) {
+            1 -> {
+                privateVideoViewModel.sortStateObservable.postValue(SortState.NAME)
+            }
+
+            2 -> {
+                privateVideoViewModel.sortStateObservable.postValue(SortState.NAME_DESC)
+            }
+
+            3 -> {
+                privateVideoViewModel.sortStateObservable.postValue(SortState.DATE_DESC)
+            }
+
+            4 -> {
+                privateVideoViewModel.sortStateObservable.postValue(SortState.DATE)
+            }
+
+            5 -> {
+                privateVideoViewModel.sortStateObservable.postValue(SortState.SIZE_DESC)
+            }
+
+            6 -> {
+                privateVideoViewModel.sortStateObservable.postValue(SortState.SIZE)
+            }
+        }
+
+        privateVideoViewModel.fileType.postValue(fileType)
+
 //        videoViewModel.start()
         binding.tab.addTab(binding.tab.newTab().setId(0).setText(getString(R.string.string_all)))
         binding.tab.addTab(binding.tab.newTab().setId(1).setText(getString(R.string.string_video)))
@@ -112,7 +148,7 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
 
 
         videoAdapter =
-            VideoAdapter(requireContext(), emptyList(), this@DownloadedFragment, fileUtil)
+            VideoAdapter(requireContext(), false, emptyList(), this@DownloadedFragment, fileUtil)
 
         handleUIEvents()
         handleIfStartedFromNotification()
@@ -121,20 +157,10 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
             intentUtil.shareVideo(requireContext(), uri)
         }
 
-//        videoViewModel.localVideos.addOnPropertyChangedCallback(object :
-//            Observable.OnPropertyChangedCallback() {
-//            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-//
-//                lifecycleScope.launch(Dispatchers.Main) {
-//
-//                    Log.d("ntt", "onPropertyChanged: ${videoViewModel.localVideos.get()}")
-//                }
-//            }
-//
-//        })
 
         privateVideoViewModel.fileTabLiveData.observe(viewLifecycleOwner) { tabIndex ->
             binding.tab.selectTab(binding.tab.getTabAt(tabIndex))
+
             setupCurrentTab(tabIndex)
 
             ViewUtils.hideView(true, binding.layoutSelected, 300)
@@ -144,34 +170,39 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
 
             videoAdapter.setIsChecked(false)
 
-            lifecycleScope.launch {
-                privateVideoViewModel.queryVideoTaskItem(fileType).observe(viewLifecycleOwner) {
-                    if (it.isEmpty()) {
-                        binding.layoutNoData.visibility = View.VISIBLE
-                        binding.imgSearch.visibility = View.GONE
-                    } else {
-                        binding.layoutNoData.visibility = View.GONE
-                        binding.imgSearch.visibility = View.VISIBLE
-                    }
+        }
+
+        lifecycleScope.launch {
+            privateVideoViewModel.queryVideoTaskItem().observe(viewLifecycleOwner) {
+                Log.d("ntt", "Query : ")
+                if (it.isEmpty()) {
+                    binding.layoutNoData.visibility = View.VISIBLE
+                    binding.imgSearch.visibility = View.GONE
+                } else {
+                    binding.layoutNoData.visibility = View.GONE
+                    binding.imgSearch.visibility = View.VISIBLE
+                }
 //
 //                listHistory.clear()
 //                listHistory.addAll(it.reversed())
 
-                    listVideoTaskItem.clear()
-                    listVideoTaskItem.addAll(it)
+                Log.d("ntt", "onViewCreated: size: ${it.size}")
 
-                    binding.tvNumFiles.text =
-                        getString(R.string.string_num_files, it.size.toString())
-                    videoAdapter.setData(it)
+                listVideoTaskItem.clear()
+                listVideoTaskItem.addAll(it)
 
-                    val managerL =
-                        WrapContentLinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-                    binding.rcvFiles.layoutManager = managerL
-                    binding.rcvFiles.adapter = videoAdapter
+                binding.tvNumFiles.text =
+                    getString(R.string.string_num_files, it.size.toString())
+                videoAdapter.setData(it)
 
-                }
+                val managerL =
+                    WrapContentLinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+                binding.rcvFiles.layoutManager = managerL
+                binding.rcvFiles.adapter = videoAdapter
+
             }
         }
+
 
         binding.tab.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
@@ -189,7 +220,9 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
             }
         })
 
-
+        binding.imgSort.setOnClickListener {
+            showBottomSheetSort()
+        }
 
         binding.imgSearch.setOnClickListener {
             ViewUtils.showView(true, binding.llSearch, 300)
@@ -261,7 +294,7 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
                     getString(R.string.string_please_select_file), Toast.LENGTH_SHORT
                 ).show()
             } else {
-
+                shareMultipleFiles(videoAdapter.getSelectedFile())
             }
         }
 
@@ -301,10 +334,33 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
         }
     }
 
+    private fun shareMultipleFiles(videoTaskItem: List<VideoTaskItem>) {
+        val uris = ArrayList<Uri>()
+
+        for (videoItem in videoTaskItem) {
+            val file = File(videoItem.filePath)
+            val uri = FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.provider",
+                file
+            )
+            uris.add(uri)
+        }
+
+        val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+            type = "*/*" // Hoặc "image/*", "video/*" nếu chỉ chia sẻ ảnh/video
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        startActivity(Intent.createChooser(shareIntent, "Chia sẻ với"))
+    }
+
     private fun setupCurrentTab(index: Int) {
         when (index) {
             0 -> {
                 fileType = "all"
+
             }
 
             1 -> {
@@ -316,9 +372,11 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
             }
 
         }
+
+        privateVideoViewModel.fileType.postValue(fileType)
     }
 
-    private fun showBottomSheetSort(typeSort: Int) {
+    private fun showBottomSheetSort() {
 
         sortLayout = LayoutBottomSheetSortBinding.inflate(layoutInflater)
 
@@ -355,6 +413,98 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
         }
         bottomSheetDialog.behavior.addBottomSheetCallback(bottomSheetCallback)
 
+        var typeSort = preferenceHelper.getTypeSort()
+
+        updateTypeSort(typeSort)
+
+        sortLayout.llAz.setOnClickListener {
+            typeSort = 1
+            updateTypeSort(typeSort)
+//            privateVideoViewModel.sortStateObservable.postValue(SortState.NAME_DESC)
+        }
+
+        sortLayout.llZa.setOnClickListener {
+            typeSort = 2
+            updateTypeSort(typeSort)
+//            privateVideoViewModel.sortStateObservable.postValue(SortState.NAME)
+        }
+
+        sortLayout.llNewToOld.setOnClickListener {
+            typeSort = 3
+            updateTypeSort(typeSort)
+//            privateVideoViewModel.sortStateObservable.postValue(SortState.DATE_DESC)
+        }
+
+        sortLayout.llOldToNew.setOnClickListener {
+            typeSort = 4
+            updateTypeSort(typeSort)
+//            privateVideoViewModel.sortStateObservable.postValue(SortState.DATE)
+        }
+
+        sortLayout.llLargeSmall.setOnClickListener {
+            typeSort = 5
+            updateTypeSort(typeSort)
+//            privateVideoViewModel.sortStateObservable.postValue(SortState.SIZE_DESC)
+        }
+
+        sortLayout.llSmallLarge.setOnClickListener {
+            typeSort = 6
+            updateTypeSort(typeSort)
+//            privateVideoViewModel.sortStateObservable.postValue(SortState.SIZE)
+        }
+
+        sortLayout.tvCancel.setOnClickListener {
+            bottomSheetDialog.dismiss()
+        }
+
+        sortLayout.tvOk.setOnClickListener {
+            preferenceHelper.setTypeSort(typeSort)
+            when (typeSort) {
+                1 -> {
+                    updateSortState(SortState.NAME)
+//                    privateVideoViewModel.sortStateObservable.postValue(SortState.NAME)
+                }
+
+                2 -> {
+                    updateSortState(SortState.NAME_DESC)
+//                    privateVideoViewModel.sortStateObservable.postValue(SortState.NAME_DESC)
+                }
+
+                3 -> {
+                    updateSortState(SortState.DATE_DESC)
+//                    privateVideoViewModel.sortStateObservable.postValue(SortState.DATE_DESC)
+                }
+
+                4 -> {
+                    updateSortState(SortState.DATE)
+//                    privateVideoViewModel.sortStateObservable.postValue(SortState.DATE)
+                }
+
+                5 -> {
+                    updateSortState(SortState.SIZE_DESC)
+//                    privateVideoViewModel.sortStateObservable.postValue(SortState.SIZE_DESC)
+                }
+
+                6 -> {
+                    updateSortState(SortState.SIZE)
+//                    privateVideoViewModel.sortStateObservable.postValue(SortState.SIZE)
+                }
+            }
+
+            bottomSheetDialog.dismiss()
+        }
+
+
+        bottomSheetDialog.show()
+    }
+
+    fun updateSortState(newSortState: SortState) {
+        if (privateVideoViewModel.sortStateObservable.value != newSortState) {
+            privateVideoViewModel.sortStateObservable.postValue(newSortState)
+        }
+    }
+
+    private fun updateTypeSort(typeSort: Int) {
         when (typeSort) {
             1 -> {
                 sortLayout.icSelectedAz.setImageResource(R.drawable.ic_selected_sort)
@@ -411,40 +561,6 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
             }
         }
 
-        sortLayout.llAz.setOnClickListener {
-
-        }
-
-        sortLayout.llZa.setOnClickListener {
-
-        }
-
-        sortLayout.llNewToOld.setOnClickListener {
-
-        }
-
-        sortLayout.llOldToNew.setOnClickListener {
-
-        }
-
-        sortLayout.llLargeSmall.setOnClickListener {
-
-        }
-
-        sortLayout.llSmallLarge.setOnClickListener {
-
-        }
-
-        sortLayout.tvCancel.setOnClickListener {
-            bottomSheetDialog.dismiss()
-        }
-
-        sortLayout.tvOk.setOnClickListener {
-
-        }
-
-
-        bottomSheetDialog.show()
     }
 
 
@@ -530,7 +646,12 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
                 requireContext(),
                 PlayMediaActivity::class.java
             ).apply {
+                val bundle = Bundle()
+                bundle.putSerializable(VIDEO_ITEM, videoTaskItem)
                 putExtra(VIDEO_NAME, videoTaskItem.fileName)
+                putExtra(ITEM_TYPE, videoTaskItem.mimeType)
+                putExtra(IS_DOWNLOADED, true)
+                putExtras(bundle)
                 putExtra(
                     VIDEO_URL,
                     Uri.parse(videoTaskItem.filePath).toString()
@@ -581,18 +702,34 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
                 val file = File(videoTaskItem.filePath)
                 val fileUri = Uri.fromFile(file)
 
-                lifecycleScope.launch {
-                    privateVideoViewModel.renameVideo(
-                        requireContext(),
-                        videoTaskItem.mId,
-                        videoTaskItem.filePath,
-                        File(newName).nameWithoutExtension + ".mp4"
-                    )
+                if (videoTaskItem.mimeType == "image") {
+                    lifecycleScope.launch {
+                        privateVideoViewModel.renameImage(
+                            requireContext(),
+                            videoTaskItem.mId,
+                            videoTaskItem.filePath,
+                            File(newName).nameWithoutExtension + ".jpg"
+                        )
 
-                    withContext(Dispatchers.Main) {
-                        balloon.dismiss()
+                        withContext(Dispatchers.Main) {
+                            balloon.dismiss()
+                        }
+
                     }
+                } else {
+                    lifecycleScope.launch {
+                        privateVideoViewModel.renameVideo(
+                            requireContext(),
+                            videoTaskItem.mId,
+                            videoTaskItem.filePath,
+                            File(newName).nameWithoutExtension + ".mp4"
+                        )
 
+                        withContext(Dispatchers.Main) {
+                            balloon.dismiss()
+                        }
+
+                    }
                 }
 
             }

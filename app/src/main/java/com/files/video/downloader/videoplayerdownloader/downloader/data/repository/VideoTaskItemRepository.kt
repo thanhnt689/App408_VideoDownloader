@@ -1,5 +1,6 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.data.repository
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.room.Query
@@ -21,14 +22,14 @@ class VideoTaskItemRepository @Inject constructor(
     }
 
     fun queryVideoTaskItem(
-        isAll: Boolean?,
+        isAll: Boolean,
         typeItem: String?,
         textSearch: String,
         typeSort: Int
     ): LiveData<List<VideoTaskItem>> {
         return videoTaskItemDao
             .getLiveDataVideoTaskItemByTextSearch(
-                isAll,
+                if (isAll) 1 else 0,
                 typeItem,
                 "%" + textSearch.trim() + "%",
                 typeSort

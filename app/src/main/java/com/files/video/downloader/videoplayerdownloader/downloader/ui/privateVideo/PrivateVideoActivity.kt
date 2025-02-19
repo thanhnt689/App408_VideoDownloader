@@ -29,6 +29,9 @@ import com.files.video.downloader.videoplayerdownloader.downloader.model.LocalVi
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.downloaded.VideoAdapter
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.downloaded.VideoListener
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.IS_DOWNLOADED
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.ITEM_TYPE
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.VIDEO_ITEM
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.VIDEO_NAME
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.VIDEO_URL
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.pin.PinActivity
@@ -67,7 +70,7 @@ class PrivateVideoActivity : BaseActivity<ActivityPrivateVideoBinding>(), VideoL
 
     override fun initView() {
 
-        videoAdapter = VideoAdapter(this, emptyList(), this@PrivateVideoActivity, fileUtil)
+        videoAdapter = VideoAdapter(this, false, emptyList(), this@PrivateVideoActivity, fileUtil)
 
         privateVideoViewModel.queryVideoSecurityTaskItem().observe(this) {
             if (it.isEmpty()) {
@@ -267,18 +270,35 @@ class PrivateVideoActivity : BaseActivity<ActivityPrivateVideoBinding>(), VideoL
                 val file = File(videoTaskItem.filePath)
                 val fileUri = Uri.fromFile(file)
 
-                lifecycleScope.launch {
-                    privateVideoViewModel.renameVideo(
-                        this@PrivateVideoActivity,
-                        videoTaskItem.mId,
-                        videoTaskItem.filePath,
-                        File(newName).nameWithoutExtension + ".mp4"
-                    )
 
-                    withContext(Dispatchers.Main) {
-                        balloon.dismiss()
+                if (videoTaskItem.mimeType == "image") {
+                    lifecycleScope.launch {
+                        privateVideoViewModel.renameImage(
+                            this@PrivateVideoActivity,
+                            videoTaskItem.mId,
+                            videoTaskItem.filePath,
+                            File(newName).nameWithoutExtension + ".jpg"
+                        )
+
+                        withContext(Dispatchers.Main) {
+                            balloon.dismiss()
+                        }
+
                     }
+                } else {
+                    lifecycleScope.launch {
+                        privateVideoViewModel.renameVideo(
+                            this@PrivateVideoActivity,
+                            videoTaskItem.mId,
+                            videoTaskItem.filePath,
+                            File(newName).nameWithoutExtension + ".mp4"
+                        )
 
+                        withContext(Dispatchers.Main) {
+                            balloon.dismiss()
+                        }
+
+                    }
                 }
 
             }
@@ -352,7 +372,12 @@ class PrivateVideoActivity : BaseActivity<ActivityPrivateVideoBinding>(), VideoL
                 this,
                 PlayMediaActivity::class.java
             ).apply {
+                val bundle = Bundle()
+                bundle.putSerializable(VIDEO_ITEM, videoTaskItem)
                 putExtra(VIDEO_NAME, videoTaskItem.fileName)
+                putExtra(ITEM_TYPE, videoTaskItem.mimeType)
+                putExtra(IS_DOWNLOADED, true)
+                putExtras(bundle)
                 putExtra(
                     VIDEO_URL,
                     Uri.parse(videoTaskItem.filePath).toString()

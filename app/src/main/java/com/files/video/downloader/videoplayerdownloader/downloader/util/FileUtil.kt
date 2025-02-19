@@ -20,6 +20,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.net.toFile
 import androidx.core.net.toUri
+import com.files.video.downloader.videoplayerdownloader.downloader.R
 import org.apache.commons.io.FilenameUtils
 import java.io.File
 import java.io.FileNotFoundException
@@ -265,7 +266,7 @@ class FileUtil @Inject constructor() {
                 return Pair(cleanedFileName, newUri ?: from)
             }
         } catch (e: Throwable) {
-            Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.string_error), Toast.LENGTH_SHORT).show()
         }
 
         return null
@@ -305,12 +306,57 @@ class FileUtil @Inject constructor() {
             }
         } catch (e: Throwable) {
             e.printStackTrace()
-            Toast.makeText(context, "Lỗi khi đổi tên file", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context,
+                context.getString(R.string.string_error_renaming_file), Toast.LENGTH_SHORT).show()
         }
 
         return null
     }
 
+    fun renameImage(context: Context, filePath: String, newName: String): Pair<String, String>? {
+        try {
+            Log.d("ntt", "renameMedia: newName: $newName")
+
+            // Làm sạch tên file và đảm bảo có phần mở rộng của ảnh
+            val cleanedFileName = FileNameCleaner.cleanFileNameImage(newName) + ".jpg"
+
+            // Kiểm tra tên file mới có rỗng không
+            if (cleanedFileName.isEmpty()) {
+                throw Error("Tên file không được để trống")
+            }
+
+            val oldFile = File(filePath)
+
+            // Kiểm tra file cũ có tồn tại không
+            if (!oldFile.exists()) {
+                throw FileNotFoundException("Không tìm thấy file: $filePath")
+            }
+
+            Log.d("ntt", "renameImage: cleanedFileName: $cleanedFileName")
+
+            val newFile = File(oldFile.parent, cleanedFileName)
+
+            // Kiểm tra file mới đã tồn tại chưa
+            if (newFile.exists()) {
+                throw Exception("File đã tồn tại: ${newFile.absolutePath}")
+            }
+
+            // Đổi tên file
+            val renamed = oldFile.renameTo(newFile)
+            if (renamed) {
+                // Trả về tên file mới và đường dẫn đầy đủ mới
+                return Pair(newFile.name, newFile.absolutePath)
+            } else {
+                throw Exception("Không thể đổi tên file: ${oldFile.absolutePath}")
+            }
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            Toast.makeText(context,
+                context.getString(R.string.string_error_renaming_image), Toast.LENGTH_SHORT).show()
+        }
+
+        return null
+    }
 
 
     @Deprecated("This old")
@@ -320,7 +366,7 @@ class FileUtil @Inject constructor() {
             intent.data = uri
             context.sendBroadcast(intent)
         } catch (e: Throwable) {
-            Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.string_error), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -337,7 +383,7 @@ class FileUtil @Inject constructor() {
             deleted
         } catch (e: Throwable) {
             e.printStackTrace()
-            Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.string_error), Toast.LENGTH_SHORT).show()
             false
         }
     }
@@ -373,7 +419,8 @@ class FileUtil @Inject constructor() {
             return deleted
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(context, "Lỗi khi xóa file!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context,
+                context.getString(R.string.string_error_deleting_file), Toast.LENGTH_SHORT).show()
             false
         }
     }
@@ -770,6 +817,40 @@ object FileNameCleaner {
         }
         var finalName = cleanName.toString()
             .replace(".mp4", "")
+            .replace("/", "").replace("\\", "")
+            .replace(":", "")
+            .replace("*", "")
+            .replace("?", "")
+            .replace("\"", "")
+            .replace("`", "")
+            .replace("\'", "")
+            .replace("<", "")
+            .replace(">", "")
+            .replace(".", "_")
+            .replace("|", "")
+            .replace(Regex("\\s*-\\s*"), "-")
+            .replace(" ", "_").trim()
+        if (finalName.isEmpty()) {
+            finalName = "Untitled"
+        }
+
+        if (finalName.length > MAX_FILE_NAME_LENGTH) {
+            return finalName.substring(0, MAX_FILE_NAME_LENGTH)
+        }
+
+        return finalName
+    }
+
+    fun cleanFileNameImage(badFileName: String): String {
+        val cleanName = StringBuilder()
+        for (element in badFileName) {
+            val c = element.code
+            if (Arrays.binarySearch(illegalChars, c) < 0) {
+                cleanName.append(c.toChar())
+            }
+        }
+        var finalName = cleanName.toString()
+            .replace(".jpg", "")
             .replace("/", "").replace("\\", "")
             .replace(":", "")
             .replace("*", "")

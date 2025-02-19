@@ -14,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -25,6 +26,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.files.video.downloader.videoplayerdownloader.downloader.MainActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ItemVideoBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ItemVideoGridBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.model.LocalVideo
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.PrivateVideoActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.SelectVideoActivity
@@ -37,23 +39,144 @@ import java.util.Date
 
 class VideoAdapter(
     private var context: Context,
+    private var isGridLayout: Boolean = false,
     private var videoTaskItems: List<VideoTaskItem>,
     private val videoListener: VideoListener,
     private val fileUtil: FileUtil
-) : RecyclerView.Adapter<VideoAdapter.VideoViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
-        val binding = DataBindingUtil.inflate<ItemVideoBinding>(
-            LayoutInflater.from(parent.context), R.layout.item_video, parent, false
-        )
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return when (viewType) {
+            0 -> {
+                VideoViewHolder(
+                    DataBindingUtil.inflate<ItemVideoBinding>(
+                        LayoutInflater.from(parent.context), R.layout.item_video, parent, false
+                    ), fileUtil
+                )
+            }
 
-        return VideoViewHolder(binding, fileUtil)
+            else -> {
+                VideoGridViewHolder(
+                    DataBindingUtil.inflate<ItemVideoGridBinding>(
+                        LayoutInflater.from(parent.context), R.layout.item_video_grid, parent, false
+                    ), fileUtil
+                )
+            }
+        }
+//        val binding = DataBindingUtil.inflate<ItemVideoBinding>(
+//            LayoutInflater.from(parent.context), R.layout.item_video, parent, false
+//        )
+//
+//        return VideoViewHolder(binding, fileUtil)
     }
 
     override fun getItemCount() = videoTaskItems.size
 
-    override fun onBindViewHolder(holder: VideoViewHolder, position: Int) =
-        holder.bind(videoTaskItems[position], position)
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        holder.apply {
+            when (holder) {
+                is VideoViewHolder -> {
+                    holder.bind(videoTaskItems[position], position)
+                }
+
+                is VideoGridViewHolder -> {
+                    holder.bind(videoTaskItems[position], position)
+                }
+            }
+        }
+//        holder.bind(videoTaskItems[position], position)
+    }
+
+    inner class VideoGridViewHolder(var binding: ItemVideoGridBinding, var fileUtil: FileUtil) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(videoTaskItem: VideoTaskItem, position: Int) {
+
+            val size = getScreenResolution(itemView.context)
+
+            with(binding) {
+                var isEdit = false
+
+                Glide.with(this@VideoGridViewHolder.itemView.context)
+                    .load(videoTaskItem.filePath).fitCenter()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .apply(RequestOptions().override(size.first / 8, size.second / 8))
+                    .into(this.imgDownload)
+
+
+                if (videoTaskItem.isChecked) {
+                    binding.icSelect.setImageResource(R.drawable.ic_check_box_selected)
+                    binding.cardPage.setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_select))
+                } else {
+                    binding.icSelect.setImageResource(R.drawable.ic_check_box_normal)
+                    binding.cardPage.setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_background))
+                }
+
+                if (videoTaskItem.isEditable) {
+                    isEdit = true
+                    icSelect.visibility = View.VISIBLE
+                } else {
+                    isEdit = false
+                    icSelect.visibility = View.GONE
+                }
+
+                root.setOnClickListener {
+                    if (isEdit) {
+                        videoTaskItem.isChecked = !videoTaskItem.isChecked
+
+                        if (videoTaskItem.isChecked) {
+                            binding.icSelect.setImageResource(R.drawable.ic_check_box_selected)
+
+                            binding.cardPage.setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_select))
+                        } else {
+                            binding.icSelect.setImageResource(R.drawable.ic_check_box_normal)
+
+                            binding.cardPage.setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_background))
+                        }
+
+                        videoListener.onClickItemChecked(videoTaskItem)
+
+                        checkIfAllFilesDeselected()
+                    } else {
+                        videoListener.onItemClicked(videoTaskItem)
+                    }
+                }
+
+                icSelect.setOnClickListener {
+                    videoTaskItem.isChecked = !videoTaskItem.isChecked
+
+                    if (videoTaskItem.isChecked) {
+                        binding.icSelect.setImageResource(R.drawable.ic_check_box_selected)
+
+                        binding.cardPage.setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_select))
+                    } else {
+                        binding.icSelect.setImageResource(R.drawable.ic_check_box_normal)
+
+                        binding.cardPage.setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_background))
+                    }
+
+                    videoListener.onClickItemChecked(videoTaskItem)
+
+                    checkIfAllFilesDeselected()
+                }
+
+            }
+
+        }
+
+        private fun getScreenResolution(context: Context): Pair<Int, Int> {
+            val displayMetrics = DisplayMetrics()
+            val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+            windowManager.defaultDisplay.getMetrics(displayMetrics)
+
+            val widthPixels = displayMetrics.widthPixels
+            val heightPixels = displayMetrics.heightPixels
+
+            return Pair(widthPixels, heightPixels)
+        }
+
+    }
 
     inner class VideoViewHolder(var binding: ItemVideoBinding, var fileUtil: FileUtil) :
         RecyclerView.ViewHolder(binding.root) {
@@ -211,7 +334,6 @@ class VideoAdapter(
             return Pair(widthPixels, heightPixels)
         }
 
-
         private fun formatFileSize(size: Long): String {
             val units = arrayOf("B", "KB", "MB", "GB")
             var fileSize = size.toDouble()
@@ -235,6 +357,19 @@ class VideoAdapter(
                 "00:00"
             }
         }
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return if (isGridLayout) {
+            1
+        } else {
+            0
+        }
+    }
+
+    fun setLayoutType(isGridLayout: Boolean) {
+        this.isGridLayout = isGridLayout
+        notifyDataSetChanged()
     }
 
     fun setData(localVideos: List<VideoTaskItem>) {
@@ -316,45 +451,6 @@ class VideoAdapter(
     private fun checkIfAllFilesDeselected() {
         val selectedVideo = getSelectedFile()
 
-//        when (context) {
-//            is SelectVideoActivity -> {
-//                (context as SelectVideoActivity).updateStatusNumSelect()
-//
-//                when (selectedVideo.size) {
-//                    0 -> {
-//                        (context as SelectVideoActivity).setStatusUnSelectAll()
-//                    }
-//
-//                    this.videoTaskItems.size -> {
-//                        (context as SelectVideoActivity).setStatusSelectAll()
-//                    }
-//
-//                    else -> {
-//                        (context as SelectVideoActivity).setStatusUnSelectAll()
-//                    }
-//                }
-//            }
-//
-//            is PrivateVideoActivity -> {
-//                (context as PrivateVideoActivity).updateStatusNumSelect()
-//
-//                when (selectedVideo.size) {
-//                    0 -> {
-//                        (context as PrivateVideoActivity).setStatusUnSelectAll()
-//                    }
-//
-//                    this.videoTaskItems.size -> {
-//                        (context as PrivateVideoActivity).setStatusSelectAll()
-//                    }
-//
-//                    else -> {
-//                        (context as PrivateVideoActivity).setStatusUnSelectAll()
-//                    }
-//                }
-//            }
-//
-//            else -> {
-
         videoListener.updateStatusNumSelect()
 
         when (selectedVideo.size) {
@@ -369,12 +465,8 @@ class VideoAdapter(
             else -> {
                 videoListener.setStatusUnSelectAll()
             }
-//                }
-//            }
+
         }
-
-//        (context as SelectVideoActivity).updateStatusNumSelect()
-
 
     }
 }

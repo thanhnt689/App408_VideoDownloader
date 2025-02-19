@@ -76,6 +76,7 @@
                 android:textSize="@dimen/_14ssp" />
 
             <ImageView
+                android:id="@+id/img_step_1"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_170sdp"
                 android:layout_marginTop="@dimen/_8sdp"
@@ -92,6 +93,7 @@
                 android:textSize="@dimen/_14ssp" />
 
             <ImageView
+                android:id="@+id/img_step_2"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_170sdp"
                 android:layout_marginTop="@dimen/_8sdp"

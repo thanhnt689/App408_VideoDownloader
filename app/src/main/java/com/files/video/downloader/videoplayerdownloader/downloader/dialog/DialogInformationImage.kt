@@ -6,6 +6,9 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View.GONE
+import android.view.View.VISIBLE
+import android.view.WindowManager
 import android.widget.LinearLayout
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.DialogConfirmDeleteBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.DialogDownloadSuccessfulBinding
@@ -16,6 +19,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.databinding.D
 class DialogInformationImage(
     context: Context,
     var link: String,
+    var isShowDownload: Boolean,
     var onClickOpenNewTab: (link: String) -> Unit,
     var onClickShare: (link: String) -> Unit,
     var onClickCopyLink: (link: String) -> Unit,
@@ -38,7 +42,11 @@ class DialogInformationImage(
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         }
 
-        setCancelable(true)
+        if(isShowDownload){
+            binding.tvDownloadImage.visibility = VISIBLE
+        }else{
+            binding.tvDownloadImage.visibility = GONE
+        }
 
         initViews()
 

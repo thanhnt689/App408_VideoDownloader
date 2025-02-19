@@ -49,7 +49,7 @@
                 android:id="@+id/tv_tab"
                 android:layout_width="@dimen/_28sdp"
                 android:layout_height="@dimen/_28sdp"
-                android:background="@drawable/bg_item_turnon_stroke"
+                android:background="@drawable/bg_item_num_tab"
                 android:backgroundTint="#808080"
                 android:fontFamily="@font/sf_pro_display_semi_bold"
                 android:gravity="center"
@@ -111,9 +111,9 @@
                     android:fontFamily="@font/sf_pro_display_regular"
                     android:hint="@string/string_search_for_anything"
                     android:paddingVertical="@dimen/_4sdp"
+                    android:singleLine="true"
                     android:textColor="#27364B"
                     android:textColorHint="#BFBFBF"
-                    android:singleLine="true"
                     android:textSize="@dimen/_14ssp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/img_search"
@@ -231,6 +231,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/_6sdp"
+                    android:visibility="gone"
                     app:layout_constraintEnd_toStartOf="@id/layout_instagram"
                     app:layout_constraintStart_toEndOf="@id/layout_google"
                     app:layout_constraintTop_toTopOf="parent">
@@ -272,7 +273,7 @@
                     android:id="@+id/layout_instagram"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/_6sdp"
+                    android:layout_marginHorizontal="@dimen/_12sdp"
                     app:layout_constraintEnd_toStartOf="@id/layout_tiktok"
                     app:layout_constraintStart_toEndOf="@id/layout_facebook"
                     app:layout_constraintTop_toTopOf="parent">
@@ -355,7 +356,7 @@
                     android:id="@+id/layout_vimeo"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_16sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
                     app:layout_constraintEnd_toEndOf="@id/layout_google"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/layout_google">
@@ -398,10 +399,10 @@
                     android:id="@+id/layout_imdb"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_16sdp"
-                    app:layout_constraintEnd_toEndOf="@id/layout_facebook"
-                    app:layout_constraintStart_toStartOf="@id/layout_facebook"
-                    app:layout_constraintTop_toBottomOf="@id/layout_facebook">
+                    android:layout_marginTop="@dimen/_10sdp"
+                    app:layout_constraintEnd_toEndOf="@id/layout_instagram"
+                    app:layout_constraintStart_toStartOf="@id/layout_instagram"
+                    app:layout_constraintTop_toBottomOf="@id/layout_instagram">
 
                     <ImageView
                         android:id="@+id/img_imdb"
@@ -441,10 +442,10 @@
                     android:id="@+id/layout_daily_motion"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_16sdp"
-                    app:layout_constraintEnd_toEndOf="@id/layout_instagram"
-                    app:layout_constraintStart_toStartOf="@id/layout_instagram"
-                    app:layout_constraintTop_toBottomOf="@id/layout_instagram">
+                    android:layout_marginTop="@dimen/_10sdp"
+                    app:layout_constraintEnd_toEndOf="@id/layout_tiktok"
+                    app:layout_constraintStart_toStartOf="@id/layout_tiktok"
+                    app:layout_constraintTop_toBottomOf="@id/layout_tiktok">
 
                     <ImageView
                         android:id="@+id/img_daily_motion"
@@ -484,7 +485,7 @@
                     android:id="@+id/layout_invisible"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_16sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
                     android:visibility="invisible"
                     app:layout_constraintEnd_toEndOf="@id/layout_tiktok"
                     app:layout_constraintStart_toStartOf="@id/layout_tiktok"

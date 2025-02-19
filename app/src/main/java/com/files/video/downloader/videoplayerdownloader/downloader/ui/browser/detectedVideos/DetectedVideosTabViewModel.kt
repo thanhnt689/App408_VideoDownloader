@@ -40,6 +40,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import okhttp3.Response
@@ -54,7 +55,7 @@ class DetectedVideosTabViewModel @Inject constructor(
     private val baseSchedulers: BaseSchedulers,
     private val okHttpProxyClient: OkHttpProxyClient,
     private val customProxyController: CustomProxyController,
-    ) : BaseViewModel(), IVideoDetector {
+) : BaseViewModel(), IVideoDetector {
     // key: videoInfo.id, value: format - string
     val selectedFormats = ObservableField<Map<String, String>>()
 
@@ -92,10 +93,17 @@ class DetectedVideosTabViewModel @Inject constructor(
     private val hasCheckLoadingsM3u8 = ObservableBoolean(false)
     private val hasCheckLoadingsRegular = ObservableBoolean(false)
 
-    private val videoServiceLocal = VideoServiceLocal(customProxyController, YoutubedlHelper(okHttpProxyClient, preferenceHelper))
+    private val videoServiceLocal = VideoServiceLocal(
+        customProxyController,
+        YoutubedlHelper(okHttpProxyClient, preferenceHelper)
+    )
 
     override fun start() {
         AppLogger.d("START")
+        viewModelScope.launch {
+            Log.d("ntt", "start: setListHost")
+            webTabModel?.setListHost()
+        }
         regularLoadingList.addOnPropertyChangedCallback(object :
             OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
@@ -184,6 +192,7 @@ class DetectedVideosTabViewModel @Inject constructor(
 
     override fun verifyLinkStatus(resourceRequest: Request, hlsTitle: String?, isM3u8: Boolean) {
         // TODO list of sites, where youtube dl should be disabled
+        Log.d("ntt", "verifyLinkStatus: ")
         if (resourceRequest.url.toString().contains("tiktok.")) {
             return
         }

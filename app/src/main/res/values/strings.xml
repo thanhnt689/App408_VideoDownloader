@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BaseProject</string>
+    <string name="app_name" translatable="false">Video Downloader</string>
     <string name="string_this_action_can_contain_ads">This action can contain ads</string>
     <string name="string_loading">Loading (%s%%)...</string>
     <string name="string_languages">Languages</string>
@@ -84,6 +84,7 @@
     <string name="string_you_have_not_added">You have not added any Bookmarks, select the "+" sign at the bottom of the screen to add a Bookmark.</string>
     <string name="string_clear_all_history">Clear all history</string>
     <string name="string_set_pin">Set PIN</string>
+
     <string name="string_enter_your_new_pin">Enter your new PIN</string>
     <string name="string_des_pin">Enhanced security with PIN codes to prevent access to sensitive content</string>
     <string name="string_forgot_password">Forgot Password</string>
@@ -153,6 +154,7 @@
     <string name="string_change_security_question">Change security question</string>
     <string name="string_delete_private_folder">Delete Private folder</string>
     <string name="string_num_video_selected">%s Video selected</string>
+    <string name="string_num_file_selected">%s File selected</string>
     <string name="string_add_to_private">Add to private</string>
     <string name="string_go_to_browser">Go to browser</string>
     <string name="string_please_select_file">Please select file</string>
@@ -172,5 +174,21 @@
     <string name="string_file_size">File size</string>
     <string name="string_large_to_small">(large to small)</string>
     <string name="string_small_to_large">(small to large)</string>
+    <string name="permission_setting">You need to grant access to perform this task. Go to the settings screen.</string>
+    <string name="string_copied_to_clipboard">Copied to clipboard</string>
+    <string name="string_private_file">Private file</string>
+    <string name="string_error">Error</string>
+    <string name="string_error_renaming_file">Error renaming file</string>
+    <string name="string_error_renaming_image">Error renaming image</string>
+    <string name="string_error_deleting_file">Error deleting file!</string>
+    <string name="string_step_1_process"><![CDATA[<b>Step 1:</b>]]> Open App and copy the link.</string>
+    <string name="string_step_2_process"><![CDATA[<b>Step 1:</b>]]> Go back to the application, select \'Paste link\' to download the link.</string>
+    <string name="string_num_image_selected">%s Image selected</string>
+    <string name="string_details">Details</string>
+    <string name="string_file_name">File name</string>
+    <string name="string_date">Date</string>
+    <string name="string_storage_path">Storage path</string>
+    <string name="string_duration">Duration</string>
+
 
 </resources>

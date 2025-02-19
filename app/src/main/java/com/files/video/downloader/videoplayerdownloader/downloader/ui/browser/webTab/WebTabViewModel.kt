@@ -72,6 +72,10 @@ class WebTabViewModel @Inject constructor(
     override fun stop() {
     }
 
+    suspend fun setListHost() {
+        adBlockHostsRemoteDataSource.setListHost()
+    }
+
     fun isAd(url: String): Boolean {
         return adBlockHostsRemoteDataSource.isAds(url)
     }

@@ -23,15 +23,34 @@ class GuideActivity : BaseActivity<ActivityGuideBinding>() {
     }
 
     override fun initView() {
-        binding.tvStep1.text = HtmlCompat.fromHtml(
-            getString(R.string.string_step_1),
-            HtmlCompat.FROM_HTML_MODE_LEGACY
-        )
+        if (intent.getStringExtra("open") == "home") {
+            binding.tvStep1.text = HtmlCompat.fromHtml(
+                getString(R.string.string_step_1),
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            )
 
-        binding.tvStep2.text = HtmlCompat.fromHtml(
-            getString(R.string.string_step_2),
-            HtmlCompat.FROM_HTML_MODE_LEGACY
-        )
+            binding.tvStep2.text = HtmlCompat.fromHtml(
+                getString(R.string.string_step_2),
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            )
+
+            binding.imgStep1.setImageResource(R.drawable.img_step_1)
+            binding.imgStep2.setImageResource(R.drawable.img_step_2)
+
+        } else {
+            binding.tvStep1.text = HtmlCompat.fromHtml(
+                getString(R.string.string_step_1_process),
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            )
+
+            binding.tvStep2.text = HtmlCompat.fromHtml(
+                getString(R.string.string_step_2_process),
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            )
+
+            binding.imgStep1.setImageResource(R.drawable.img_step_1_process)
+            binding.imgStep2.setImageResource(R.drawable.img_step_2_process)
+        }
 
         binding.btnBack.setOnClickListener {
             finish()

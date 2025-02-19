@@ -29,10 +29,14 @@ class TabsActivity : BaseActivity<ActivityTabsBinding>() {
     }
 
     override fun initView() {
+
+        binding.tvNumTabs.text = getString(R.string.string_num_tabs, listTabs.size.toString())
+
         tabViewModels.listTabWeb.observe(this) {
-            binding.tvNumTabs.text = getString(R.string.string_num_tabs, it.size.toString())
             listTabs.clear()
             listTabs.addAll(it)
+
+            binding.tvNumTabs.text = getString(R.string.string_num_tabs, listTabs.size.toString())
 
             binding.rcvTabs.apply {
                 setHasFixedSize(true)
@@ -74,6 +78,10 @@ class TabsActivity : BaseActivity<ActivityTabsBinding>() {
         binding.tvCloseAll.setOnClickListener {
             tabViewModels.clearAllTabs()
         }
+
+        binding.imgAdd.setOnClickListener {
+            newTab("")
+        }
     }
 
     private fun openNewTab(input: String) {
@@ -87,5 +95,18 @@ class TabsActivity : BaseActivity<ActivityTabsBinding>() {
             startActivity(intent)
 
         }
+    }
+
+    private fun newTab(input: String) {
+        val webTab = WebTabFactory.createWebTabFromInput(input)
+
+        tabViewModels.addNewTab(webTab)
+
+        val intent = Intent(this, WebTabActivity::class.java)
+        val bundle = Bundle()
+        bundle.putSerializable("webtab", webTab)
+        intent.putExtras(bundle)
+        startActivity(intent)
+
     }
 }

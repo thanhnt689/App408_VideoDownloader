@@ -24,8 +24,10 @@ interface VideoTaskItemDao {
     fun insertVideoTaskItem(videoTaskItem: VideoTaskItem)
 
     @Query(
-        """SELECT * FROM VideoTaskItem WHERE CASE WHEN :isAll = 0 THEN mime_type =:typeItem ELSE mime_type IS NOT NULL END 
-                AND title LIKE :textSearch AND is_security = 0
+        """SELECT * FROM VideoTaskItem 
+       WHERE (:isAll = 1 OR mime_type = :typeItem) 
+             AND title LIKE :textSearch 
+             AND is_security = 0
        ORDER BY  
                 CASE WHEN :typeSort = 1 THEN file_name COLLATE NOCASE COLLATE UNICODE END ASC,
                 CASE WHEN :typeSort = 2 THEN file_name COLLATE NOCASE COLLATE UNICODE END DESC,
@@ -36,15 +38,17 @@ interface VideoTaskItemDao {
        """
     )
     fun getLiveDataVideoTaskItemByTextSearch(
-        isAll: Boolean?,
+        isAll: Int,
         typeItem: String?,
         textSearch: String,
         typeSort: Int
     ): LiveData<List<VideoTaskItem>>
 
     @Query(
-        """SELECT * FROM VideoTaskItem WHERE CASE WHEN :isAll = 0 THEN mime_type =:typeItem ELSE mime_type IS NOT NULL END 
-                AND title LIKE :textSearch AND is_security = 1
+        """SELECT * FROM VideoTaskItem 
+       WHERE (:isAll = 1 OR mime_type = :typeItem) 
+             AND title LIKE :textSearch 
+             AND is_security = 1
        ORDER BY  
                 CASE WHEN :typeSort = 1 THEN file_name COLLATE NOCASE COLLATE UNICODE END ASC,
                 CASE WHEN :typeSort = 2 THEN file_name COLLATE NOCASE COLLATE UNICODE END DESC,

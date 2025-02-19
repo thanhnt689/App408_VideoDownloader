@@ -26,6 +26,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import javax.inject.Inject
+import kotlin.math.log
 
 const val AD_HOSTS_URL_LIST_ADAWAY = "https://adaway.org/hosts.txt"
 const val AD_HOSTS_URLS_LIST_ADMIRAL = "https://v.firebog.net/hosts/Admiral.txt"
@@ -115,9 +116,13 @@ class AdBlockHostsRemoteDataSource @Inject constructor(
         return hostsCache
     }
 
+    suspend fun setListHost() {
+        hostsCache.addAll(adHostDao.getAdHosts())
+    }
+
     fun isAds(url: String): Boolean {
 
-//        val hostCache = adHostDao.getAdHosts()
+//        val hostCacheDb = adHostDao.getAdHosts()
 
         val uri = try {
             Uri.parse(url)

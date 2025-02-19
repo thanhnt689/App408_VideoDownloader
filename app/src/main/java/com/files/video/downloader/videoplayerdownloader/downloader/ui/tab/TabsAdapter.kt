@@ -24,6 +24,7 @@ class TabsAdapter(
         fun bind(webTab: WebTab, position: Int) {
             binding.tvLinkWeb.text = webTab.getUrl().toString()
             Glide.with(binding.imgIcon).load(webTab.getFavicon()).into(binding.imgIcon)
+            Glide.with(binding.imgWallpaper).load(webTab.getFavicon()).into(binding.imgWallpaper)
 
             binding.tvLinkWeb.isSelected = true
 

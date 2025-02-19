@@ -127,14 +127,12 @@
                     android:id="@+id/img_download"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:background="@drawable/bg_btn_skip_permission"
-                    android:padding="@dimen/_12sdp"
-                    android:src="@drawable/ic_download"
+                    android:src="@drawable/ic_download_disable_update"
                     app:layout_constraintBottom_toBottomOf="@id/layout_search"
                     app:layout_constraintDimensionRatio="1:1"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@id/layout_search"
-                    app:tint="#FFFFFF" />
+                     />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -145,6 +143,14 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/layout_download" />
+
+            <LinearLayout
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:id="@+id/webview_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:visibility="gone" />
 
             <com.mikhaellopez.circularprogressbar.CircularProgressBar
                 android:id="@+id/pb_loading"

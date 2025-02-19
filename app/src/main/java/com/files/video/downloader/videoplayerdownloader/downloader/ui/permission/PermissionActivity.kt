@@ -67,6 +67,9 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                 ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.READ_MEDIA_VIDEO
+                ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.READ_MEDIA_IMAGES
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
                 isPermissionStorage = true

@@ -7,6 +7,7 @@ import androidx.databinding.ObservableField
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseViewModel
@@ -50,16 +51,20 @@ class PrivateVideoViewModel @Inject constructor(
     val shareEvent = SingleLiveEvent<Uri>()
 
     val searchCharObservable: MutableLiveData<String> = MutableLiveData("")
+    val fileType: MutableLiveData<String> = MutableLiveData("")
 
-    suspend fun queryVideoTaskItem(fileType: String): LiveData<List<VideoTaskItem>> {
+    suspend fun queryVideoTaskItem(): LiveData<List<VideoTaskItem>> {
         return sortStateObservable.switchMap { sortState ->
             return@switchMap searchCharObservable.switchMap { query ->
-                videoTaskItemRepository.queryVideoTaskItem(
-                    fileType == "all",
-                    fileType,
-                    query,
-                    sortState.value
-                )
+                return@switchMap fileType.switchMap { type ->
+                    videoTaskItemRepository.queryVideoTaskItem(
+                        type == "all",
+                        type,
+                        query,
+                        sortState.value
+                    )
+                }
+
             }
         }
     }
@@ -110,7 +115,28 @@ class PrivateVideoViewModel @Inject constructor(
 //            }
 
             val newMediaNameUri = fileUtil.renameMedia(context, filePath, newName)
-            Log.d("ntt", "renameVideo: newMediaNameUri: ${newMediaNameUri}")
+            if (newMediaNameUri != null) {
+                newMediaNameUri.second.let {
+                    videoTaskItemRepository.updateNameVideoTaskItem(
+                        id, newMediaNameUri.first,
+                        it
+                    )
+                }
+
+                return
+
+                renameErrorEvent.value = VideoViewModel.FILE_EXIST_ERROR_CODE
+
+            }
+        }
+
+        renameErrorEvent.value = VideoViewModel.FILE_INVALID_ERROR_CODE
+    }
+
+    suspend fun renameImage(context: Context, id: String, filePath: String, newName: String) {
+        if (newName.isNotEmpty()) {
+
+            val newMediaNameUri = fileUtil.renameImage(context, filePath, newName)
             if (newMediaNameUri != null) {
                 newMediaNameUri.second.let {
                     videoTaskItemRepository.updateNameVideoTaskItem(

@@ -51,7 +51,9 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
         binding.tvDailyMotion.isSelected = true
 
         binding.imgGuide.setOnClickListener {
-            startActivity(GuideActivity.newIntent(requireContext()))
+            startActivity(GuideActivity.newIntent(requireContext()).apply {
+                putExtra("open", "home")
+            })
         }
 
         tabViewModels.listTabWeb.observe(viewLifecycleOwner) {

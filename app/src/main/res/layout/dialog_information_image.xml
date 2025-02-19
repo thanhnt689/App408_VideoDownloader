@@ -11,7 +11,8 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/_16sdp"
         android:background="@drawable/bg_dialog_rate"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingVertical="@dimen/_15sdp">
 
         <LinearLayout
             android:id="@+id/native_ads"
@@ -23,9 +24,7 @@
             android:id="@+id/tv_link"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_14sdp"
             android:ellipsize="marquee"
-
             android:focusable="true"
             android:focusableInTouchMode="true"
             android:fontFamily="@font/sf_pro_display_regular"
@@ -80,7 +79,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_10sdp"
-            android:layout_marginBottom="@dimen/_14sdp"
             android:fontFamily="@font/sf_pro_display_regular"
             android:gravity="center"
             android:paddingHorizontal="@dimen/_8sdp"

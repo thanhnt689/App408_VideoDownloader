@@ -1,18 +1,25 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab
 
+import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentValues
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.os.Message
 import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Base64
 import android.util.Log
 import android.view.ContextMenu
@@ -20,6 +27,10 @@ import android.view.ContextMenu.ContextMenuInfo
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.LinearInterpolator
+import android.view.inputmethod.EditorInfo
 import android.webkit.HttpAuthHandler
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.ServiceWorkerClient
@@ -33,8 +44,13 @@ import android.webkit.WebView.HitTestResult
 import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
+import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.text.HtmlCompat
 import androidx.databinding.Observable
 import androidx.databinding.Observable.OnPropertyChangedCallback
 import androidx.databinding.ObservableField
@@ -52,6 +68,8 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.network.
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityWebTabBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetDownloadBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetPermissionBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetSortBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogInformationImage
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
@@ -76,6 +94,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.FaviconU
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileNameCleaner
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SingleLiveEvent
+import com.files.video.downloader.videoplayerdownloader.downloader.util.SystemUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.VideoUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.CustomProxyController
@@ -83,6 +102,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_ut
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.nlbn.ads.util.AppOpenManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.Dispatchers
@@ -167,8 +187,6 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     private val videoDetectionModel: VideoDetectionAlgVModel by viewModels()
 
 
-    private lateinit var workerEventProvider: WorkerEventProvider
-
     private lateinit var historyItemCurrent: HistoryItem
 
     private var bundle: Bundle? = null
@@ -201,8 +219,19 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
     private lateinit var videoInfoAdapter: VideoInfoAdapter
 
+    private lateinit var permissionLayoutBinding: LayoutBottomSheetPermissionBinding
+
+    private lateinit var bottomSheetPermissionDialog: BottomSheetDialog
+
+    private lateinit var animation: AlphaAnimation
+
+    private lateinit var handler: Handler
+
+    private lateinit var runnable: Runnable
+
     private var webViewClient = object : WebViewClient() {
         override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+            Log.d("ntt", "doUpdateVisitedHistory: ")
             val viewTitle = view?.title
             val title = tabViewModel.currentTitle.get()
             val userAgent = view?.settings?.userAgentString ?: BrowserFragment.MOBILE_USER_AGENT
@@ -233,6 +262,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                         tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
 
                     pageTab?.setUrl(url)
+                    pageTab?.setFavicon(icon)
 
                     withContext(Dispatchers.Main) {
 
@@ -534,6 +564,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
     private val serviceWorkerClient = object : ServiceWorkerClient() {
         override fun shouldInterceptRequest(request: WebResourceRequest): WebResourceResponse? {
+            Log.d("ntt", "shouldInterceptRequest: serviceWorkerClient")
             val url = request.url.toString()
 
             val isM3u8Check = true
@@ -590,21 +621,35 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
     override fun initView() {
 
+        videoDetectionTabViewModel.webTabModel = tabViewModel
+
         videoDetectionTabViewModel.start()
 
         videoDetectionModel.start()
 
         tabViewModel.start()
 
+        handler = Handler(Looper.getMainLooper())
+
+        animation =
+            AlphaAnimation(1f, 0.2f)
+
+        animation.duration = 700
+
+        animation.interpolator = LinearInterpolator()
+        animation.repeatCount = Animation.INFINITE
+
+        animation.repeatMode = Animation.REVERSE
+
 
         val swController = ServiceWorkerController.getInstance()
         swController.setServiceWorkerClient(serviceWorkerClient)
         swController.serviceWorkerWebSettings.allowContentAccess = true
 
-        videoDetectionTabViewModel.webTabModel = tabViewModel
-
 
         bottomSheetDialog = BottomSheetDialog(this, R.style.CustomAlertBottomSheet)
+
+        bottomSheetPermissionDialog = BottomSheetDialog(this, R.style.CustomAlertBottomSheet)
 
         videoDetectionTabViewModel.downloadButtonState.addOnPropertyChangedCallback(object :
             Observable.OnPropertyChangedCallback() {
@@ -615,13 +660,36 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                     val state = videoDetectionTabViewModel.downloadButtonState.get()
 
                     when (videoDetectionTabViewModel.downloadButtonState.get()) {
-                        is DownloadButtonStateCanNotDownload -> binding.imgDownload.setImageResource(
-                            R.drawable.ic_download_disable
-                        )
+//                        is DownloadButtonStateCanNotDownload -> binding.imgDownload.setImageResource(
+//                            R.drawable.ic_download_disable
+//                        )
+//
+//                        is DownloadButtonStateCanDownload -> binding.imgDownload.setImageResource(R.drawable.ic_download_enable)
+//                        is DownloadButtonStateLoading -> {
+//                            binding.imgDownload.setImageResource(R.drawable.ic_download_disable)
+//                        }
 
-                        is DownloadButtonStateCanDownload -> binding.imgDownload.setImageResource(R.drawable.ic_download_enable)
+                        is DownloadButtonStateCanNotDownload -> {
+
+                            Glide.with(binding.imgDownload).load(R.drawable.ic_download_disable)
+                                .into(binding.imgDownload)
+
+                        }
+
+                        is DownloadButtonStateCanDownload -> {
+
+                            Glide.with(binding.imgDownload).load(R.drawable.ic_download_enable)
+                                .into(binding.imgDownload)
+                        }
+
                         is DownloadButtonStateLoading -> {
-                            binding.imgDownload.setImageResource(R.drawable.ic_download_disable)
+
+                            binding.imgDownload.setBackgroundResource(
+                                R.drawable.bg_download_disable_update
+                            )
+
+                            Glide.with(binding.imgDownload).load(R.drawable.loading_video)
+                                .into(binding.imgDownload)
                         }
                     }
 
@@ -670,6 +738,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
         configureWebView()
 
+        registerForContextMenu(webTab.getWebView())
 
         tabViewModels.listTabWeb.observe(this) {
             binding.tvTab.text = it.size.toString()
@@ -721,6 +790,17 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
             }
 
         })
+
+        binding.edtSearch.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                val url = binding.edtSearch.text.toString()
+                webTab.setUrl(url)
+                tabViewModel.loadPage(webTab.getUrl())
+                true // Trả về true để xử lý sự kiện
+            } else {
+                false
+            }
+        }
 
 
         binding.imgBack.setOnClickListener {
@@ -887,43 +967,54 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         val webView = v as WebView
         val result = webView.hitTestResult
 
-        if (result?.type == WebView.HitTestResult.IMAGE_TYPE || result?.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-            val imageUrl = result.extra // URL của ảnh
-            Log.d("ntt", "configureWebView: imageUrl: ${imageUrl}")
+        val imageUrl = result.extra
 
-            if (imageUrl != null) {
-                val dialogInformationImage =
-                    DialogInformationImage(this@WebTabActivity,
-                        imageUrl.toString(),
-                        onClickOpenNewTab = {
-                            if (imageUrl.startsWith("http")) {
-                                webTab.getWebView()?.stopLoading()
-                                webTab.getWebView()?.loadUrl(imageUrl)
+        if (imageUrl != null) {
+            val dialogInformationImage =
+                DialogInformationImage(this@WebTabActivity,
+                    imageUrl.toString(),
+                    result.type == WebView.HitTestResult.IMAGE_TYPE || result.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE,
+                    onClickOpenNewTab = {
+                        if (imageUrl.startsWith("http")) {
+                            webTab.getWebView()?.stopLoading()
+                            webTab.getWebView()?.loadUrl(imageUrl)
 
-                            }
-                        },
-                        onClickShare = {
-                            shareUrl(this@WebTabActivity, imageUrl)
-                        },
-                        onClickCopyLink = {
-                            val clipboard =
-                                getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("copied_text", imageUrl)
-                            clipboard.setPrimaryClip(clip)
-                            Toast.makeText(this, "Đã sao chép vào clipboard", Toast.LENGTH_SHORT)
-                                .show()
-                        },
-                        onClickDownloadImage = {
-                            lifecycleScope.launch(Dispatchers.Main) {
+                        }
+                    },
+                    onClickShare = {
+                        shareUrl(this@WebTabActivity, imageUrl)
+                    },
+                    onClickCopyLink = {
+                        val clipboard =
+                            getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("copied_text", imageUrl)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(
+                            this,
+                            getString(R.string.string_copied_to_clipboard), Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    },
+                    onClickDownloadImage = {
+                        lifecycleScope.launch(Dispatchers.Main) {
+                            if (!checkNotificationPermission() || !checkStoragePermission()) {
+                                showBottomSheetPermission()
+                            } else {
                                 downloadImage(this@WebTabActivity, imageUrl)
                             }
-                        })
+                        }
+                    })
 
-                dialogInformationImage.show()
-            }
-        } else {
-            false
+            dialogInformationImage.show()
         }
+
+
+//        if (result?.type == WebView.HitTestResult.IMAGE_TYPE || result?.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+//            val imageUrl = result.extra // URL của ảnh
+//
+//        } else {
+//            false
+//        }
     }
 
     private fun shareUrl(context: Context, url: String) {
@@ -1094,6 +1185,14 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
                 Log.d("ntt", "File saved at: ${outputFile.absolutePath}")
 
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        "File saved: ${outputFile.absolutePath}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
                 return@withContext outputFile
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -1129,7 +1228,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                 webTab.getWebView()?.stopLoading()
                 webTab.getWebView()?.loadUrl(tab.getUrl())
 
-                registerForContextMenu(webTab.getWebView())
+
             }
         }
     }
@@ -1170,16 +1269,16 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     private fun handleOpenDetectedVideos() {
         videoDetectionTabViewModel.showDetectedVideosEvent.observe(this) {
 //            navigateToDownloads()
-            Log.d(
-                "ntt",
-                "handleOpenDetectedVideos: ${videoDetectionTabViewModel.detectedVideosList.get()}"
-            )
 
             val list = videoDetectionTabViewModel.detectedVideosList.get()
-            val firstItem = list?.firstOrNull() // Lấy phần tử đầu tiên hoặc null nếu danh sách rỗng
+            val firstItem = list?.firstOrNull()
 
             if (firstItem != null) {
-                showBottomSheetDownload(firstItem)
+                if (!checkStoragePermission() || !checkNotificationPermission()) {
+                    showBottomSheetPermission()
+                } else {
+                    showBottomSheetDownload(firstItem)
+                }
             } else {
                 // Xử lý khi danh sách rỗng
                 Log.d("ntt", "Danh sách rỗng, không có phần tử đầu tiên")
@@ -1427,46 +1526,363 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         }
 
         downloadBinding.cvImage.setOnClickListener {
-//            startActivity(
-//                Intent(
-//                    this, PlayMediaActivity::class.java
-//                ).apply {
-//                    val selectedFormatsMap = videoDetectionTabViewModel.selectedFormats.get()
-//                    val format = selectedFormatsMap?.get(videoInfo.id)
-//
-//                    val selectedFormatTitle = videoDetectionTabViewModel.formatsTitles.get()
-//                    val title = selectedFormatTitle?.get(videoInfo.id)
-//                    // you can add values(if any) to pass to the next class or avoid using `.apply`
-//                    val currFormat = videoInfo.formats.formats.filter {
-//                        format?.let { it1 ->
-//                            it.format?.contains(
-//                                it1 as CharSequence
-//                            )
-//                        } ?: false
-//                    }
-//
-//                    putExtra(PlayMediaActivity.VIDEO_NAME, title)
-//
-//                    if (currFormat.isNotEmpty()) {
-//                        val headers = currFormat.first().httpHeaders?.let {
-//                            JSONObject(
-//                                currFormat.first().httpHeaders ?: emptyMap<String, String>()
-//                            ).toString()
-//                        } ?: "{}"
-//
-//                        putExtra(
-//                            PlayMediaActivity.VIDEO_URL, currFormat.first().url
-//                        )
-//                        val headersFinal = headers
-//                        putExtra(
-//                            PlayMediaActivity.VIDEO_HEADERS, headersFinal
-//                        )
-//                    }
-//                })
+
         }
 
 
         bottomSheetDialog.show()
+    }
+
+    private fun showBottomSheetPermission() {
+
+        permissionLayoutBinding = LayoutBottomSheetPermissionBinding.inflate(layoutInflater)
+
+        bottomSheetPermissionDialog.setContentView(permissionLayoutBinding.root)
+
+        bottomSheetPermissionDialog.setCanceledOnTouchOutside(true);
+
+        val behavior = bottomSheetPermissionDialog.behavior
+
+        behavior.state = BottomSheetBehavior.STATE_EXPANDED
+
+        val bottomSheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                // Xử lý sự kiện thay đổi trạng thái của bottom sheet
+                when (newState) {
+                    BottomSheetBehavior.STATE_HIDDEN -> {
+                    }
+
+                    BottomSheetBehavior.STATE_EXPANDED -> {
+                    }
+
+                    BottomSheetBehavior.STATE_COLLAPSED -> {
+                    }
+
+                    BottomSheetBehavior.STATE_DRAGGING -> {
+                        behavior.setState(BottomSheetBehavior.STATE_EXPANDED)
+                    }
+                }
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                // Xử lý khi bottom sheet được trượt
+            }
+        }
+
+        SystemUtil.setLocale(this@WebTabActivity)
+
+        bottomSheetPermissionDialog.behavior.addBottomSheetCallback(bottomSheetCallback)
+
+        runnable = Runnable {
+            if (permissionLayoutBinding.btnStorage.isEnabled) {
+                permissionLayoutBinding.btnStorage.startAnimation(animation)
+            } else if (permissionLayoutBinding.btnNotification.isEnabled) {
+                permissionLayoutBinding.btnNotification.startAnimation(animation)
+            }
+        }
+
+        handler.postDelayed(runnable, 5000L)
+
+        if (checkStoragePermission()) {
+
+            permissionLayoutBinding.btnStorage.clearAnimation()
+
+            handler.removeCallbacks(runnable)
+            handler.postDelayed(runnable, 5000L)
+
+            permissionLayoutBinding.btnStorage.isEnabled = false
+            permissionLayoutBinding.btnStorage.setBackgroundResource(R.drawable.bg_btn_exit)
+
+            permissionLayoutBinding.btnStorage.setTextColor(Color.parseColor("#808080"))
+
+            permissionLayoutBinding.tvDes.text = getString(R.string.string_notification)
+            permissionLayoutBinding.imgStorage.setImageResource(R.drawable.ic_notification)
+
+            permissionLayoutBinding.btnNotification.isEnabled = true
+            permissionLayoutBinding.btnNotification.setBackgroundResource(R.drawable.bg_btn_skip_permission)
+            permissionLayoutBinding.btnNotification.setTextColor(Color.parseColor("#FFFFFF"))
+
+        } else {
+
+            permissionLayoutBinding.btnNotification.clearAnimation()
+
+            handler.removeCallbacks(runnable)
+            handler.postDelayed(runnable, 5000L)
+
+            permissionLayoutBinding.btnStorage.isEnabled = true
+            permissionLayoutBinding.btnStorage.setBackgroundResource(R.drawable.bg_btn_skip_permission)
+            permissionLayoutBinding.btnStorage.setTextColor(Color.parseColor("#FFFFFF"))
+
+            permissionLayoutBinding.tvDes.text = getString(R.string.string_storage)
+            permissionLayoutBinding.imgStorage.setImageResource(R.drawable.ic_storage)
+
+
+            permissionLayoutBinding.btnNotification.isEnabled = false
+            permissionLayoutBinding.btnNotification.setBackgroundResource(R.drawable.bg_btn_exit)
+
+            permissionLayoutBinding.btnNotification.setTextColor(Color.parseColor("#808080"))
+
+        }
+
+        permissionLayoutBinding.btnClose.setOnClickListener {
+            bottomSheetPermissionDialog.dismiss()
+        }
+
+        permissionLayoutBinding.btnNotification.setOnClickListener {
+            permissionLayoutBinding.btnNotification.clearAnimation()
+
+            handler.removeCallbacks(runnable)
+            handler.postDelayed(runnable, 5000L)
+
+            requestNotificationPermission.launch(
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+        }
+
+        permissionLayoutBinding.btnStorage.setOnClickListener {
+            requestPermissionStorage()
+        }
+
+        bottomSheetPermissionDialog.show()
+    }
+
+    private fun requestPermissionStorage() {
+
+        permissionLayoutBinding.btnStorage.clearAnimation()
+
+        handler.removeCallbacks(runnable)
+        handler.postDelayed(runnable, 5000L)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            storageImageActivityResultLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+        } else {
+            //Android is below 13(R)
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                ),
+                99
+            )
+        }
+    }
+
+    private val storageImageActivityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            storageActivityResultLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
+        }
+
+    private val storageActivityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                if (checkNotificationPermission()) {
+
+                    bottomSheetPermissionDialog.dismiss()
+                } else {
+                    permissionLayoutBinding.btnNotification.clearAnimation()
+                    handler.removeCallbacks(runnable)
+                    handler.postDelayed(runnable, 5000L)
+                    permissionLayoutBinding.btnStorage.isEnabled = false
+                    permissionLayoutBinding.btnStorage.setBackgroundResource(R.drawable.bg_btn_exit)
+
+                    permissionLayoutBinding.tvDes.text = getString(R.string.string_notification)
+                    permissionLayoutBinding.imgStorage.setImageResource(R.drawable.ic_notification)
+
+                    permissionLayoutBinding.btnStorage.setTextColor(Color.parseColor("#808080"))
+
+
+                    permissionLayoutBinding.btnNotification.isEnabled = true
+                    permissionLayoutBinding.btnNotification.setBackgroundResource(R.drawable.bg_btn_skip_permission)
+
+                    permissionLayoutBinding.btnNotification.setTextColor(Color.parseColor("#FFFFFF"))
+                }
+            } else {
+                showSettingsDialog()
+            }
+
+        }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == 99) {
+            if (grantResults.isNotEmpty()) {
+                val read = grantResults[0] == PackageManager.PERMISSION_GRANTED
+                val write = grantResults[0] == PackageManager.PERMISSION_GRANTED
+
+                if (read && write) {
+                    if (checkNotificationPermission()) {
+
+                        bottomSheetPermissionDialog.dismiss()
+                    } else {
+                        permissionLayoutBinding.btnNotification.clearAnimation()
+                        handler.removeCallbacks(runnable)
+                        handler.postDelayed(runnable, 5000L)
+                        permissionLayoutBinding.btnStorage.isEnabled = false
+                        permissionLayoutBinding.btnStorage.setBackgroundResource(R.drawable.bg_btn_exit)
+
+                        permissionLayoutBinding.tvDes.text = getString(R.string.string_notification)
+                        permissionLayoutBinding.imgStorage.setImageResource(R.drawable.ic_notification)
+
+                        permissionLayoutBinding.btnStorage.setTextColor(Color.parseColor("#808080"))
+
+
+                        permissionLayoutBinding.btnNotification.isEnabled = true
+                        permissionLayoutBinding.btnNotification.setBackgroundResource(R.drawable.bg_btn_skip_permission)
+
+                        permissionLayoutBinding.btnNotification.setTextColor(Color.parseColor("#FFFFFF"))
+                    }
+                } else {
+                    showSettingsDialog()
+                }
+            }
+        }
+
+    }
+
+
+    private val requestNotificationPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            if (checkStoragePermission()) {
+
+                bottomSheetPermissionDialog.dismiss()
+            } else {
+                permissionLayoutBinding.btnNotification.clearAnimation()
+                handler.removeCallbacks(runnable)
+                handler.postDelayed(runnable, 5000L)
+                permissionLayoutBinding.btnNotification.isEnabled = false
+                permissionLayoutBinding.btnNotification.setBackgroundResource(R.drawable.bg_btn_exit)
+
+                permissionLayoutBinding.tvDes.text = getString(R.string.string_storage)
+                permissionLayoutBinding.imgStorage.setImageResource(R.drawable.ic_storage)
+
+                permissionLayoutBinding.btnNotification.setTextColor(Color.parseColor("#808080"))
+
+                permissionLayoutBinding.btnStorage.isEnabled = true
+                permissionLayoutBinding.btnStorage.setBackgroundResource(R.drawable.bg_btn_skip_permission)
+
+                permissionLayoutBinding.btnStorage.setTextColor(Color.parseColor("#FFFFFF"))
+            }
+        } else {
+            showSettingsDialog()
+        }
+    }
+
+    private fun showSettingsDialog() {
+//        frAds.visibility = View.GONE
+        var builder = AlertDialog.Builder(this@WebTabActivity)
+        builder.setTitle(getString(R.string.string_permission))
+            .setMessage(getString(R.string.permission_setting))
+            .setPositiveButton(getString(R.string.string_ok)) { _: DialogInterface, _: Int ->
+                openAppSettings()
+            }
+            .setCancelable(false)
+
+        var dialog = builder.create()
+        builder.setOnDismissListener {
+//            frAds.visibility = View.VISIBLE
+        }
+        dialog.show()
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        val uri = Uri.fromParts("package", packageName, null)
+        intent.data = uri
+//        AppOpenManager.getInstance().disableAppResumeWithActivity(WebTabActivity::class.java)
+        startSettingResult.launch(intent)
+    }
+
+    val startSettingResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+
+        if (checkStoragePermission() && checkNotificationPermission()) {
+            bottomSheetDialog.dismiss()
+        } else {
+
+            if (checkStoragePermission()) {
+
+                permissionLayoutBinding.btnStorage.clearAnimation()
+
+                handler.removeCallbacks(runnable)
+                handler.postDelayed(runnable, 5000L)
+
+                permissionLayoutBinding.btnStorage.isEnabled = false
+                permissionLayoutBinding.btnStorage.setBackgroundResource(R.drawable.bg_btn_exit)
+
+                permissionLayoutBinding.btnStorage.setTextColor(Color.parseColor("#808080"))
+
+                permissionLayoutBinding.tvDes.text = getString(R.string.string_notification)
+                permissionLayoutBinding.imgStorage.setImageResource(R.drawable.ic_notification)
+
+                permissionLayoutBinding.btnNotification.isEnabled = true
+                permissionLayoutBinding.btnNotification.setBackgroundResource(R.drawable.bg_btn_skip_permission)
+                permissionLayoutBinding.btnNotification.setTextColor(Color.parseColor("#FFFFFF"))
+
+            } else {
+
+                permissionLayoutBinding.btnNotification.clearAnimation()
+
+                handler.removeCallbacks(runnable)
+                handler.postDelayed(runnable, 5000L)
+
+                permissionLayoutBinding.btnStorage.isEnabled = true
+                permissionLayoutBinding.btnStorage.setBackgroundResource(R.drawable.bg_btn_skip_permission)
+                permissionLayoutBinding.btnStorage.setTextColor(Color.parseColor("#FFFFFF"))
+
+                permissionLayoutBinding.tvDes.text = getString(R.string.string_storage)
+                permissionLayoutBinding.imgStorage.setImageResource(R.drawable.ic_storage)
+
+                permissionLayoutBinding.btnNotification.isEnabled = false
+                permissionLayoutBinding.btnNotification.setBackgroundResource(R.drawable.bg_btn_exit)
+
+                permissionLayoutBinding.btnNotification.setTextColor(Color.parseColor("#808080"))
+
+            }
+        }
+
+    }
+
+    private fun checkStoragePermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_MEDIA_VIDEO
+            ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED
+        }
+
+    }
+
+    private fun checkNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
     }
 
     private fun onVideoDownloadPropagate(
@@ -1556,6 +1972,9 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                     putExtra(
                         PlayMediaActivity.VIDEO_URL, currFormat.first().url
                     )
+                    putExtra(
+                        PlayMediaActivity.ITEM_TYPE, "video"
+                    )
                     val headersFinal = if (isForce) "{}" else headers
                     putExtra(
                         PlayMediaActivity.VIDEO_HEADERS, headersFinal
@@ -1575,3 +1994,4 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         videoDetectionTabViewModel.selectedFormats.set(formats)
     }
 }
+

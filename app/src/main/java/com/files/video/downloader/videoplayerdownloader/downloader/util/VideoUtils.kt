@@ -1,9 +1,12 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.util
 
+import android.util.Log
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.ContentType
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
 import okhttp3.Headers
+import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.util.concurrent.TimeUnit
 
 class VideoUtils {
     companion object {

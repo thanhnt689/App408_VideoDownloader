@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import java.io.Serializable
 import java.util.UUID
 
 @Entity(tableName = "VideoTaskItem")
@@ -110,7 +111,7 @@ data class VideoTaskItem(
 
     @Ignore
     var isEditable: Boolean = false,
-) {
+) : Serializable {
     fun getPercentFromBytes(): Float =
         if (totalSize == 0L) 0f else (1f * downloadSize / totalSize) * 100f
 
