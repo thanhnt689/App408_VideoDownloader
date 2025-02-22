@@ -192,7 +192,6 @@ class DetectedVideosTabViewModel @Inject constructor(
 
     override fun verifyLinkStatus(resourceRequest: Request, hlsTitle: String?, isM3u8: Boolean) {
         // TODO list of sites, where youtube dl should be disabled
-        Log.d("ntt", "verifyLinkStatus: ")
         if (resourceRequest.url.toString().contains("tiktok.")) {
             return
         }

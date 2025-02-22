@@ -21,6 +21,14 @@ class VideoTaskItemRepository @Inject constructor(
         return videoTaskItemDao.getVideoTaskItem()
     }
 
+    fun getAllVideoTaskItems(): List<VideoTaskItem> {
+        return videoTaskItemDao.getAllVideoTaskItems()
+    }
+
+    fun deleteVideoTaskItems(videoTaskItems: List<VideoTaskItem>) {
+        videoTaskItemDao.deleteVideoTaskItems(videoTaskItems)
+    }
+
     fun queryVideoTaskItem(
         isAll: Boolean,
         typeItem: String?,
@@ -68,6 +76,14 @@ class VideoTaskItemRepository @Inject constructor(
 
     suspend fun updateNameVideoTaskItem(id: String, newName: String, newPath: String) {
         videoTaskItemDao.updateNameVideoTaskItem(id, newName, newPath)
+    }
+
+    suspend fun isFileNameImageExists(newName: String): Boolean {
+        return videoTaskItemDao.isFileNameImageExists(newName) > 0
+    }
+
+    suspend fun isFileNameVideoExists(newName: String): Boolean {
+        return videoTaskItemDao.isFileNameVideoExists(newName) > 0
     }
 
     fun findVideoTaskItemByName(name: String): VideoTaskItem {

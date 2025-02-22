@@ -27,6 +27,7 @@ import io.reactivex.rxjava3.core.Observable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -69,15 +70,39 @@ class PrivateVideoViewModel @Inject constructor(
         }
     }
 
-    suspend fun queryVideoTaskItemSecurity(fileType: String): LiveData<List<VideoTaskItem>> {
+    private fun isFileExists(filePath: String): Boolean {
+        return File(filePath).exists()
+    }
+
+    suspend fun matchAndRemoveDeletedFiles() {
+        withContext(Dispatchers.IO) {
+            val allVideos = videoTaskItemRepository.getAllVideoTaskItems()
+            val deletedItems = mutableListOf<VideoTaskItem>()
+
+            for (item in allVideos) {
+                if (!isFileExists(item.filePath)) {
+                    deletedItems.add(item)
+                }
+            }
+
+            if (deletedItems.isNotEmpty()) {
+                videoTaskItemRepository.deleteVideoTaskItems(deletedItems)
+            }
+        }
+    }
+
+    suspend fun queryVideoTaskItemSecurity(): LiveData<List<VideoTaskItem>> {
         return sortStateObservable.switchMap { sortState ->
             return@switchMap searchCharObservable.switchMap { query ->
-                videoTaskItemRepository.queryVideoTaskItemSecurity(
-                    fileType == "all",
-                    fileType,
-                    query,
-                    sortState.value
-                )
+                return@switchMap fileType.switchMap { type ->
+                    videoTaskItemRepository.queryVideoTaskItemSecurity(
+                        type == "all",
+                        type,
+                        query,
+                        sortState.value
+                    )
+                }
+
             }
         }
     }
@@ -92,7 +117,7 @@ class PrivateVideoViewModel @Inject constructor(
     }
 
     suspend fun renameVideo(context: Context, id: String, filePath: String, newName: String) {
-        if (newName.isNotEmpty()) {
+        if (newName.isNotEmpty() && !videoTaskItemRepository.isFileNameVideoExists(newName)) {
 //            val exists = fileUtil.isUriExists(context, uri)
 //            if (exists) {
 //                val isFileWithNameNotExists =
@@ -134,7 +159,7 @@ class PrivateVideoViewModel @Inject constructor(
     }
 
     suspend fun renameImage(context: Context, id: String, filePath: String, newName: String) {
-        if (newName.isNotEmpty()) {
+        if (newName.isNotEmpty() && !videoTaskItemRepository.isFileNameImageExists(newName)) {
 
             val newMediaNameUri = fileUtil.renameImage(context, filePath, newName)
             if (newMediaNameUri != null) {
@@ -154,10 +179,6 @@ class PrivateVideoViewModel @Inject constructor(
 
         renameErrorEvent.value = VideoViewModel.FILE_INVALID_ERROR_CODE
     }
-
-//    fun queryVideoTaskItem(): LiveData<List<VideoTaskItem>> {
-//        return videoTaskItemRepository.getAllVideoTaskItem()
-//    }
 
     suspend fun deleteVideoTaskItem(videoTaskItem: VideoTaskItem) {
 

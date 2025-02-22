@@ -5,9 +5,11 @@ import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.files.video.downloader.videoplayerdownloader.downloader.R
@@ -17,12 +19,19 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.we
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabFactory
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
+@AndroidEntryPoint
 class TabsActivity : BaseActivity<ActivityTabsBinding>() {
 
-    private var listTabs = arrayListOf<WebTab>()
+    private var listTabs = arrayListOf<TabModel>()
 
     private lateinit var tabsAdapter: TabsAdapter
+
+    private val tabModelViewModel by viewModels<TabModelViewModel>()
 
     override fun setBinding(layoutInflater: LayoutInflater): ActivityTabsBinding {
         return ActivityTabsBinding.inflate(layoutInflater)
@@ -32,7 +41,7 @@ class TabsActivity : BaseActivity<ActivityTabsBinding>() {
 
         binding.tvNumTabs.text = getString(R.string.string_num_tabs, listTabs.size.toString())
 
-        tabViewModels.listTabWeb.observe(this) {
+        tabModelViewModel.queryAllTabModel().observe(this) {
             listTabs.clear()
             listTabs.addAll(it)
 
@@ -47,52 +56,67 @@ class TabsActivity : BaseActivity<ActivityTabsBinding>() {
                 tabsAdapter = TabsAdapter(
                     this@TabsActivity,
                     listTabs,
-                    onClickItemTab = { webTab, position ->
-//                        val intent = Intent(this@TabsActivity, WebTabActivity::class.java)
-//                        val bundle = Bundle()
-//                        bundle.putSerializable("webtab", webTab)
-//                        intent.putExtras(bundle)
-//                        startActivity(intent)
-                        openNewTab(webTab.getUrl())
-                        Log.d("ntt", "initView: $webTab")
+                    onClickItemTab = { tabModel, position ->
+                        openNewTab(tabModel)
                     },
-                    onClickDeleteItemTab = { webTab, position ->
-                        tabViewModels.removeTabAt(position)
+                    onClickDeleteItemTab = { tabModel, position ->
+//                        tabViewModels.removeTabAt(position)
+
+                        tabModelViewModel.deleteTabModel(tabModel)
                     },
                 )
 
                 adapter = tabsAdapter
 
             }
-
-
         }
 
-        tabViewModels.currentPositionTabWeb.observe(this) {
-            if (this::tabsAdapter.isInitialized) {
-                tabsAdapter.setPositionCurrentTab(it)
-                tabsAdapter.notifyDataSetChanged()
+//        tabViewModels.listTabWeb.observe(this) {
+//
+//
+//
+//        }
+
+//        tabViewModels.currentPositionTabWeb.observe(this) {
+//            if (this::tabsAdapter.isInitialized) {
+//                tabsAdapter.setPositionCurrentTab(it)
+//                tabsAdapter.notifyDataSetChanged()
+//            }
+//        }
+
+        binding.tvCloseAll.setOnClickListener {
+//            tabViewModels.clearAllTabs()
+            lifecycleScope.launch(Dispatchers.IO) {
+                tabModelViewModel.clearAllTabModel()
             }
         }
 
-        binding.tvCloseAll.setOnClickListener {
-            tabViewModels.clearAllTabs()
-        }
-
         binding.imgAdd.setOnClickListener {
-            newTab("")
+            newTab("https://www.google.com")
         }
     }
 
-    private fun openNewTab(input: String) {
-        if (input.isNotEmpty()) {
-            val webTab = WebTabFactory.createWebTabFromInput(input)
+    private fun openNewTab(tabModel: TabModel) {
+        if (tabModel.url.isNotEmpty()) {
+            val webTab = WebTabFactory.createWebTabFromInput(tabModel.url)
 
-            val intent = Intent(this, WebTabActivity::class.java)
-            val bundle = Bundle()
-            bundle.putSerializable("webtab", webTab)
-            intent.putExtras(bundle)
-            startActivity(intent)
+            lifecycleScope.launch(Dispatchers.IO) {
+                tabModelViewModel.updateInfoTabModel(
+                    tabModel.id,
+                    tabModel.url,
+                    tabModel.favicon,
+                    true
+                )
+
+                withContext(Dispatchers.Main) {
+                    val intent = Intent(this@TabsActivity, WebTabActivity::class.java)
+                    val bundle = Bundle()
+                    bundle.putSerializable("webtab", webTab)
+                    intent.putExtra("open", "tab")
+                    intent.putExtras(bundle)
+                    startActivity(intent)
+                }
+            }
 
         }
     }
@@ -100,13 +124,24 @@ class TabsActivity : BaseActivity<ActivityTabsBinding>() {
     private fun newTab(input: String) {
         val webTab = WebTabFactory.createWebTabFromInput(input)
 
-        tabViewModels.addNewTab(webTab)
+        val tabModel = WebTabFactory.createTabModelFromInput(input)
 
-        val intent = Intent(this, WebTabActivity::class.java)
-        val bundle = Bundle()
-        bundle.putSerializable("webtab", webTab)
-        intent.putExtras(bundle)
-        startActivity(intent)
+        lifecycleScope.launch(Dispatchers.IO) {
+            tabModelViewModel.insertTabModel(tabModel)
+
+            withContext(Dispatchers.Main) {
+                val intent = Intent(this@TabsActivity, WebTabActivity::class.java)
+                val bundle = Bundle()
+                bundle.putSerializable("webtab", webTab)
+                intent.putExtra("open", "tab")
+                intent.putExtras(bundle)
+                startActivity(intent)
+            }
+        }
+
+
+//        tabViewModels.addNewTab(webTab)
+
 
     }
 }

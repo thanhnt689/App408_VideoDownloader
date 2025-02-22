@@ -11,6 +11,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.ImageFormat
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -32,6 +33,8 @@ import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.inputmethod.EditorInfo
 import android.webkit.HttpAuthHandler
+import android.webkit.JavascriptInterface
+import android.webkit.MimeTypeMap
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.ServiceWorkerClient
 import android.webkit.ServiceWorkerController
@@ -40,7 +43,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
-import android.webkit.WebView.HitTestResult
 import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -50,7 +52,6 @@ import androidx.annotation.OptIn
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.text.HtmlCompat
 import androidx.databinding.Observable
 import androidx.databinding.Observable.OnPropertyChangedCallback
 import androidx.databinding.ObservableField
@@ -61,6 +62,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.files.video.downloader.videoplayerdownloader.downloader.MainActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.HistoryItem
@@ -69,7 +71,6 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.network.
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityWebTabBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetDownloadBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetPermissionBinding
-import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetSortBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogInformationImage
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
@@ -85,6 +86,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.Hi
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.PrivateVideoViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.processing.ProgressViewModel
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabModelViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabsActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AdBlockerHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogger
@@ -102,7 +104,6 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_ut
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.nlbn.ads.util.AppOpenManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.Dispatchers
@@ -168,7 +169,7 @@ const val HOME_TAB_INDEX = 0
 const val TAB_INDEX_KEY = "TAB_INDEX_KEY"
 
 @AndroidEntryPoint
-class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListener {
+class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListener, IDownloadImage {
 
     private lateinit var webTab: WebTab
 
@@ -205,6 +206,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     @Inject
     lateinit var fileUtil: FileUtil
 
+    private val tabModelViewModel: TabModelViewModel by viewModels()
+
     private lateinit var downloadBinding: LayoutBottomSheetDownloadBinding
 
     private lateinit var bottomSheetDialog: BottomSheetDialog
@@ -231,7 +234,6 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
     private var webViewClient = object : WebViewClient() {
         override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
-            Log.d("ntt", "doUpdateVisitedHistory: ")
             val viewTitle = view?.title
             val title = tabViewModel.currentTitle.get()
             val userAgent = view?.settings?.userAgentString ?: BrowserFragment.MOBILE_USER_AGENT
@@ -245,6 +247,9 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                     } catch (e: Throwable) {
                         null
                     }
+
+                    val outputFavicon = FaviconUtils.bitmapToBytes(icon)
+
                     saveUrlToHistory(url, icon, viewTitle ?: title)
 
                     videoDetectionTabViewModel.onStartPage(
@@ -258,17 +263,27 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                         userAgent
                     )
 
-                    val pageTab =
-                        tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
+                    val tabModelSelected = tabModelViewModel.getSelectedTabModel()
+                    tabModelSelected.url = url
 
-                    pageTab?.setUrl(url)
-                    pageTab?.setFavicon(icon)
+                    tabModelViewModel.updateInfoTabModel(
+                        tabModelSelected.id,
+                        url, outputFavicon, tabModelSelected.isSelected
+                    )
 
-                    withContext(Dispatchers.Main) {
+//                    val pageTab =
+//                        tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
+//
+//                    pageTab?.setUrl(url)
+//                    pageTab?.setFavicon(icon)
+//
+//                    withContext(Dispatchers.Main) {
+//
+//                        pageTab?.let { tabViewModels.updateCurrentTab(it) }
+//
+//                    }
 
-                        pageTab?.let { tabViewModels.updateCurrentTab(it) }
 
-                    }
                 }
             }
             super.doUpdateVisitedHistory(view, url, isReload)
@@ -382,27 +397,43 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 //            id = pageTab.id
 //        )
 
-            val pageTab = tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
+//            val pageTab =
+//                tabViewModels.currentPositionTabWeb.value?.let { tabViewModels.getTabAt(it) }
+//
+//            if (pageTab != null) {
+//                val headers = pageTab?.getHeaders() ?: emptyMap()
+//                val favi = pageTab?.getFavicon() ?: view.favicon ?: favicon
+//
+//                val updateTab = WebTab(
+//                    url,
+//                    view.title,
+//                    favi,
+//                    headers,
+//                    view,
+//                    id = pageTab!!.id
+//                )
+//
+//                tabViewModels.updateCurrentTab(updateTab)
+//            }
 
-            val headers = pageTab?.getHeaders() ?: emptyMap()
-            val favi = pageTab?.getFavicon() ?: view.favicon ?: favicon
+            val outputFavicon = FaviconUtils.bitmapToBytes(favicon)
 
-            val updateTab = WebTab(
-                url,
-                view.title,
-                favi,
-                headers,
-                view,
-                id = pageTab!!.id
-            )
+            lifecycleScope.launch(Dispatchers.IO) {
+                val tabModelSelected = tabModelViewModel.getSelectedTabModel()
+                tabModelSelected.url = url
 
-            tabViewModels.updateCurrentTab(updateTab)
+                tabModelViewModel.updateInfoTabModel(
+                    tabModelSelected.id,
+                    url, outputFavicon, tabModelSelected.isSelected
+                )
+            }
 
             tabViewModel.onStartPage(url, view.title)
         }
 
         override fun shouldOverrideUrlLoading(view: WebView, url: WebResourceRequest): Boolean {
 //            val isAdBlockerOn = settingsModel.isAdBlocker.get()
+
             val isAdBlockerOn = true
             val isAd = if (isAdBlockerOn) tabViewModel.isAd(url.url.toString()) else false
 
@@ -419,26 +450,44 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         override fun onPageFinished(view: WebView, url: String) {
             super.onPageFinished(view, url)
             tabViewModel.finishPage(url)
+
+            Log.d("ntt", "onPageFinished: ")
+
+            injectDownloadButton()
         }
 
         override fun onRenderProcessGone(
             view: WebView?, detail: RenderProcessGoneDetail?
         ): Boolean {
-//        val pageTab = pageTabProvider.getPageTab(tabViewModel.thisTabIndex.get())
-            val pageTab = tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
+//            val pageTab = tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
+//
+//            val webView = pageTab?.getWebView()
+//            if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                    view == webView && detail?.didCrash() == true
+//                } else {
+//                    view == webView
+//                }
+//            ) {
+//                webView?.destroy()
+//                return true
+//            }
+//
+//            return super.onRenderProcessGone(view, detail)
 
-            val webView = pageTab?.getWebView()
             if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    view == webView && detail?.didCrash() == true
+                    detail?.didCrash() == true
                 } else {
-                    view == webView
+                    true
                 }
             ) {
-                webView?.destroy()
-                return true
+                Log.e("WebView", "Render process bị crash!")
+            } else {
+                Log.e("WebView", "Render process bị kill bởi hệ thống!")
             }
 
-            return super.onRenderProcessGone(view, detail)
+            // Giải quyết vấn đề: Load lại WebView hoặc hiển thị thông báo
+            view?.destroy() // Hủy WebView cũ
+            return true // Trả về true nếu đã xử lý, false nếu muốn để WebView mặc định xử lý
         }
     }
 
@@ -498,20 +547,22 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 //            updateTabEvent.value = updateTab
 
 
-            val pageTab = tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
-
-
-            val headers = pageTab?.getHeaders() ?: emptyMap()
-            val updateTab = WebTab(
-                pageTab!!.getUrl(),
-                pageTab.getTitle(),
-                icon ?: pageTab.getFavicon(),
-                headers,
-                view,
-                id = pageTab.id
-            )
-
-            tabViewModels.updateCurrentTab(updateTab)
+//            val pageTab = tabViewModels.getTabAt(tabViewModels.currentPositionTabWeb.value!!)
+//
+//            if (pageTab != null) {
+//
+//                val headers = pageTab?.getHeaders() ?: emptyMap()
+//                val updateTab = WebTab(
+//                    pageTab!!.getUrl(),
+//                    pageTab.getTitle(),
+//                    icon ?: pageTab.getFavicon(),
+//                    headers,
+//                    view,
+//                    id = pageTab.id
+//                )
+//
+//                tabViewModels.updateCurrentTab(updateTab)
+//            }
         }
 
         override fun onProgressChanged(view: WebView?, newProgress: Int) {
@@ -561,6 +612,90 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     }
 
     private var canGoCounter = 0
+
+    fun injectDownloadButton() {
+        webTab.getWebView()?.evaluateJavascript(
+            """
+(function() {
+    function isValidImage(img) {
+        let imageUrl = img.src || img.style.backgroundImage.replace(/url\(["']?|["']?\)/g, "");
+
+        // Loại bỏ ảnh từ domain static.xx.fbcdn.net (icon, emoji)
+        if (imageUrl.includes("static.xx.fbcdn.net")) {
+            return false;
+        }
+
+        // Loại bỏ ảnh nhỏ hơn 100x100 (đây là mức tương đối để lọc icon)
+        if (img.naturalWidth < 100 || img.naturalHeight < 100) {
+            return false;
+        }
+
+        return true;
+    }
+
+    function addDownloadButton(img) {
+        if (!isValidImage(img) || img.dataset.downloadAdded) return;
+        img.dataset.downloadAdded = true;
+
+        console.log("✅ Adding download button to:", img.src); // Debug log
+
+        let btn = document.createElement('button');
+        btn.innerText = '📥';
+        btn.style.position = 'absolute';
+        btn.style.top = '10px';
+        btn.style.right = '10px';
+        btn.style.zIndex = '9999';
+        btn.style.background = 'rgba(0,0,0,0.7)';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.style.padding = '6px 11px';
+        btn.style.cursor = 'pointer';
+        btn.style.fontSize = '17px';
+        btn.style.pointerEvents = 'auto';
+        btn.style.borderRadius = '5px';
+
+        btn.addEventListener('click', function(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            window.Android.downloadImageUpdate(img.src);
+        });
+
+        let parent = img.closest('div[role="img"]') || img.parentNode;
+        if (parent) {
+            parent.style.position = 'relative';
+            parent.appendChild(btn);
+        }
+    }
+
+    function scanImages() {
+        document.querySelectorAll('div[role="img"], img').forEach(img => {
+            addDownloadButton(img);
+        });
+    }
+
+    // Gọi hàm lần đầu tiên khi trang load
+    scanImages();
+
+    // Dùng MutationObserver để theo dõi khi có ảnh mới xuất hiện khi cuộn
+    let observer = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1) {
+                    let imgs = node.querySelectorAll('div[role="img"], img');
+                    imgs.forEach(img => addDownloadButton(img));
+                }
+            });
+        });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+})();
+
+        """, null
+        )
+    }
+
 
     private val serviceWorkerClient = object : ServiceWorkerClient() {
         override fun shouldInterceptRequest(request: WebResourceRequest): WebResourceResponse? {
@@ -740,7 +875,11 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
         registerForContextMenu(webTab.getWebView())
 
-        tabViewModels.listTabWeb.observe(this) {
+//        tabViewModels.listTabWeb.observe(this) {
+//            binding.tvTab.text = it.size.toString()
+//        }
+
+        tabModelViewModel.queryAllTabModel().observe(this) {
             binding.tvTab.text = it.size.toString()
         }
 
@@ -805,7 +944,13 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
         binding.imgBack.setOnClickListener {
             videoDetectionTabViewModel.cancelAllCheckJobs()
-            finish()
+            if (intent.getStringExtra("open") == "tab") {
+                startActivity(Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                })
+            } else {
+                finish()
+            }
         }
         binding.imgBookmark.setOnClickListener {
             AppLogger.d("Webview::::::::: ${webTab.getUrl()}")
@@ -941,6 +1086,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
             userAgentString = BrowserFragment.MOBILE_USER_AGENT
         }
 
+        webView?.addJavascriptInterface(WebAppInterface(this), "Android")
+
         AppLogger.d(webTab.toString())
 
         binding.webviewContainer.addView(
@@ -964,16 +1111,22 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     override fun onCreateContextMenu(menu: ContextMenu?, v: View, menuInfo: ContextMenuInfo?) {
         super.onCreateContextMenu(menu, v, menuInfo)
 
+        Log.d("ntt", "onCreateContextMenu: ")
+
         val webView = v as WebView
         val result = webView.hitTestResult
 
         val imageUrl = result.extra
+
+        Log.d("ntt", "onCreateContextMenu: result.extra: ${imageUrl}")
+
 
         if (imageUrl != null) {
             val dialogInformationImage =
                 DialogInformationImage(this@WebTabActivity,
                     imageUrl.toString(),
                     result.type == WebView.HitTestResult.IMAGE_TYPE || result.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE,
+                    true,
                     onClickOpenNewTab = {
                         if (imageUrl.startsWith("http")) {
                             webTab.getWebView()?.stopLoading()
@@ -1017,6 +1170,11 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 //        }
     }
 
+    private fun generateFileName(url: String): String {
+        val extension = url.substringAfterLast(".", "jpg") // Lấy đuôi file hoặc mặc định là "jpg"
+        return "downloaded_image_${System.currentTimeMillis()}.$extension"
+    }
+
     private fun shareUrl(context: Context, url: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
@@ -1042,7 +1200,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                 }
 
                 val url = URL(imageUrl)
-                var fileName = url.file.substringAfterLast("/")
+                var fileName = generateFileName(url.toString())
+
                 if (fileName.isBlank()) fileName = "downloaded_image.jpg"
 
                 val outputFile: File
@@ -1378,8 +1537,21 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     }
 
     private fun saveUrlToHistoryBookmark() {
-
         if (this::historyItemCurrent.isInitialized) {
+//
+//            val dialogAddBookmark = DialogAddBookmark(
+//                this@WebTabActivity,
+//                name = historyItemCurrent.title.toString(),
+//                url = historyItemCurrent.url.toString(),
+//            ) { name: String, url: String ->
+//
+//                lifecycleScope.launch(Dispatchers.IO) {
+//
+//                }
+//
+//            }
+//
+//            dialogAddBookmark.show()
 
             historyItemCurrent.isBookmark = true
             lifecycleScope.launch(Dispatchers.IO) {
@@ -1501,6 +1673,24 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         videoDetectionTabViewModel.detectedVideosList.addOnPropertyChangedCallback(object :
             OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+                Log.d(
+                    "ntt",
+                    "onPropertyChanged: videoDetectionTabViewModel.detectedVideosList: ${videoDetectionTabViewModel.detectedVideosList.get()?.size}"
+                )
+
+//                if (this@WebTabActivity::videoInfoAdapter.isInitialized) {
+//                    videoInfoAdapter.notifyDataSetChanged()
+//                }
+
+                videoInfoAdapter = VideoInfoAdapter(
+                    this@WebTabActivity,
+                    videoDetectionTabViewModel?.detectedVideosList?.get()?.toList() ?: emptyList(),
+                    videoDetectionTabViewModel,
+                    this@WebTabActivity,
+                    appUtil
+                )
+
+                videoInfoAdapter.notifyDataSetChanged()
 
             }
         })
@@ -1901,11 +2091,6 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
         bottomSheetDialog.dismiss()
 
-
-//        downloadVideo(info)
-//
-////        downloadVideoEvent.value = info
-
         Toast.makeText(
             this, getString(R.string.download_started), Toast.LENGTH_SHORT
         ).show()
@@ -1992,6 +2177,60 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
             videoDetectionTabViewModel.selectedFormats.get()?.toMutableMap() ?: mutableMapOf()
         formats[videoInfo.id] = format
         videoDetectionTabViewModel.selectedFormats.set(formats)
+    }
+
+    override fun iDownloadImageUpdate(imageUrl: String) {
+        val dialogInformationImage =
+            DialogInformationImage(this@WebTabActivity,
+                imageUrl.toString(),
+                true,
+                false,
+                onClickOpenNewTab = {
+                    if (imageUrl.startsWith("http")) {
+                        webTab.getWebView()?.stopLoading()
+                        webTab.getWebView()?.loadUrl(imageUrl)
+
+                    }
+                },
+                onClickShare = {
+                    shareUrl(this@WebTabActivity, imageUrl)
+                },
+                onClickCopyLink = {
+                    val clipboard =
+                        getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("copied_text", imageUrl)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.makeText(
+                        this,
+                        getString(R.string.string_copied_to_clipboard), Toast.LENGTH_SHORT
+                    )
+                        .show()
+                },
+                onClickDownloadImage = {
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        if (!checkNotificationPermission() || !checkStoragePermission()) {
+                            showBottomSheetPermission()
+                        } else {
+                            downloadImage(this@WebTabActivity, imageUrl)
+                        }
+                    }
+                })
+
+        dialogInformationImage.show()
+    }
+}
+
+interface IDownloadImage {
+    fun iDownloadImageUpdate(imageUrl: String)
+}
+
+class WebAppInterface(private val context: Context) {
+    @JavascriptInterface
+    fun downloadImageUpdate(imageUrl: String) {
+        if (imageUrl.isNotEmpty()) {
+            val iDownloadImage = context as IDownloadImage
+            iDownloadImage.iDownloadImageUpdate(imageUrl)
+        }
     }
 }
 

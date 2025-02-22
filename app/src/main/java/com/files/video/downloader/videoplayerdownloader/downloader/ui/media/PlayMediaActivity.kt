@@ -1,6 +1,9 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.ui.media
 
 import android.content.Context
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.media.AudioManager
@@ -10,10 +13,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -116,7 +121,7 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
     private var isLoop = false
 
-    private var isFill = true
+    private var isFill = false
 
     private var speed = 1.0f
 
@@ -131,6 +136,8 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
     private lateinit var bottomSheetDetailDialog: BottomSheetDialog
 
+    private var videoUri: Uri? = null
+
     @Inject
     lateinit var fileUtil: FileUtil
 
@@ -143,6 +150,16 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
     override fun initView() {
         playMediaViewModel.start()
+
+//        videoUri = intent?.data
+//
+//        if (videoUri != null) {
+//            val fileName = getFileNameFromUri(this, videoUri!!)
+//
+//            binding.btnMore.visibility = View.GONE
+//        } else {
+//
+//        }
 
         bottomSheetDetailDialog = BottomSheetDialog(this, R.style.CustomAlertBottomSheet)
 
@@ -159,6 +176,15 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
         if (intent.getStringExtra(ITEM_TYPE) == "video") {
             binding.layoutVideo.visibility = View.VISIBLE
             binding.layoutImage.visibility = View.GONE
+
+            isFill = preferenceHelper.getIsFillMedia()
+
+            requestedOrientation = if (isFill) {
+                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            } else {
+                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+
         } else {
             binding.layoutVideo.visibility = View.GONE
             binding.layoutImage.visibility = View.VISIBLE
@@ -200,7 +226,8 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
         isLoop = preferenceHelper.getIsLoopMedia()
         updateStatusLoop(isLoop)
 
-        isFill = preferenceHelper.getIsFillMedia()
+
+
         updateFillMedia(isFill)
 
         playMediaViewModel.videoName.addOnPropertyChangedCallback(object :
@@ -324,7 +351,11 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
                 } else {
                     playAudio()
                 }
-                binding.btnPlayPause.setBackgroundResource(R.drawable.ic_pause)
+                if (isFill) {
+                    binding.btnPlayPause.setBackgroundResource(R.drawable.ic_pause_fill)
+                } else {
+                    binding.btnPlayPause.setBackgroundResource(R.drawable.ic_pause)
+                }
             }
         }
 
@@ -378,12 +409,20 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
         binding.btnResize.setOnClickListener {
             isFill = !isFill
             updateFillMedia(isFill)
+//
+//            if (isFill) {
+//                binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+//            } else {
+//                binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+//            }
 
-            if (isFill) {
-                binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
-            } else {
-                binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-            }
+            requestedOrientation =
+                if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                } else {
+                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                }
+
         }
 
         binding.btnVolume.setOnClickListener {
@@ -433,6 +472,30 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
         }
     }
 
+    fun getFileNameFromUri(context: Context, uri: Uri): String? {
+        var name: String? = null
+        val cursor = context.contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    name = it.getString(nameIndex)
+                }
+            }
+        }
+        return name
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        // Khi xoay ngang, mở rộng BottomSheet full màn hình
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            bottomSheetDetailDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+            bottomSheetDetailDialog.behavior.peekHeight = Resources.getSystem().displayMetrics.heightPixels
+        }
+    }
+
     private fun showBottomSheetDetail(videoTaskItem: VideoTaskItem) {
         detailLayoutBinding = LayoutBottomSheetDetailBinding.inflate(layoutInflater)
 
@@ -446,7 +509,7 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
         val bottomSheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                // Xử lý sự kiện thay đổi trạng thái của bottom sheet
+
                 when (newState) {
                     BottomSheetBehavior.STATE_HIDDEN -> {
                     }
@@ -458,7 +521,7 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
                     }
 
                     BottomSheetBehavior.STATE_DRAGGING -> {
-                        behavior.setState(BottomSheetBehavior.STATE_EXPANDED)
+//                        behavior.setState(BottomSheetBehavior.STATE_EXPANDED)
                     }
                 }
             }
@@ -469,6 +532,8 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
         }
 
         SystemUtil.setLocale(this@PlayMediaActivity)
+
+        bottomSheetDetailDialog.behavior.peekHeight = Resources.getSystem().displayMetrics.heightPixels
 
         bottomSheetDetailDialog.behavior.addBottomSheetCallback(bottomSheetCallback)
 
@@ -490,10 +555,6 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
         detailLayoutBinding.tvDuration.text = getVideoDuration(videoTaskItem.fileDuration)
 
         detailLayoutBinding.tvPath.text = videoTaskItem.filePath
-
-        detailLayoutBinding.btnOk.setOnClickListener {
-            bottomSheetDetailDialog.dismiss()
-        }
 
         bottomSheetDetailDialog.show()
     }
@@ -587,21 +648,30 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
     }
 
     private fun updateStatusLoop(isLoop: Boolean) {
-        if (isLoop) {
-            binding.btnLoop.setBackgroundResource(R.drawable.ic_enable_loop)
+
+        if (isFill) {
+            if (isLoop) {
+                binding.btnLoop.setBackgroundResource(R.drawable.ic_enable_loop)
+            } else {
+                binding.btnLoop.setBackgroundResource(R.drawable.ic_disable_loop_white)
+            }
         } else {
-            binding.btnLoop.setBackgroundResource(R.drawable.ic_disable_loop)
+            if (isLoop) {
+                binding.btnLoop.setBackgroundResource(R.drawable.ic_enable_loop)
+            } else {
+                binding.btnLoop.setBackgroundResource(R.drawable.ic_disable_loop)
+            }
         }
 
         preferenceHelper.setIsLoopMedia(isLoop)
     }
 
     private fun updateFillMedia(isFill: Boolean) {
-        if (isFill) {
-            binding.btnResize.setBackgroundResource(R.drawable.ic_fill)
-        } else {
-            binding.btnResize.setBackgroundResource(R.drawable.ic_fit)
-        }
+//        if (isFill) {
+//            binding.btnResize.setBackgroundResource(R.drawable.ic_fill)
+//        } else {
+//            binding.btnResize.setBackgroundResource(R.drawable.ic_fit)
+//        }
 
         preferenceHelper.setIsFillMedia(isFill)
     }
@@ -641,7 +711,11 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
     }
 
     private fun pauseAudio() {
-        binding.btnPlayPause.setBackgroundResource(R.drawable.ic_play_media)
+        if (isFill) {
+            binding.btnPlayPause.setBackgroundResource(R.drawable.ic_play_media_fill)
+        } else {
+            binding.btnPlayPause.setBackgroundResource(R.drawable.ic_play_media)
+        }
         binding.playerView.onPause()
 
         isPause = true
@@ -662,7 +736,11 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
             isPlay = false
             isPause = false
 
-            binding.btnPlayPause.setBackgroundResource(R.drawable.ic_play_media)
+            if (isFill) {
+                binding.btnPlayPause.setBackgroundResource(R.drawable.ic_play_media_fill)
+            } else {
+                binding.btnPlayPause.setBackgroundResource(R.drawable.ic_play_media)
+            }
         }
     }
 

@@ -12,23 +12,23 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.we
 
 class TabsAdapter(
     private var context: Context,
-    private var listTabs: ArrayList<WebTab>,
-    private var onClickItemTab: ((webTab: WebTab, position: Int) -> Unit),
-    private var onClickDeleteItemTab: ((webTab: WebTab, position: Int) -> Unit)
+    private var listTabs: ArrayList<TabModel>,
+    private var onClickItemTab: ((tabModel: TabModel, position: Int) -> Unit),
+    private var onClickDeleteItemTab: ((tabModel: TabModel, position: Int) -> Unit)
 ) :
     RecyclerView.Adapter<TabsAdapter.ViewHolder>() {
 
     var currentPosTab = -1
 
     inner class ViewHolder(var binding: ItemTabsBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(webTab: WebTab, position: Int) {
-            binding.tvLinkWeb.text = webTab.getUrl().toString()
-            Glide.with(binding.imgIcon).load(webTab.getFavicon()).into(binding.imgIcon)
-            Glide.with(binding.imgWallpaper).load(webTab.getFavicon()).into(binding.imgWallpaper)
+        fun bind(tabModel: TabModel, position: Int) {
+            binding.tvLinkWeb.text = tabModel.url.toString()
+            Glide.with(binding.imgIcon).load(tabModel.faviconBitmap()).into(binding.imgIcon)
+            Glide.with(binding.imgWallpaper).load(tabModel.faviconBitmap()).into(binding.imgWallpaper)
 
             binding.tvLinkWeb.isSelected = true
 
-            if (position == currentPosTab) {
+            if (tabModel.isSelected) {
                 binding.cardView.backgroundTintList =
                     ContextCompat.getColorStateList(context, R.color.color_select)
                 binding.cv.backgroundTintList =

@@ -42,8 +42,22 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.media.PlayMediaActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
+            android:exported="true"
+            android:screenOrientation="portrait">
+
+            <!--            <intent-filter>-->
+            <!--                <action android:name="android.intent.action.VIEW" />-->
+            <!--                <category android:name="android.intent.category.DEFAULT" />-->
+            <!--                <category android:name="android.intent.category.BROWSABLE" />-->
+
+            <!--                &lt;!&ndash; Hỗ trợ mở file từ bộ nhớ máy &ndash;&gt;-->
+            <!--                <data android:scheme="file" android:mimeType="video/*" />-->
+
+            <!--                &lt;!&ndash; Hỗ trợ mở từ Google Photos, File Manager &ndash;&gt;-->
+            <!--                <data android:scheme="content" android:mimeType="video/*" />-->
+            <!--            </intent-filter>-->
+
+        </activity>
         <activity
             android:name=".ui.pin.SecurityActivity"
             android:exported="false"
@@ -136,6 +150,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"

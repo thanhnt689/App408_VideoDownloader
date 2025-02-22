@@ -26,6 +26,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.we
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabFactory
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.language.LanguageActivity.Companion.FROM_SPLASH
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.permission.PermissionActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabModelViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FaviconUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.KeyboardUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.ViewUtils
@@ -48,6 +49,8 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
 
     @Inject
     lateinit var okHttpProxyClient: OkHttpProxyClient
+
+    private val tabModelViewModel: TabModelViewModel by viewModels()
 
     private var openAct = "history"
 
@@ -92,7 +95,7 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
                                 false,
                                 listHistory,
                                 onClickItemHistory = { historyItem, position ->
-                                    openNewTab(historyItem.url)
+                                    newTab(historyItem.url)
                                 },
                                 onClickDeleteItemHistory = { historyItem, position ->
                                     showDialogConfirmDelete(historyItem)
@@ -142,7 +145,7 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
                                 true,
                                 listHistory,
                                 onClickItemHistory = { historyItem, position ->
-                                    openNewTab(historyItem.url)
+                                    newTab(historyItem.url)
                                 },
                                 onClickDeleteItemHistory = { historyItem, position ->
                                     showDialogConfirmDelete(historyItem)
@@ -266,19 +269,42 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
         dialogDelete.show()
     }
 
-    private fun openNewTab(input: String) {
-        if (input.isNotEmpty()) {
-            val webTab = WebTabFactory.createWebTabFromInput(input)
+//    private fun openNewTab(input: String) {
+//        if (input.isNotEmpty()) {
+//            val webTab = WebTabFactory.createWebTabFromInput(input)
+//
+//            tabViewModels.addNewTab(webTab)
+//
+//            val intent = Intent(this, WebTabActivity::class.java)
+//            val bundle = Bundle()
+//            bundle.putSerializable("webtab", webTab)
+//            intent.putExtras(bundle)
+//            startActivity(intent)
+//
+//        }
+//    }
 
-            tabViewModels.addNewTab(webTab)
+    private fun newTab(input: String) {
+        val webTab = WebTabFactory.createWebTabFromInput(input)
 
-            val intent = Intent(this, WebTabActivity::class.java)
-            val bundle = Bundle()
-            bundle.putSerializable("webtab", webTab)
-            intent.putExtras(bundle)
-            startActivity(intent)
+        val tabModel = WebTabFactory.createTabModelFromInput(input)
 
+        lifecycleScope.launch(Dispatchers.IO) {
+            tabModelViewModel.insertTabModel(tabModel)
+
+            withContext(Dispatchers.Main) {
+                val intent = Intent(this@HistoryActivity, WebTabActivity::class.java)
+                val bundle = Bundle()
+                bundle.putSerializable("webtab", webTab)
+                intent.putExtras(bundle)
+                startActivity(intent)
+            }
         }
+
+
+//        tabViewModels.addNewTab(webTab)
+
+
     }
 
     companion object {

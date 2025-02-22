@@ -184,5 +184,11 @@
     <string name="string_step_1_process"><![CDATA[<b>Étape 1 :</b>]]> Ouvrez l\'application et copiez le lien.</string>
     <string name="string_step_2_process"><![CDATA[<b>Étape 2 :</b>]]> Retournez à l\'application et sélectionnez "Coller le lien" pour télécharger.</string>
     <string name="string_num_image_selected">%s Image sélectionnée</string>
+    <string name="string_details">Détails</string>
+    <string name="string_file_name">Nom du fichier</string>
+    <string name="string_date">Date</string>
+    <string name="string_storage_path">Chemin de stockage</string>
+    <string name="string_duration">Durée</string>
+    <string name="string_name_contains_special_characters">Le nom contient des caractères spéciaux !</string>
 
 </resources>

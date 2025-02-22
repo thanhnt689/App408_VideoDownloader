@@ -184,5 +184,11 @@
     <string name="string_step_1_process"><![CDATA[<b>步驟 1:</b>]]> 打開應用程式並複製連結。</string>
     <string name="string_step_2_process"><![CDATA[<b>步驟 2:</b>]]> 返回應用程式，選擇「貼上連結」來下載。</string>
     <string name="string_num_image_selected">%s 張圖片已選擇</string>
+    <string name="string_details">詳細</string>
+    <string name="string_file_name">文件名稱</string>
+    <string name="string_date">日期</string>
+    <string name="string_storage_path">儲存路徑</string>
+    <string name="string_duration">持續時間</string>
+    <string name="string_name_contains_special_characters">名稱包含特殊字符！</string>
 
 </resources>

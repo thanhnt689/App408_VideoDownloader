@@ -17,6 +17,12 @@ interface VideoTaskItemDao {
     @Query("SELECT * FROM VideoTaskItem WHERE is_security = 0")
     fun getVideoTaskItem(): LiveData<List<VideoTaskItem>>
 
+    @Query("SELECT * FROM VideoTaskItem")
+    fun getAllVideoTaskItems(): List<VideoTaskItem>
+
+    @Delete
+    fun deleteVideoTaskItems(videoTaskItems: List<VideoTaskItem>)
+
     @Query("SELECT * FROM VideoTaskItem WHERE is_security = 1")
     fun getVideoSecurityTaskItem(): LiveData<List<VideoTaskItem>>
 
@@ -73,6 +79,12 @@ interface VideoTaskItemDao {
 
     @Query("UPDATE VideoTaskItem SET file_name = :newName, file_path = :newPath WHERE _id = :id")
     suspend fun updateNameVideoTaskItem(id: String, newName: String, newPath: String)
+
+    @Query("SELECT COUNT(*) FROM VideoTaskItem WHERE file_name = :newName AND mime_type = 'video'")
+    suspend fun isFileNameVideoExists(newName: String): Int
+
+    @Query("SELECT COUNT(*) FROM VideoTaskItem WHERE file_name = :newName AND mime_type = 'image'")
+    suspend fun isFileNameImageExists(newName: String): Int
 
     @Query("SELECT * FROM VideoTaskItem WHERE file_name = :name AND is_security = 0")
     fun findVideoTaskItemByName(name: String): VideoTaskItem

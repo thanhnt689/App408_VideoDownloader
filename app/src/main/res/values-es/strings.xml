@@ -184,5 +184,11 @@
     <string name="string_step_1_process"><![CDATA[<b>Schritt 1:</b>]]> Öffnen Sie die App und kopieren Sie den Link.</string>
     <string name="string_step_2_process"><![CDATA[<b>Schritt 2:</b>]]> Kehren Sie zur Anwendung zurück und wählen Sie „Link einfügen“, um den Link herunterzuladen.</string>
     <string name="string_num_image_selected">%s Bild ausgewählt</string>
+    <string name="string_details">Detalles</string>
+    <string name="string_file_name">Nombre del archivo</string>
+    <string name="string_date">Fecha</string>
+    <string name="string_storage_path">Ruta de almacenamiento</string>
+    <string name="string_duration">Duración</string>
+    <string name="string_name_contains_special_characters">¡El nombre contiene caracteres especiales!</string>
 
 </resources>

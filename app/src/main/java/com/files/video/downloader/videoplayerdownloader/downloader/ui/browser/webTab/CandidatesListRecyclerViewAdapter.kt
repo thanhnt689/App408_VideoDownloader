@@ -1,6 +1,7 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab
 
 import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.ObservableField
@@ -56,6 +57,7 @@ class CandidatesListRecyclerViewAdapter(
 //            this.videoInfo = downloadCandidates
 //            this.downloadCandidate = candidate
 //            this.isCandidateSelected = candidate == selected
+            Log.d("ntt", "onBindViewHolder: candidate: $candidate")
             this.tvTitle.text = getShortOfFormat(candidate)
 
 //            this.executePendingBindings()

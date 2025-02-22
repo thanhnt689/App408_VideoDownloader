@@ -4,6 +4,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import android.webkit.CookieManager
 import android.webkit.WebResourceRequest
 import androidx.core.database.getBlobOrNull
@@ -64,6 +65,8 @@ object CookieUtils {
                 File(chromeDefaultPathApi29More)
             if (cookieFile.exists() && !cookieFile.isFile) {
                 request.addOption("--cookies-from-browser", "chrome:${cookieFile.path}")
+//                request.addOption("--cookies", "chrome:${cookieFile.path}")
+
             }
 
             return cookieFile
@@ -82,6 +85,44 @@ object CookieUtils {
 
         return cookieFile
     }
+
+//    fun addCookiesToRequest(
+//        url: String,
+//        request: YoutubeDLRequest,
+//        additionalUrl: String? = null
+//    ): File {
+//        val cookieFile: File
+//
+//        // Nếu Android >= 13, lấy cookies từ trình duyệt
+//        if (Build.VERSION.SDK_INT > 32) {
+//            cookieFile = File("/data/data/com.android.chrome/app_chrome/Default/Network/Cookies")
+//            if (cookieFile.exists() && cookieFile.isFile) {
+//                request.addOption("--cookies-from-browser", "chrome")
+//            } else {
+//                Log.e("YoutubeDL", "Chrome cookie file not found!")
+//            }
+//            return cookieFile
+//        }
+//
+//        // Nếu Android < 13, dùng cookies từ file tạm
+//        cookieFile = createTmpCookieFile(url.hashCode().toString())
+//        var cookies = readCookiesForUrlFromDb(url)
+//
+//        // Nếu cookies ít hơn 3 dòng, thử lấy thêm từ `additionalUrl`
+//        if (additionalUrl != null && cookies.split("\n").size <= 3) {
+//            cookies = readCookiesForUrlFromDb(additionalUrl)
+//        }
+//
+//        if (cookies.isNotEmpty()) {
+//            cookieFile.writeText(cookies)
+//            request.addOption("--cookies", cookieFile.path)
+//        } else {
+//            Log.e("YoutubeDL", "Cookies are empty!")
+//        }
+//
+//        return cookieFile
+//    }
+
 
     fun getCookiesForUrlNetScape(url: String, additionalUrl: String? = null): String {
         var cookies = readCookiesForUrlFromDb(url)

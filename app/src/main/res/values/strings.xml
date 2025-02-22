@@ -55,7 +55,7 @@
     <string name="string_choose_one">Choose one</string>
     <string name="string_guide">Guide</string>
     <string name="string_step_1"><![CDATA[<b>Step 1:</b>]]> Visit the websites you want to download content from.</string>
-    <string name="string_step_2"><![CDATA[<b>Step 1:</b>]]> Tap on the download button provided on the webpage and wait for the download process to complete.</string>
+    <string name="string_step_2"><![CDATA[<b>Step 2:</b>]]> Tap on the download button provided on the webpage and wait for the download process to complete.</string>
     <string name="string_video_downloader">Video Downloader</string>
     <string name="string_search_for_anything">Search for anything</string>
     <string name="string_bookmark">Bookmark</string>
@@ -182,13 +182,14 @@
     <string name="string_error_renaming_image">Error renaming image</string>
     <string name="string_error_deleting_file">Error deleting file!</string>
     <string name="string_step_1_process"><![CDATA[<b>Step 1:</b>]]> Open App and copy the link.</string>
-    <string name="string_step_2_process"><![CDATA[<b>Step 1:</b>]]> Go back to the application, select \'Paste link\' to download the link.</string>
+    <string name="string_step_2_process"><![CDATA[<b>Step 2:</b>]]> Go back to the application, select \'Paste link\' to download the link.</string>
     <string name="string_num_image_selected">%s Image selected</string>
     <string name="string_details">Details</string>
     <string name="string_file_name">File name</string>
     <string name="string_date">Date</string>
     <string name="string_storage_path">Storage path</string>
     <string name="string_duration">Duration</string>
+    <string name="string_name_contains_special_characters">Name contains special characters!</string>
 
 
 </resources>

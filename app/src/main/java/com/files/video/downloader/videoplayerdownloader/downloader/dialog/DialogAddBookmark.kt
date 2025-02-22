@@ -19,6 +19,8 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_ut
 
 class DialogAddBookmark(
     context: Context,
+    var name: String = "",
+    var url: String = "",
     var add: (name: String, url: String) -> Unit
 ) :
     Dialog(context) {
@@ -47,6 +49,9 @@ class DialogAddBookmark(
 
     private fun initViews() {
         window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        binding.edtName.setText(this.name)
+        binding.edtUrl.setText(this.url)
     }
 
     private fun initListener() {

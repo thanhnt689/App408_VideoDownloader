@@ -184,5 +184,11 @@
     <string name="string_step_1_process"><![CDATA[<b>Шаг 1:</b>]]> Откройте приложение и скопируйте ссылку.</string>
     <string name="string_step_2_process"><![CDATA[<b>Шаг 2:</b>]]> Вернитесь в приложение и выберите «Вставить ссылку», чтобы загрузить.</string>
     <string name="string_num_image_selected">%s изображение выбрано</string>
+    <string name="string_details">Детали</string>
+    <string name="string_file_name">Имя файла</string>
+    <string name="string_date">Дата</string>
+    <string name="string_storage_path">Путь хранения</string>
+    <string name="string_duration">Длительность</string>
+    <string name="string_name_contains_special_characters">Имя содержит специальные символы!</string>
 
 </resources>

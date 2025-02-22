@@ -184,6 +184,12 @@
     <string name="string_step_1_process"><![CDATA[<b>ধাপ ১:</b>]]> অ্যাপ খুলুন এবং লিংক কপি করুন।</string>
     <string name="string_step_2_process"><![CDATA[<b>ধাপ ২:</b>]]> অ্যাপে ফিরে যান, \'লিংক পেস্ট করুন\' নির্বাচন করে ডাউনলোড করুন।</string>
     <string name="string_num_image_selected">%sটি ছবি নির্বাচিত</string>
+    <string name="string_details">বিস্তারিত</string>
+    <string name="string_file_name">ফাইলের নাম</string>
+    <string name="string_date">তারিখ</string>
+    <string name="string_storage_path">সংগ্রহের পথ</string>
+    <string name="string_duration">সময়কাল</string>
+    <string name="string_name_contains_special_characters">নামে বিশেষ অক্ষর রয়েছে!</string>
 
 
 </resources>

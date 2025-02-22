@@ -23,15 +23,15 @@
         app:layout_constraintTop_toBottomOf="@id/guideline1">
 
         <LinearLayout
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:background="@drawable/bg_dialog_rate"
             android:orientation="vertical"
             android:paddingHorizontal="5dp"
-            android:paddingTop="20dp">
+            android:paddingTop="20dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
                 android:id="@+id/img_icon"
@@ -61,13 +61,12 @@
                 android:singleLine="true"
                 android:text="@string/string_do_you_like_the_app"
                 android:textColor="#1B1B1B"
-                android:textSize="26sp"
-                 />
+                android:textSize="26sp" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_marginTop="@dimen/_8sdp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_8sdp">
 
                 <androidx.appcompat.widget.AppCompatRatingBar
                     android:id="@+id/rtb"

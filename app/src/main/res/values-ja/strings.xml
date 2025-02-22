@@ -184,5 +184,11 @@
     <string name="string_step_1_process"><![CDATA[<b>ステップ 1:</b>]]> アプリを開いてリンクをコピーします。</string>
     <string name="string_step_2_process"><![CDATA[<b>ステップ 2:</b>]]> アプリに戻り、「リンクを貼り付ける」を選択してダウンロードします。</string>
     <string name="string_num_image_selected">%s 枚の画像が選択されました</string>
+    <string name="string_details">詳細</string>
+    <string name="string_file_name">ファイル名</string>
+    <string name="string_date">日付</string>
+    <string name="string_storage_path">保存パス</string>
+    <string name="string_duration">期間</string>
+    <string name="string_name_contains_special_characters">名前に特殊文字が含まれています！</string>
 
 </resources>

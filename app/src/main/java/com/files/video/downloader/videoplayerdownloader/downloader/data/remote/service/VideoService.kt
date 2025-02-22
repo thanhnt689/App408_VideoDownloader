@@ -1,5 +1,6 @@
 package com.files.video.downloader.videoplayerdownloader.downloader.data.remote.service
 
+import android.util.Log
 import com.files.video.downloader.videoplayerdownloader.downloader.data.model.VideoInfoWrapper
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideFormatEntityList
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoFormatEntity
@@ -25,7 +26,7 @@ interface VideoService {
 
 open class VideoServiceLocal(
     private val proxyController: CustomProxyController, private val helper: YoutubedlHelper
-)  {
+) {
     companion object {
         const val MP4_EXT = "mp4"
         private const val FACEBOOK_HOST = ".facebook."
@@ -54,6 +55,16 @@ open class VideoServiceLocal(
         url.headers.forEach { (name, value) ->
             if (name != COOKIE_HEADER) {
                 request.addOption("--add-header", "$name:${value}")
+
+                if (url.url.host?.contains("facebook.com") == true) {
+                    request.addOption(
+                        "--add-header",
+                        "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                    )
+                    request.addOption("--add-header", "Accept-Language:en-US,en;q=0.9")
+                    request.addOption("--add-header", "Referer:https://m.facebook.com/")
+                }
+
             }
         }
 
@@ -84,6 +95,7 @@ open class VideoServiceLocal(
             val listFormats =
                 VideFormatEntityList(filtered.ifEmpty { formats?.filter { !(it.acodec != "none" && it.vcodec == "none") } }
                     ?: emptyList())
+
             if (listFormats.formats.isEmpty()) throw Exception("Audio Only Detected")
 
             return VideoInfoWrapper(VideoInfo(title = info.title ?: "no title").also { videoInfo ->

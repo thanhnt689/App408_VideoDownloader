@@ -142,7 +142,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
 
     private fun onClickLayoutPrivatePolicy() {
         val browserIntent =
-            Intent(Intent.ACTION_VIEW, Uri.parse(""))
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://smartweb-technology.netlify.app/policy"))
         startActivity(browserIntent)
     }
 

@@ -7,6 +7,8 @@
     android:fitsSystemWindows="true"
     android:layoutDirection="ltr">
 
+
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/_12sdp"
-            android:layout_marginTop="@dimen/_12sdp"
+            android:layout_marginTop="@dimen/_8sdp"
             android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -174,19 +176,6 @@
                 android:text="@string/string_storage_path"
                 android:textColor="#BFBFBF"
                 android:textSize="@dimen/_12ssp" />
-
-            <TextView
-                android:id="@+id/btn_ok"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="@dimen/_16sdp"
-                android:background="@drawable/bg_btn_skip_permission"
-                android:fontFamily="@font/sf_pro_display_semi_bold"
-                android:gravity="center"
-                android:text="@string/string_ok"
-                android:textColor="@color/colorWhite"
-                android:textSize="17sp" />
-
 
         </LinearLayout>
 

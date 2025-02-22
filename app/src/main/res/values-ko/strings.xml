@@ -184,5 +184,11 @@
     <string name="string_step_1_process"><![CDATA[<b>1단계:</b>]]> 앱을 열고 링크를 복사하세요.</string>
     <string name="string_step_2_process"><![CDATA[<b>2단계:</b>]]> 앱으로 돌아가서 "링크 붙여넣기"를 선택하여 다운로드하세요.</string>
     <string name="string_num_image_selected">%s개의 이미지 선택됨</string>
+    <string name="string_details">세부 정보</string>
+    <string name="string_file_name">파일 이름</string>
+    <string name="string_date">날짜</string>
+    <string name="string_storage_path">저장 경로</string>
+    <string name="string_duration">기간</string>
+    <string name="string_name_contains_special_characters">이름에 특수 문자가 포함되어 있습니다!</string>
 
 </resources>

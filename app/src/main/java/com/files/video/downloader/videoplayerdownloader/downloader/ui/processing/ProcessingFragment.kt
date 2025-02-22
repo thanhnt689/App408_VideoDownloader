@@ -47,6 +47,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Recycler
+import androidx.webkit.WebViewCompat.setAudioMuted
 import com.bumptech.glide.Glide
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseFragment
@@ -927,6 +928,8 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
         webView?.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         webView?.isScrollbarFadingEnabled = true
 
+        webView?.let { setAudioMuted(it, true) }
+
         webSettings?.apply {
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             setSupportZoom(true)
@@ -947,6 +950,7 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
             javaScriptCanOpenWindowsAutomatically = true
             mediaPlaybackRequiresUserGesture = false
             userAgentString = BrowserFragment.MOBILE_USER_AGENT
+            mediaPlaybackRequiresUserGesture = true // Chặn autoplay
         }
 
         AppLogger.d(webTab.toString())
@@ -1266,6 +1270,10 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
     }
 
     override fun onSelectFormat(videoInfo: VideoInfo, format: String) {
+        val formats =
+            videoDetectionTabViewModel.selectedFormats.get()?.toMutableMap() ?: mutableMapOf()
+        formats[videoInfo.id] = format
+        videoDetectionTabViewModel.selectedFormats.set(formats)
     }
 }
 

@@ -184,5 +184,10 @@
     <string name="string_step_1_process"><![CDATA[<b>الخطوة 1:</b>]]> افتح التطبيق وانسخ الرابط.</string>
     <string name="string_step_2_process"><![CDATA[<b>الخطوة 2:</b>]]> ارجع إلى التطبيق، وحدد "لصق الرابط" لتنزيل الرابط.</string>
     <string name="string_num_image_selected">%s صورة محددة</string>
-
+    <string name="string_details">تفاصيل</string>
+    <string name="string_file_name">اسم الملف</string>
+    <string name="string_date">التاريخ</string>
+    <string name="string_storage_path">مسار التخزين</string>
+    <string name="string_duration">المدة</string>
+    <string name="string_name_contains_special_characters">الاسم يحتوي على أحرف خاصة!</string>
 </resources>

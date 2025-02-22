@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layoutDirection="ltr"
     android:background="@color/white">
 
     <LinearLayout
@@ -231,7 +232,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/_6sdp"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     app:layout_constraintEnd_toStartOf="@id/layout_instagram"
                     app:layout_constraintStart_toEndOf="@id/layout_google"
                     app:layout_constraintTop_toTopOf="parent">
@@ -273,7 +274,7 @@
                     android:id="@+id/layout_instagram"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/_12sdp"
+                    android:layout_marginHorizontal="@dimen/_6sdp"
                     app:layout_constraintEnd_toStartOf="@id/layout_tiktok"
                     app:layout_constraintStart_toEndOf="@id/layout_facebook"
                     app:layout_constraintTop_toTopOf="parent">
@@ -357,7 +358,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp"
-                    app:layout_constraintEnd_toEndOf="@id/layout_google"
+                    app:layout_constraintEnd_toStartOf="@id/layout_imdb"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/layout_google">
 
@@ -399,10 +400,11 @@
                     android:id="@+id/layout_imdb"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/_6sdp"
                     android:layout_marginTop="@dimen/_10sdp"
-                    app:layout_constraintEnd_toEndOf="@id/layout_instagram"
-                    app:layout_constraintStart_toStartOf="@id/layout_instagram"
-                    app:layout_constraintTop_toBottomOf="@id/layout_instagram">
+                    app:layout_constraintEnd_toStartOf="@id/layout_daily_motion"
+                    app:layout_constraintStart_toEndOf="@id/layout_vimeo"
+                    app:layout_constraintTop_toBottomOf="@id/layout_facebook">
 
                     <ImageView
                         android:id="@+id/img_imdb"
@@ -442,9 +444,11 @@
                     android:id="@+id/layout_daily_motion"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_6sdp"
                     android:layout_marginTop="@dimen/_10sdp"
-                    app:layout_constraintEnd_toEndOf="@id/layout_tiktok"
-                    app:layout_constraintStart_toStartOf="@id/layout_tiktok"
+                    android:visibility="visible"
+                    app:layout_constraintEnd_toStartOf="@id/layout_invisible"
+                    app:layout_constraintStart_toEndOf="@id/layout_imdb"
                     app:layout_constraintTop_toBottomOf="@id/layout_tiktok">
 
                     <ImageView
@@ -487,9 +491,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp"
                     android:visibility="invisible"
-                    app:layout_constraintEnd_toEndOf="@id/layout_tiktok"
-                    app:layout_constraintStart_toStartOf="@id/layout_tiktok"
-                    app:layout_constraintTop_toBottomOf="@id/layout_tiktok">
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/layout_daily_motion"
+                    app:layout_constraintTop_toBottomOf="@id/layout_instagram">
 
                     <ImageView
                         android:id="@+id/img_invisible"

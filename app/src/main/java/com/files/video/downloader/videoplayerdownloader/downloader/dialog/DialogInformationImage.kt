@@ -20,6 +20,7 @@ class DialogInformationImage(
     context: Context,
     var link: String,
     var isShowDownload: Boolean,
+    var isShowOpenTab: Boolean,
     var onClickOpenNewTab: (link: String) -> Unit,
     var onClickShare: (link: String) -> Unit,
     var onClickCopyLink: (link: String) -> Unit,
@@ -46,6 +47,14 @@ class DialogInformationImage(
             binding.tvDownloadImage.visibility = VISIBLE
         }else{
             binding.tvDownloadImage.visibility = GONE
+        }
+
+        if(isShowOpenTab){
+            binding.tvOpenNewTab.visibility = VISIBLE
+            binding.tvCopyLink.visibility = VISIBLE
+        }else{
+            binding.tvOpenNewTab.visibility = GONE
+            binding.tvCopyLink.visibility = GONE
         }
 
         initViews()

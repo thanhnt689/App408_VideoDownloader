@@ -9,10 +9,12 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.files.video.downloader.videoplayerdownloader.downloader.MainActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.VideoTaskItemRepository
+import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogDownloadSuccessful
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskState
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.youtubedl_downloader.YoutubeDlDownloaderWorker
@@ -21,6 +23,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -28,7 +31,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class NotificationsHelper @Inject constructor(@ApplicationContext private val context: Context, private val videoTaskItemRepository: VideoTaskItemRepository) {
+class NotificationsHelper @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val videoTaskItemRepository: VideoTaskItemRepository
+) {
 
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "NOTIFICATION_CHANNEL_ID_ALL_DOWNLOADER_SUPER"
@@ -42,7 +48,8 @@ class NotificationsHelper @Inject constructor(@ApplicationContext private val co
     }
 
     fun createNotificationBuilder(task: VideoTaskItem): Pair<Int, NotificationCompat.Builder> {
-        val taskPercent = if (task.getPercentFromBytes() == 0F) task.percent else task.getPercentFromBytes()
+        val taskPercent =
+            if (task.getPercentFromBytes() == 0F) task.percent else task.getPercentFromBytes()
 
         val builder = NotificationCompat.Builder(
             context, NOTIFICATION_CHANNEL_ID
@@ -95,6 +102,14 @@ class NotificationsHelper @Inject constructor(@ApplicationContext private val co
 
                     CoroutineScope(Dispatchers.IO).launch {
                         videoTaskItemRepository.insertVideoTaskItem(task)
+
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.string_download_successful),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
                 }
 
@@ -143,7 +158,7 @@ class NotificationsHelper @Inject constructor(@ApplicationContext private val co
                     ?.toLongOrNull() ?: 0
             retriever.release()
 
-           durationMs
+            durationMs
         } catch (e: Exception) {
             0
         }

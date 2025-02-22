@@ -6,12 +6,14 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.databinding.Observable
 import androidx.databinding.Observable.OnPropertyChangedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Recycler
 import com.bumptech.glide.Glide
+import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideoInfo
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ItemVideoInfoBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
@@ -136,7 +138,21 @@ class VideoInfoAdapter(
                     val text = model.formatsTitles.get()?.get(info.id)
                     val format = model.selectedFormats.get()?.get(info.id)
                     if (text != null && format != null) {
-                        candidateFormatListener.onDownloadVideo(info, format, text)
+                        if (containsEmojiOrSpecialCharacter(text)) {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.string_name_contains_special_characters),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            candidateFormatListener.onDownloadVideo(info, format, text)
+                        }
+                    } else {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.string_invalid_data),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
 
@@ -193,6 +209,14 @@ class VideoInfoAdapter(
             }
         }
     }
+
+    fun containsEmojiOrSpecialCharacter(text: String): Boolean {
+        val regex = Regex("[^a-zA-Z0-9 _.,!?]") // Giữ lại dấu câu phổ biến và "_"
+        val emojiRegex =
+            Regex("[\\p{So}\\p{Cn}]") // Chặn emoji và các ký tự đặc biệt không xác định
+        return regex.containsMatchIn(text) || emojiRegex.containsMatchIn(text)
+    }
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(

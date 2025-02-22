@@ -8,6 +8,7 @@ import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.FragmentBrowserBinding
@@ -16,14 +17,20 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.we
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabFactory
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.guide.GuideActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabModelViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabsActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.KeyboardUtils
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
+
+
+    private val tabModelViewModel : TabModelViewModel by viewModels()
 
     companion object {
         fun newInstance() = BrowserFragment()
@@ -56,7 +63,11 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
             })
         }
 
-        tabViewModels.listTabWeb.observe(viewLifecycleOwner) {
+//        tabViewModels.listTabWeb.observe(viewLifecycleOwner) {
+//            binding.tvTab.text = it.size.toString()
+//        }
+
+        tabModelViewModel.queryAllTabModel().observe(viewLifecycleOwner){
             binding.tvTab.text = it.size.toString()
         }
 
@@ -96,31 +107,31 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
         })
 
         binding.layoutGoogle.setOnClickListener {
-            openNewTab("https://www.google.com")
+            newTab("https://www.google.com")
         }
 
         binding.layoutFacebook.setOnClickListener {
-            openNewTab("https://www.facebook.com/watch")
+            newTab("https://www.facebook.com/watch")
         }
 
         binding.layoutInstagram.setOnClickListener {
-            openNewTab("https://www.instagram.com")
+            newTab("https://www.instagram.com")
         }
 
         binding.layoutTiktok.setOnClickListener {
-            openNewTab("https://www.tiktok.com")
+            newTab("https://www.tiktok.com")
         }
 
         binding.layoutVimeo.setOnClickListener {
-            openNewTab("https://vimeo.com")
+            newTab("https://vimeo.com")
         }
 
         binding.layoutImdb.setOnClickListener {
-            openNewTab("https://www.imdb.com")
+            newTab("https://www.imdb.com")
         }
 
         binding.layoutDailyMotion.setOnClickListener {
-            openNewTab("https://www.dailymotion.com")
+            newTab("https://www.dailymotion.com")
         }
 
         binding.layoutBookmark.setOnClickListener {
@@ -137,7 +148,7 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
                 binding.edtSearch.clearFocus()
                 lifecycleScope.launch {
                     delay(400)
-                    openNewTab((binding.edtSearch as EditText).text.toString())
+                    newTab((binding.edtSearch as EditText).text.toString())
                     binding.edtSearch.text.clear()
                 }
                 false
@@ -146,7 +157,7 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
 
         binding.imgSearch.setOnClickListener {
             if (binding.edtSearch.text.isNotEmpty()) {
-                openNewTab((binding.edtSearch as EditText).text.toString())
+                newTab((binding.edtSearch as EditText).text.toString())
                 binding.edtSearch.text.clear()
             }
         }
@@ -165,6 +176,29 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
             startActivity(intent)
 
         }
+    }
+
+    private fun newTab(input: String) {
+        val webTab = WebTabFactory.createWebTabFromInput(input)
+
+        val tabModel = WebTabFactory.createTabModelFromInput(input)
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            tabModelViewModel.insertTabModel(tabModel)
+
+            withContext(Dispatchers.Main) {
+                val intent = Intent(requireContext(), WebTabActivity::class.java)
+                val bundle = Bundle()
+                bundle.putSerializable("webtab", webTab)
+                intent.putExtras(bundle)
+                startActivity(intent)
+            }
+        }
+
+
+//        tabViewModels.addNewTab(webTab)
+
+
     }
 
 }

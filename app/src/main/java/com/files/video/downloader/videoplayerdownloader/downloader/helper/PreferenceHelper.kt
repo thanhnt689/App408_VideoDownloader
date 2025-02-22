@@ -407,7 +407,7 @@ class PreferenceHelper @Inject constructor(
     }
 
     fun getIsFillMedia(): Boolean {
-        return sharedPreferences.getBoolean(FILL, true)
+        return sharedPreferences.getBoolean(FILL, false)
     }
 
     fun setIsFillMedia(isFillMedia: Boolean) {
