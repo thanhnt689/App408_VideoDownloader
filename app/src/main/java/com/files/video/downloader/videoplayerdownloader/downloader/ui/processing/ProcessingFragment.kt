@@ -87,6 +87,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import javax.inject.Inject
 
@@ -1125,8 +1126,38 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
             OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
 
+//                if (this@WebTabActivity::videoInfoAdapter.isInitialized) {
+//                    videoInfoAdapter.notifyDataSetChanged()
+//                }
+
+                lifecycleScope.launch(Dispatchers.IO) {
+
+                    videoInfoAdapter = VideoInfoAdapter(
+                        requireContext(),
+                        videoDetectionTabViewModel?.detectedVideosList?.get()?.toList()
+                            ?: emptyList(),
+                        videoDetectionTabViewModel,
+                        this@ProcessingFragment,
+                        appUtil
+                    )
+
+                    withContext(Dispatchers.Main) {
+
+                        downloadBinding.videoInfoList.layoutManager =
+                            LinearLayoutManager(
+                                requireContext(),
+                                LinearLayoutManager.VERTICAL,
+                                false
+                            )
+
+                        downloadBinding.videoInfoList.adapter = videoInfoAdapter
+                    }
+
+                }
+
             }
         })
+
         videoInfoAdapter = VideoInfoAdapter(
             requireContext(),
             videoDetectionTabViewModel?.detectedVideosList?.get()?.toList() ?: emptyList(),

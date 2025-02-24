@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Video Downloader</string>
+    <string name="app_name" translatable="false">Video Downloader - Video Saver</string>
     <string name="string_this_action_can_contain_ads">This action can contain ads</string>
     <string name="string_loading">Loading (%s%%)...</string>
     <string name="string_languages">Languages</string>

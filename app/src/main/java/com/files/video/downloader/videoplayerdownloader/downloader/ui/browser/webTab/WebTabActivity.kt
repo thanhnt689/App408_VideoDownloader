@@ -1673,25 +1673,31 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         videoDetectionTabViewModel.detectedVideosList.addOnPropertyChangedCallback(object :
             OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                Log.d(
-                    "ntt",
-                    "onPropertyChanged: videoDetectionTabViewModel.detectedVideosList: ${videoDetectionTabViewModel.detectedVideosList.get()?.size}"
-                )
 
-//                if (this@WebTabActivity::videoInfoAdapter.isInitialized) {
-//                    videoInfoAdapter.notifyDataSetChanged()
-//                }
+                lifecycleScope.launch(Dispatchers.IO) {
 
-                videoInfoAdapter = VideoInfoAdapter(
-                    this@WebTabActivity,
-                    videoDetectionTabViewModel?.detectedVideosList?.get()?.toList() ?: emptyList(),
-                    videoDetectionTabViewModel,
-                    this@WebTabActivity,
-                    appUtil
-                )
+                    videoInfoAdapter = VideoInfoAdapter(
+                        this@WebTabActivity,
+                        videoDetectionTabViewModel?.detectedVideosList?.get()?.toList()
+                            ?: emptyList(),
+                        videoDetectionTabViewModel,
+                        this@WebTabActivity,
+                        appUtil
+                    )
 
-                videoInfoAdapter.notifyDataSetChanged()
+                    withContext(Dispatchers.Main) {
 
+                        downloadBinding.videoInfoList.layoutManager =
+                            LinearLayoutManager(
+                                this@WebTabActivity,
+                                LinearLayoutManager.VERTICAL,
+                                false
+                            )
+
+                        downloadBinding.videoInfoList.adapter = videoInfoAdapter
+                    }
+
+                }
             }
         })
         videoInfoAdapter = VideoInfoAdapter(
