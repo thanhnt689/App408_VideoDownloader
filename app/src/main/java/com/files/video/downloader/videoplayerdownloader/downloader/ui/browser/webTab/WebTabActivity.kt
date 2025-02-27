@@ -44,6 +44,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -73,6 +74,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.databinding.L
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetPermissionBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogInformationImage
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.ContentType
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.DownloadButtonState
@@ -89,9 +91,11 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.processing
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabModelViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabsActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AdBlockerHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogger
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.CookieUtils
+import com.files.video.downloader.videoplayerdownloader.downloader.util.EventBusHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FaviconUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileNameCleaner
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
@@ -101,9 +105,17 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.VideoUti
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.CustomProxyController
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.nlbn.ads.callback.AdCallback
+import com.nlbn.ads.callback.NativeCallback
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.AppOpenManager
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.Dispatchers
@@ -112,6 +124,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.greenrobot.eventbus.EventBus
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -231,6 +244,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     private lateinit var handler: Handler
 
     private lateinit var runnable: Runnable
+
+    private var nativePopupPermission: NativeAd? = null
 
     private var webViewClient = object : WebViewClient() {
         override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
@@ -949,7 +964,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                     flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                 })
             } else {
-                finish()
+                onBackPressed()
             }
         }
         binding.imgBookmark.setOnClickListener {
@@ -1259,6 +1274,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                 )
                 privateVideoViewModel.insertVideoTaskItem(videoTaskItem)
 
+                AdsConstant.isDownloadSuccessfully = true
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
@@ -1343,6 +1359,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
                 privateVideoViewModel.insertVideoTaskItem(videoTaskItem)
 
                 Log.d("ntt", "File saved at: ${outputFile.absolutePath}")
+
+                AdsConstant.isDownloadSuccessfully = true
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
@@ -1769,6 +1787,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
         bottomSheetPermissionDialog.behavior.addBottomSheetCallback(bottomSheetCallback)
 
+        showAdsNativePopupPermission(permissionLayoutBinding.frAds)
+
         runnable = Runnable {
             if (permissionLayoutBinding.btnStorage.isEnabled) {
                 permissionLayoutBinding.btnStorage.startAnimation(animation)
@@ -1830,6 +1850,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
             handler.removeCallbacks(runnable)
             handler.postDelayed(runnable, 5000L)
 
+            permissionLayoutBinding.frAds.visibility = View.GONE
+
             requestNotificationPermission.launch(
                 Manifest.permission.POST_NOTIFICATIONS
             )
@@ -1848,6 +1870,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
         handler.removeCallbacks(runnable)
         handler.postDelayed(runnable, 5000L)
+
+        permissionLayoutBinding.frAds.visibility = View.GONE
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             storageImageActivityResultLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
@@ -1871,6 +1895,9 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
     private val storageActivityResultLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+
+            permissionLayoutBinding.frAds.visibility = View.VISIBLE
+
             if (isGranted) {
                 if (checkNotificationPermission()) {
 
@@ -1905,6 +1932,8 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        permissionLayoutBinding.frAds.visibility = View.VISIBLE
 
         if (requestCode == 99) {
             if (grantResults.isNotEmpty()) {
@@ -1945,6 +1974,9 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     private val requestNotificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
+
+        permissionLayoutBinding.frAds.visibility = View.VISIBLE
+
         if (isGranted) {
             if (checkStoragePermission()) {
 
@@ -1972,7 +2004,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
     }
 
     private fun showSettingsDialog() {
-//        frAds.visibility = View.GONE
+        permissionLayoutBinding.frAds.visibility = View.GONE
         var builder = AlertDialog.Builder(this@WebTabActivity)
         builder.setTitle(getString(R.string.string_permission))
             .setMessage(getString(R.string.permission_setting))
@@ -1983,7 +2015,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
         var dialog = builder.create()
         builder.setOnDismissListener {
-//            frAds.visibility = View.VISIBLE
+            permissionLayoutBinding.frAds.visibility = View.VISIBLE
         }
         dialog.show()
     }
@@ -1992,7 +2024,7 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
         val uri = Uri.fromParts("package", packageName, null)
         intent.data = uri
-//        AppOpenManager.getInstance().disableAppResumeWithActivity(WebTabActivity::class.java)
+        AppOpenManager.getInstance().disableAppResumeWithActivity(WebTabActivity::class.java)
         startSettingResult.launch(intent)
     }
 
@@ -2224,6 +2256,95 @@ class WebTabActivity : BaseActivity<ActivityWebTabBinding>(), DownloadTabListene
 
         dialogInformationImage.show()
     }
+
+    private fun showAdsNativePopupPermission(frAds: FrameLayout) {
+        if (AdsConstant.isLoadNativePopupPermission && hasNetworkConnection() && ConsentHelper.getInstance(
+                this
+            ).canRequestAds()
+        ) {
+            if (nativePopupPermission != null) {
+                val adView = if (Admob.getInstance().isLoadFullAds) {
+                    LayoutInflater.from(this@WebTabActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update_no_bor,
+                            null
+                        ) as NativeAdView
+                } else {
+                    LayoutInflater.from(this@WebTabActivity)
+                        .inflate(R.layout.layout_ads_native_update, null) as NativeAdView
+                }
+                val nativeAdView = adView as NativeAdView
+                frAds.removeAllViews()
+                frAds.addView(adView)
+
+                Admob.getInstance().pushAdsToViewCustom(nativePopupPermission, nativeAdView)
+            } else {
+                Admob.getInstance().loadNativeAd(
+                    this,
+                    this.getString(R.string.native_popup_permission),
+                    object : NativeCallback() {
+                        override fun onNativeAdLoaded(nativeAd: NativeAd) {
+                            nativePopupPermission = nativeAd
+                            val adView = if (Admob.getInstance().isLoadFullAds) {
+                                LayoutInflater.from(this@WebTabActivity)
+                                    .inflate(
+                                        R.layout.layout_ads_native_update_no_bor,
+                                        null
+                                    ) as NativeAdView
+                            } else {
+                                LayoutInflater.from(this@WebTabActivity)
+                                    .inflate(
+                                        R.layout.layout_ads_native_update,
+                                        null
+                                    ) as NativeAdView
+                            }
+                            val nativeAdView = adView as NativeAdView
+                            frAds.removeAllViews()
+                            frAds.addView(adView)
+
+                            Admob.getInstance().pushAdsToViewCustom(nativeAd, nativeAdView)
+
+                        }
+
+                        override fun onAdFailedToLoad() {
+                            nativePopupPermission = null
+                            frAds.removeAllViews()
+                        }
+
+                    }
+                )
+            }
+
+        } else {
+            frAds.removeAllViews()
+        }
+    }
+
+    override fun onBackPressed() {
+        if (intent.getStringExtra("open") == "home") {
+            if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                    .canRequestAds() && AdsConstant.isLoadInterBack && Admob.getInstance().isLoadFullAds
+            ) {
+                Admob.getInstance().loadAndShowInter(
+                    this,
+                    getString(R.string.inter_back), true,
+                    object : AdCallback() {
+                        override fun onNextAction() {
+                            finish()
+                        }
+
+                        override fun onAdFailedToLoad(p0: LoadAdError?) {
+                            finish()
+                        }
+                    })
+            } else {
+                finish()
+            }
+        } else {
+            finish()
+        }
+    }
+
 }
 
 interface IDownloadImage {

@@ -5,13 +5,21 @@ import android.os.Bundle
 import android.os.Handler
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.FragmentBrowserBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.dialog.RatingDialog
+import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.helper.SharedPreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.TabManagerProvider
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabFactory
@@ -19,18 +27,35 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.guide.Guid
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabModelViewModel
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabsActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
+import com.files.video.downloader.videoplayerdownloader.downloader.util.EventBusHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.util.KeyboardUtils
+import com.files.video.downloader.videoplayerdownloader.downloader.util.UpdateEvent
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
+import com.google.android.play.core.review.ReviewManagerFactory
+import com.nlbn.ads.callback.NativeCallback
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
+import javax.inject.Inject
+import kotlin.system.exitProcess
 
 @AndroidEntryPoint
 class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
 
 
-    private val tabModelViewModel : TabModelViewModel by viewModels()
+    private val tabModelViewModel: TabModelViewModel by viewModels()
+
+    @Inject
+    lateinit var preferenceHelper: PreferenceHelper
 
     companion object {
         fun newInstance() = BrowserFragment()
@@ -58,7 +83,7 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
         binding.tvDailyMotion.isSelected = true
 
         binding.imgGuide.setOnClickListener {
-            startActivity(GuideActivity.newIntent(requireContext()).apply {
+            startActivityResult.launch(GuideActivity.newIntent(requireContext()).apply {
                 putExtra("open", "home")
             })
         }
@@ -67,12 +92,14 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
 //            binding.tvTab.text = it.size.toString()
 //        }
 
-        tabModelViewModel.queryAllTabModel().observe(viewLifecycleOwner){
+        tabModelViewModel.queryAllTabModel().observe(viewLifecycleOwner) {
             binding.tvTab.text = it.size.toString()
         }
 
         binding.tvTab.setOnClickListener {
-            startActivity(Intent(requireContext(), TabsActivity::class.java))
+            startActivityResult.launch(Intent(requireContext(), TabsActivity::class.java).apply {
+                putExtra("open", "home")
+            })
         }
 
         binding.layoutSearch.setOnClickListener {
@@ -135,11 +162,17 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
         }
 
         binding.layoutBookmark.setOnClickListener {
-            startActivity(HistoryActivity.newIntent(requireContext(), "bookmark"))
+            startActivityResult.launch(HistoryActivity.newIntent(requireContext(), "bookmark")
+                .apply {
+                    putExtra("start", "home")
+                })
         }
 
         binding.layoutHistory.setOnClickListener {
-            startActivity(HistoryActivity.newIntent(requireContext(), "history"))
+            startActivityResult.launch(HistoryActivity.newIntent(requireContext(), "history")
+                .apply {
+                    putExtra("start", "home")
+                })
         }
 
         binding.edtSearch.imeOptions = EditorInfo.IME_ACTION_DONE
@@ -162,6 +195,78 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
             }
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        if (!EventBus.getDefault().isRegistered(this)) {
+            EventBusHelper.register(this)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        EventBusHelper.unregister(this)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    fun onEvent(event: UpdateEvent) {
+        Log.d("ntt", "onEvent: $event")
+        if (event.name == "Ads") {
+            if (ConsentHelper.getInstance(requireActivity()).canRequestAds()) {
+                showAdsNativeHome()
+            }
+        }
+
+        if (event.name == "hide_ads") {
+            binding.frAds.visibility = View.GONE
+        } else if (event.name == "show_ads") {
+            binding.frAds.visibility = View.VISIBLE
+        }
+    }
+
+    private fun showAdsNativeHome() {
+
+        if (AdsConstant.isLoadNativeHome && Admob.getInstance().isLoadFullAds) {
+
+            if (AdsConstant.nativeAdsHome != null) {
+                AdsConstant.nativeAdsHome?.let {
+                    val adView = LayoutInflater.from(requireActivity())
+                        .inflate(R.layout.layout_ads_native_update, null)
+                    val nativeAdView = adView as NativeAdView
+                    binding.frAds.removeAllViews()
+                    binding.frAds.addView(adView)
+
+                    Admob.getInstance().pushAdsToViewCustom(it, nativeAdView)
+
+                }
+
+            } else {
+                Admob.getInstance().loadNativeAd(context,
+                    getString(R.string.native_home),
+                    object : NativeCallback() {
+                        override fun onNativeAdLoaded(nativeAd: NativeAd) {
+                            val adView = LayoutInflater.from(context)
+                                .inflate(R.layout.layout_ads_native_update, null)
+                            val nativeAdView = adView as NativeAdView
+                            binding.frAds.removeAllViews()
+                            binding.frAds.addView(adView)
+
+                            Admob.getInstance().pushAdsToViewCustom(nativeAd, nativeAdView)
+
+                        }
+
+                        override fun onAdFailedToLoad() {
+                            binding.frAds.removeAllViews()
+                        }
+
+                    })
+            }
+        } else {
+            binding.frAds.removeAllViews()
+            binding.frAds.visibility = View.GONE
+        }
+    }
+
 
     private fun openNewTab(input: String) {
         if (input.isNotEmpty()) {
@@ -191,7 +296,8 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
                 val bundle = Bundle()
                 bundle.putSerializable("webtab", webTab)
                 intent.putExtras(bundle)
-                startActivity(intent)
+                intent.putExtra("open", "home")
+                startActivityResult.launch(intent)
             }
         }
 
@@ -200,5 +306,76 @@ class BrowserFragment : BaseFragment<FragmentBrowserBinding>() {
 
 
     }
+
+    val startActivityResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        Log.d("ntt", "startActivityResult: ")
+        if (AdsConstant.isDownloadSuccessfully) {
+            AdsConstant.isDownloadSuccessfully = false
+            val countBack = preferenceHelper.getCountBackHome()
+
+            Log.d("ntt", "startActivityResult: " + countBack)
+
+            if (!preferenceHelper.isRate() && (countBack % 2 == 1)) {
+                showDialogRate()
+            } else {
+                preferenceHelper.increaseCountBackHome()
+
+            }
+        }
+    }
+
+    private fun showDialogRate() {
+        binding.frAds.visibility = View.GONE
+        val ratingDialog = RatingDialog(requireContext())
+        ratingDialog.init(requireContext(), object : RatingDialog.OnPress {
+            override fun sendThank() {
+                preferenceHelper.forceRated()
+                ratingDialog.dismiss()
+
+                Toast.makeText(
+                    requireContext(), getString(R.string.string_thank_for_rate), Toast.LENGTH_SHORT
+                ).show()
+
+
+            }
+
+            override fun rating() {
+                val manager = ReviewManagerFactory.create(requireContext())
+                val request = manager.requestReviewFlow()
+                request.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val reviewInfo = task.result
+                        val flow = manager.launchReviewFlow(requireActivity(), reviewInfo)
+                        flow.addOnSuccessListener {
+                            preferenceHelper.forceRated()
+                            ratingDialog.dismiss()
+
+                        }
+                    } else {
+                        preferenceHelper.forceRated()
+                        ratingDialog.dismiss()
+
+                    }
+                }
+            }
+
+            override fun later() {
+                ratingDialog.dismiss()
+
+                preferenceHelper.increaseCountBackHome()
+
+            }
+
+        })
+
+        ratingDialog.show()
+
+        ratingDialog.setOnDismissListener {
+            binding.frAds.visibility = View.VISIBLE
+        }
+    }
+
 
 }

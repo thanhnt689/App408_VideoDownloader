@@ -176,7 +176,7 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         android:paddingBottom="@dimen/_10sdp"
-        app:layout_constraintBottom_toTopOf="@id/tv_add_to_private"
+        app:layout_constraintBottom_toTopOf="@id/layout_native"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layout_tap">
@@ -244,6 +244,25 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+        android:id="@+id/layout_native"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/_5sdp"
+        app:layout_constraintBottom_toTopOf="@id/tv_add_to_private"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <FrameLayout
+            android:id="@+id/fr_ads"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <include layout="@layout/layout_shimmer_native_new" />
+        </FrameLayout>
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tv_add_to_private"

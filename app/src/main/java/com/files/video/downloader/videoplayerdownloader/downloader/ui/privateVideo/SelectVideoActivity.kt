@@ -19,13 +19,20 @@ import com.files.video.downloader.videoplayerdownloader.downloader.MainActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivitySelectVideoBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.downloaded.VideoAdapter
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.downloaded.VideoListener
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.processing.WrapContentLinearLayoutManager
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.ViewUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
 import com.google.android.material.tabs.TabLayout
+import com.nlbn.ads.callback.NativeCallback
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -57,6 +64,8 @@ class SelectVideoActivity : BaseActivity<ActivitySelectVideoBinding>(), VideoLis
         binding.tab.addTab(binding.tab.newTab().setId(1).setText(getString(R.string.string_image)))
 
         privateVideoViewModel.fileType.postValue(fileType)
+
+        loadNativeAddPrivate()
 
         videoAdapter =
             VideoAdapter(
@@ -97,9 +106,13 @@ class SelectVideoActivity : BaseActivity<ActivitySelectVideoBinding>(), VideoLis
                     if (it.isEmpty()) {
                         binding.layoutNoData.visibility = View.VISIBLE
                         binding.tvAddToPrivate.visibility = View.GONE
+
+                        binding.frAds.visibility = View.GONE
                     } else {
                         binding.layoutNoData.visibility = View.GONE
                         binding.tvAddToPrivate.visibility = View.VISIBLE
+
+                        binding.frAds.visibility = View.VISIBLE
                     }
 //
                     listVideoTaskItem.clear()
@@ -259,5 +272,66 @@ class SelectVideoActivity : BaseActivity<ActivitySelectVideoBinding>(), VideoLis
                 getString(R.string.string_num_image_selected, numSelect.toString())
         }
     }
+
+    private fun loadNativeAddPrivate() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && AdsConstant.isLoadNativeAdd
+        ) {
+
+            if (AdsConstant.nativeAdsAll != null) {
+                val adView = if (Admob.getInstance().isLoadFullAds) {
+                    LayoutInflater.from(this@SelectVideoActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update_no_bor,
+                            null
+                        ) as NativeAdView
+                } else {
+                    LayoutInflater.from(this@SelectVideoActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update,
+                            null
+                        ) as NativeAdView
+                }
+                binding.frAds.removeAllViews()
+                binding.frAds.addView(adView)
+                Admob.getInstance().pushAdsToViewCustom(AdsConstant.nativeAdsAll, adView)
+            } else {
+                try {
+                    Admob.getInstance().loadNativeAd(
+                        this,
+                        getString(R.string.native_all),
+                        object : NativeCallback() {
+                            override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                                val adView = if (Admob.getInstance().isLoadFullAds) {
+                                    LayoutInflater.from(this@SelectVideoActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update_no_bor,
+                                            null
+                                        ) as NativeAdView
+                                } else {
+                                    LayoutInflater.from(this@SelectVideoActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update,
+                                            null
+                                        ) as NativeAdView
+                                }
+                                binding.frAds.removeAllViews()
+                                binding.frAds.addView(adView)
+                                Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                            }
+
+                            override fun onAdFailedToLoad() {
+                                binding.frAds.removeAllViews()
+                            }
+                        })
+                } catch (e: Exception) {
+                    binding.frAds.removeAllViews()
+                }
+            }
+        } else {
+            binding.frAds.removeAllViews()
+        }
+    }
+
 
 }

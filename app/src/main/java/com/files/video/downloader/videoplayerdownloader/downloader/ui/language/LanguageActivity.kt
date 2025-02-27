@@ -7,16 +7,25 @@ import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.MainActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityLanguageBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.extensions.setLocale
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.intro.IntroActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SystemUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SystemUtil.getLanguageApp
+import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.DaggerWorkerFactory
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
+import com.nlbn.ads.callback.NativeCallback
 import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 import javax.inject.Inject
@@ -39,6 +48,7 @@ class LanguageActivity : BaseActivity<ActivityLanguageBinding>() {
     }
 
     override fun initView() {
+
         initData()
         setupListLanguage()
         initEvent()
@@ -124,7 +134,7 @@ class LanguageActivity : BaseActivity<ActivityLanguageBinding>() {
                 if (!isLoadNativeLanguageSelect
                 ) {
                     isLoadNativeLanguageSelect = true
-//                    loadAdsNativeLanguageSelect()
+                    loadAdsNativeLanguageSelect()
                 }
             }
         }
@@ -174,7 +184,7 @@ class LanguageActivity : BaseActivity<ActivityLanguageBinding>() {
             val locale = Locale.getDefault()
             initListLanguage(locale.language)
 
-//            loadAdsNativeLanguage()
+            loadAdsNativeLanguage()
 
         } else {
             binding.layoutLanguagesOpen.visibility = View.GONE
@@ -183,7 +193,7 @@ class LanguageActivity : BaseActivity<ActivityLanguageBinding>() {
                 preferenceHelper.getString(PreferenceHelper.PREF_CURRENT_LANGUAGE)
             initListLanguage(selectedLanguage ?: "")
 
-//            loadAdsNativeLanguageSetting()
+            loadAdsNativeLanguageSetting()
         }
     }
 
@@ -255,6 +265,201 @@ class LanguageActivity : BaseActivity<ActivityLanguageBinding>() {
 
             }
         }
+    }
+
+    private fun loadAdsNativeLanguage() {
+        try {
+            if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                    .canRequestAds() && AdsConstant.isLoadNativeLanguage
+            ) {
+                Admob.getInstance().loadNativeAd(
+                    this,
+                    getString(R.string.native_language),
+                    object : NativeCallback() {
+                        override fun onNativeAdLoaded(nativeAd: NativeAd) {
+                            try {
+
+                                val adView = if (Admob.getInstance().isLoadFullAds) {
+                                    LayoutInflater.from(this@LanguageActivity)
+                                        .inflate(
+                                            R.layout.ads_native_lang_top_no_bor,
+                                            null
+                                        ) as NativeAdView
+                                } else {
+                                    LayoutInflater.from(this@LanguageActivity)
+                                        .inflate(R.layout.ads_native_lang, null) as NativeAdView
+                                }
+
+                                binding.frAds.removeAllViews()
+                                binding.frAds.addView(adView)
+                                Admob.getInstance()
+                                    .pushAdsToViewCustom(nativeAd, adView as NativeAdView)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                )
+            } else {
+                binding.frAds.removeAllViews()
+//                binding.frAds.visibility = View.GONE
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun loadAdsNativeLanguageSetting() {
+
+        val adViewShimmer =
+            LayoutInflater.from(this@LanguageActivity)
+                .inflate(
+                    R.layout.layout_shimmer_native_new,
+                    null
+                )
+
+        binding.frAds.removeAllViews()
+        binding.frAds.addView(adViewShimmer)
+
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && AdsConstant.isLoadNativeLanguageSetting
+        ) {
+            try {
+                try {
+                    if (AdsConstant.nativeAdsAll != null) {
+
+                        val adView = if (Admob.getInstance().isLoadFullAds) {
+                            LayoutInflater.from(this@LanguageActivity)
+                                .inflate(
+                                    R.layout.layout_ads_native_update_no_bor,
+                                    null
+                                ) as NativeAdView
+                        } else {
+                            LayoutInflater.from(this@LanguageActivity)
+                                .inflate(
+                                    R.layout.layout_ads_native_update,
+                                    null
+                                ) as NativeAdView
+                        }
+
+                        val nativeAdView = adView as NativeAdView
+                        binding.frAds.removeAllViews()
+                        binding.frAds.addView(adView)
+
+                        Admob.getInstance()
+                            .pushAdsToViewCustom(AdsConstant.nativeAdsAll, nativeAdView)
+
+                    } else {
+                        Admob.getInstance().loadNativeAd(
+                            this,
+                            getString(R.string.native_all),
+                            object : NativeCallback() {
+                                override fun onNativeAdLoaded(nativeAd: NativeAd) {
+
+                                    val adView = if (Admob.getInstance().isLoadFullAds) {
+                                        LayoutInflater.from(this@LanguageActivity)
+                                            .inflate(
+                                                R.layout.ads_native_lang_top_no_bor,
+                                                null
+                                            ) as NativeAdView
+                                    } else {
+                                        LayoutInflater.from(this@LanguageActivity)
+                                            .inflate(
+                                                R.layout.ads_native_lang,
+                                                null
+                                            ) as NativeAdView
+                                    }
+
+                                    val nativeAdView = adView as NativeAdView
+                                    binding.frAds.removeAllViews()
+                                    binding.frAds.addView(adView)
+
+                                    Admob.getInstance()
+                                        .pushAdsToViewCustom(nativeAd, nativeAdView)
+
+                                }
+
+                                override fun onAdFailedToLoad() {
+                                    binding.frAds.removeAllViews()
+                                }
+
+                            }
+                        )
+                    }
+
+                } catch (e: Exception) {
+                    binding.frAds.removeAllViews()
+                }
+            } catch (e: Exception) {
+                binding.frAds.removeAllViews()
+            }
+        } else {
+            binding.frAds.removeAllViews()
+        }
+    }
+
+    private fun loadAdsNativeLanguageSelect() {
+
+        if (hasNetworkConnection() && ConsentHelper.getInstance(
+                this@LanguageActivity
+            )
+                .canRequestAds() && AdsConstant.isLoadNativeLanguageSelect
+        ) {
+
+            if (AdsConstant.nativeAdsLanguageSelect != null) {
+
+                val adView = if (Admob.getInstance().isLoadFullAds) {
+                    LayoutInflater.from(this@LanguageActivity)
+                        .inflate(R.layout.ads_native_lang_top_no_bor, null) as NativeAdView
+                } else {
+                    LayoutInflater.from(this@LanguageActivity)
+                        .inflate(R.layout.ads_native_lang, null) as NativeAdView
+                }
+
+                val nativeAdView = adView as NativeAdView
+                binding.frAds.removeAllViews()
+                binding.frAds.addView(adView)
+
+                Admob.getInstance()
+                    .pushAdsToViewCustom(AdsConstant.nativeAdsLanguageSelect, nativeAdView)
+
+            } else {
+                Admob.getInstance().loadNativeAd(
+                    this,
+                    getString(R.string.native_language_select),
+                    object : NativeCallback() {
+                        override fun onNativeAdLoaded(nativeAd: NativeAd) {
+
+                            val adView = if (Admob.getInstance().isLoadFullAds) {
+                                LayoutInflater.from(this@LanguageActivity)
+                                    .inflate(
+                                        R.layout.ads_native_lang_top_no_bor,
+                                        null
+                                    ) as NativeAdView
+                            } else {
+                                LayoutInflater.from(this@LanguageActivity)
+                                    .inflate(R.layout.ads_native_lang, null) as NativeAdView
+                            }
+
+                            val nativeAdView = adView as NativeAdView
+                            binding.frAds.removeAllViews()
+                            binding.frAds.addView(adView)
+
+                            Admob.getInstance().pushAdsToViewCustom(nativeAd, nativeAdView)
+
+                        }
+
+                        override fun onAdFailedToLoad() {
+                            binding.frAds.removeAllViews()
+                        }
+
+                    }
+                )
+            }
+        } else {
+            binding.frAds.removeAllViews()
+        }
+
     }
 
     companion object {

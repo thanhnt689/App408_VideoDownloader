@@ -190,13 +190,13 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/iv_2">
 
-                <!--                <FrameLayout-->
-                <!--                    android:id="@+id/fr_ads"-->
-                <!--                    android:layout_width="match_parent"-->
-                <!--                    android:layout_height="wrap_content">-->
+                <FrameLayout
+                    android:id="@+id/fr_ads"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
-                <!--                    <include layout="@layout/layout_shimmer_native_new" />-->
-                <!--                </FrameLayout>-->
+                    <include layout="@layout/layout_shimmer_native_new" />
+                </FrameLayout>
 
             </RelativeLayout>
 

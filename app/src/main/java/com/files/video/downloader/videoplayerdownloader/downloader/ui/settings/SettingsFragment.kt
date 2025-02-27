@@ -9,6 +9,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.BuildConfig
+import com.files.video.downloader.videoplayerdownloader.downloader.MainActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.FragmentSettingsBinding
@@ -16,6 +17,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.dialog.Rating
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.language.LanguageActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.nlbn.ads.util.AppOpenManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -125,6 +127,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
                 activity?.window!!.decorView.systemUiVisibility = (
                         View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION)
+                AppOpenManager.getInstance().disableAppResumeWithActivity(MainActivity::class.java)
 
                 startActivityForResult(
                     Intent.createChooser(
@@ -143,6 +146,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
     private fun onClickLayoutPrivatePolicy() {
         val browserIntent =
             Intent(Intent.ACTION_VIEW, Uri.parse("https://smartweb-technology.netlify.app/policy"))
+        AppOpenManager.getInstance().disableAppResumeWithActivity(MainActivity::class.java)
         startActivity(browserIntent)
     }
 
@@ -151,6 +155,12 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
         if (requestCode == 1900) {
             isShareDialogOpen = false
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        AppOpenManager.getInstance().enableAppResumeWithActivity(MainActivity::class.java)
+
     }
 
 }

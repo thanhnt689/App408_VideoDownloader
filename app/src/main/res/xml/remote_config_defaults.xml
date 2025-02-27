@@ -1,115 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <defaults>
     <entry>
-        <key>disable_admob_ads_click_native_background</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>disable_admob_ads_click_native_position</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>disable_admob_ads_click_native_setup_record</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>disable_admob_ads_click_native_customization</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>disable_admob_ads_click_native_screen_color</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>disable_admob_ads_click_native_home</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>is_load_native_permission</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>disable_meta_ads_click_native_customization</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>disable_meta_ads_click_native_position</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>switch_bannerColapse_bannerDefault</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>is_load_native_language_setting</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>is_load_native_intro1</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>is_load_native_home</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>is_load_inter_item</key>
+        <key>force_update</key>
         <value>true</value>
     </entry>
     <entry>
         <key>cb_fetch_interval</key>
-        <value>20</value>
+        <value>999</value>
     </entry>
     <entry>
-        <key>disable_meta_ads_click_native_screen_color</key>
-        <value>false</value>
+        <key>interval_show_interstitial</key>
+        <value>15</value>
     </entry>
     <entry>
-        <key>is_load_native_screen_color</key>
+        <key>is_load_inter_splash</key>
         <value>true</value>
     </entry>
     <entry>
-        <key>is_load_native_position</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>is_reload_native_home</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>disable_meta_ads_click_native_background</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>is_load_native_language</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>is_load_native_customization</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>disable_meta_ads_click_native_setup_record</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>is_load_native_intro2</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>is_load_native_background</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>is_load_native_intro3</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>is_load_native_set_up_record</key>
-        <value>true</value>
-    </entry>
-    <entry>
-        <key>is_load_all_banner_home</key>
+        <key>is_load_native_language1</key>
         <value>true</value>
     </entry>
     <entry>
@@ -117,58 +25,47 @@
         <value>true</value>
     </entry>
     <entry>
+        <key>is_load_native_language_setting</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_intro_1</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_intro_2</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_intro_3</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_intro_4</key>
+        <value>true</value>
+    </entry>
+    <entry>
         <key>is_load_inter_intro</key>
         <value>true</value>
     </entry>
     <entry>
-        <key>force_update</key>
-        <value>false</value>
-    </entry>
-    <entry>
-        <key>disable_meta_ads_click_native_home</key>
-        <value>false</value>
-    </entry>
-
-    <entry>
-        <key>is_load_native_tutorial</key>
+        <key>is_load_native_permission</key>
         <value>true</value>
     </entry>
-
-    <entry>
-        <key>is_load_native_intro4</key>
-        <value>true</value>
-    </entry>
-
-    <entry>
-        <key>is_load_native_permission_appear</key>
-        <value>true</value>
-    </entry>
-
-    <entry>
-        <key>is_load_native_permission_system</key>
-        <value>true</value>
-    </entry>
-
     <entry>
         <key>is_load_native_permission_storage</key>
         <value>true</value>
     </entry>
-
     <entry>
-        <key>is_load_native_permission_notification</key>
-        <value>true</value>
-    </entry>
-
-    <entry>
-        <key>is_load_native_tutorial_in_app</key>
+        <key>is_load_native_permission_notice</key>
         <value>true</value>
     </entry>
     <entry>
-        <key>is_load_native_exit</key>
+        <key>is_load_native_popup_permission</key>
         <value>true</value>
     </entry>
     <entry>
-        <key>is_load_native_back</key>
+        <key>is_load_native_popup_exit</key>
         <value>true</value>
     </entry>
     <entry>
@@ -176,8 +73,69 @@
         <value>true</value>
     </entry>
     <entry>
-        <key>interval_show_interstitial</key>
-        <value>15</value>
+        <key>is_load_banner</key>
+        <value>true</value>
     </entry>
+    <entry>
+        <key>is_load_inter_tab_home</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_inter_downloaded_item</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_inter_private_add</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_home</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_nomedia_downloaded</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_tabs</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_history</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_bookmark</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_security</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_add</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_private</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_image_detail</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_guide</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_files</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>is_load_native_video</key>
+        <value>true</value>
+    </entry>
+
 
 </defaults>

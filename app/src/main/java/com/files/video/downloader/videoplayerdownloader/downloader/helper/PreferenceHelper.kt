@@ -75,6 +75,9 @@ class PreferenceHelper @Inject constructor(
         private const val SECURITY_ANSWER = "SECURITY_ANSWER"
         private const val PIN_CODE = "PIN_CODE"
 
+        const val COUNT_EXIT = "count_exit"
+        const val COUNT_BACK_HOME = "count_back_home"
+
     }
 
     //    private val sharedPreferences by lazy {
@@ -470,5 +473,25 @@ class PreferenceHelper @Inject constructor(
             it.putInt(TYPE_SORT, typeSort)
             it.apply()
         }
+    }
+
+    fun getCountExitApp(): Int {
+        return sharedPreferences.getInt(COUNT_EXIT, 1)
+    }
+
+    fun increaseCountExitApp() {
+        sharedPreferences.edit()
+            .putInt(COUNT_EXIT, sharedPreferences.getInt(COUNT_EXIT, 1) + 1)
+            .commit()
+    }
+
+    fun getCountBackHome(): Int {
+        return sharedPreferences.getInt(COUNT_BACK_HOME, 1)
+    }
+
+    fun increaseCountBackHome() {
+        sharedPreferences.edit()
+            .putInt(COUNT_BACK_HOME, sharedPreferences.getInt(COUNT_BACK_HOME, 1) + 1)
+            .commit()
     }
 }

@@ -56,15 +56,22 @@ import com.files.video.downloader.videoplayerdownloader.downloader.databinding.A
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetDetailBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetPermissionBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.PrivateVideoViewModel
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FileUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SystemUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.slider.Slider
+import com.nlbn.ads.callback.NativeCallback
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import com.skydoves.balloon.ArrowOrientation
 import com.skydoves.balloon.Balloon
 import dagger.hilt.android.AndroidEntryPoint
@@ -179,15 +186,25 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
             isFill = preferenceHelper.getIsFillMedia()
 
+            loadNativeVideo()
+
             requestedOrientation = if (isFill) {
                 ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             } else {
                 ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             }
 
+            if (isFill) {
+                binding.frAds?.visibility = View.GONE
+            } else {
+                binding.frAds?.visibility = View.VISIBLE
+            }
+
         } else {
             binding.layoutVideo.visibility = View.GONE
             binding.layoutImage.visibility = View.VISIBLE
+
+            loadNativeImageDetail()
 
             Glide.with(this)
                 .load(intent.getStringExtra(VIDEO_URL))
@@ -492,7 +509,8 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
         // Khi xoay ngang, mở rộng BottomSheet full màn hình
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             bottomSheetDetailDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            bottomSheetDetailDialog.behavior.peekHeight = Resources.getSystem().displayMetrics.heightPixels
+            bottomSheetDetailDialog.behavior.peekHeight =
+                Resources.getSystem().displayMetrics.heightPixels
         }
     }
 
@@ -533,7 +551,8 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
 
         SystemUtil.setLocale(this@PlayMediaActivity)
 
-        bottomSheetDetailDialog.behavior.peekHeight = Resources.getSystem().displayMetrics.heightPixels
+        bottomSheetDetailDialog.behavior.peekHeight =
+            Resources.getSystem().displayMetrics.heightPixels
 
         bottomSheetDetailDialog.behavior.addBottomSheetCallback(bottomSheetCallback)
 
@@ -773,4 +792,125 @@ class PlayMediaActivity : BaseActivity<ActivityPlayMediaBinding>() {
         super.onDestroy()
         stopMediaPlayer()
     }
+
+    private fun loadNativeVideo() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && AdsConstant.isLoadNativeVideo
+        ) {
+
+            if (AdsConstant.nativeAdsAll != null) {
+                val adView = if (Admob.getInstance().isLoadFullAds) {
+                    LayoutInflater.from(this@PlayMediaActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update_no_bor,
+                            null
+                        ) as NativeAdView
+                } else {
+                    LayoutInflater.from(this@PlayMediaActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update,
+                            null
+                        ) as NativeAdView
+                }
+                binding.frAds?.removeAllViews()
+                binding.frAds?.addView(adView)
+                Admob.getInstance().pushAdsToViewCustom(AdsConstant.nativeAdsAll, adView)
+            } else {
+                try {
+                    Admob.getInstance().loadNativeAd(
+                        this,
+                        getString(R.string.native_all),
+                        object : NativeCallback() {
+                            override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                                val adView = if (Admob.getInstance().isLoadFullAds) {
+                                    LayoutInflater.from(this@PlayMediaActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update_no_bor,
+                                            null
+                                        ) as NativeAdView
+                                } else {
+                                    LayoutInflater.from(this@PlayMediaActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update,
+                                            null
+                                        ) as NativeAdView
+                                }
+                                binding.frAds?.removeAllViews()
+                                binding.frAds?.addView(adView)
+                                Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                            }
+
+                            override fun onAdFailedToLoad() {
+                                binding.frAds?.removeAllViews()
+                            }
+                        })
+                } catch (e: Exception) {
+                    binding.frAds?.removeAllViews()
+                }
+            }
+        } else {
+            binding.frAds?.removeAllViews()
+        }
+    }
+
+    private fun loadNativeImageDetail() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && AdsConstant.isLoadNativeImageDetail
+        ) {
+
+            if (AdsConstant.nativeAdsAll != null) {
+                val adView = if (Admob.getInstance().isLoadFullAds) {
+                    LayoutInflater.from(this@PlayMediaActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update_no_bor,
+                            null
+                        ) as NativeAdView
+                } else {
+                    LayoutInflater.from(this@PlayMediaActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update,
+                            null
+                        ) as NativeAdView
+                }
+                binding.frAds?.removeAllViews()
+                binding.frAds?.addView(adView)
+                Admob.getInstance().pushAdsToViewCustom(AdsConstant.nativeAdsAll, adView)
+            } else {
+                try {
+                    Admob.getInstance().loadNativeAd(
+                        this,
+                        getString(R.string.native_all),
+                        object : NativeCallback() {
+                            override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                                val adView = if (Admob.getInstance().isLoadFullAds) {
+                                    LayoutInflater.from(this@PlayMediaActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update_no_bor,
+                                            null
+                                        ) as NativeAdView
+                                } else {
+                                    LayoutInflater.from(this@PlayMediaActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update,
+                                            null
+                                        ) as NativeAdView
+                                }
+                                binding.frAds?.removeAllViews()
+                                binding.frAds?.addView(adView)
+                                Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                            }
+
+                            override fun onAdFailedToLoad() {
+                                binding.frAds?.removeAllViews()
+                            }
+                        })
+                } catch (e: Exception) {
+                    binding.frAds?.removeAllViews()
+                }
+            }
+        } else {
+            binding.frAds?.removeAllViews()
+        }
+    }
+
 }

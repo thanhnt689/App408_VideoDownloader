@@ -4,8 +4,8 @@
     android:id="@+id/view_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layoutDirection="ltr"
-    android:background="@color/white">
+    android:background="@color/white"
+    android:layoutDirection="ltr">
 
     <LinearLayout
         android:id="@+id/toolbar"
@@ -214,6 +214,24 @@
             app:tabTextColor="#BFBFBF" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <LinearLayout
+        android:id="@+id/layout_native"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_tap">
+
+        <FrameLayout
+            android:id="@+id/fr_ads"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <include layout="@layout/layout_native_no_media_shimmer" />
+        </FrameLayout>
+
+    </LinearLayout>
+
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -221,7 +239,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layout_tap">
+        app:layout_constraintTop_toBottomOf="@id/layout_native">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"

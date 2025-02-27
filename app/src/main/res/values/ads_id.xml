@@ -1,8 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //id test
-    <string name="app_flyer" translatable="false">LikYKU2zUYTct7BoQ7MuJY</string>
     <string name="app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
     <string name="facebook_app_id" translatable="false">1097990038357689</string>
     <string name="facebook_client_token" translatable="false">bb5f2d64dda6fec8bfb3080f70b7d0b0</string>
+
+    <string name="inter_splash" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="native_language" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="native_language_select" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="native_intro_1" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="native_intro_2" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="native_intro_3" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="native_intro_4" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="inter_intro" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="native_permission" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="native_permission_notice" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="native_permission_storage" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="native_popup_permission" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="open_resume" translatable="false">ca-app-pub-3940256099942544/9257395921</string>
+
+    <string name="native_popup_exit" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="inter_back" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="banner" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="inter_tab_home" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="inter_downloaded_item" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="inter_private_add" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="native_home" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="native_nomedia_download" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
+    <string name="native_all" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
 </resources>

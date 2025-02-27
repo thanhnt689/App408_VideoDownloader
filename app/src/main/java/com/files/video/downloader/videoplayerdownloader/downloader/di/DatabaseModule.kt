@@ -26,7 +26,7 @@ object DatabaseModule {
         return Room.databaseBuilder(
             appContext,
             AppDatabase::class.java,
-            "video"
+            "videoDownloader"
         ).fallbackToDestructiveMigration().build()
     }
 

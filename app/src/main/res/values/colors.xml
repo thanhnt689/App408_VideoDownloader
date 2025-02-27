@@ -24,4 +24,5 @@
     <color name="color_background">#FFFFFF</color>
     <color name="color_pdf">#DA0A19</color>
     <color name="color_word">#2F80ED</color>
+    <color name="color_main">#6368EF</color>
 </resources>

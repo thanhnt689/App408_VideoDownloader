@@ -4,14 +4,21 @@ import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityPinBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.PrivateVideoActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.nlbn.ads.banner.BannerPlugin
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -50,6 +57,8 @@ class PinActivity : BaseActivity<ActivityPinBinding>() {
     override fun initView() {
 
         isSetupPinCode = preferenceHelper.getIsSetupPinCode()
+
+        loadBanner()
 
         if (isSetupPinCode && intent.getStringExtra("action") != "changePinCode") {
             binding.tvForgotPassword.visibility = View.VISIBLE
@@ -293,6 +302,33 @@ class PinActivity : BaseActivity<ActivityPinBinding>() {
 
         Log.d("ntt", "setPassword: passCodeSecond: $passCodeSecond")
 
+    }
+
+    private fun loadBanner() {
+        if (this.hasNetworkConnection() && ConsentHelper.getInstance(this).canRequestAds()) {
+
+            if (AdsConstant.isLoadBanner) {
+                binding.frBanner.visibility = View.VISIBLE
+                val config = BannerPlugin.Config()
+                config.defaultAdUnitId = getString(R.string.banner)
+                config.defaultBannerType = BannerPlugin.BannerType.Adaptive
+                val cbFetchInterval =
+                    FirebaseRemoteConfig.getInstance().getLong("cb_fetch_interval").toInt()
+                config.defaultRefreshRateSec = cbFetchInterval
+                config.defaultCBFetchIntervalSec = cbFetchInterval
+                Admob.getInstance().loadBannerPlugin(
+                    this,
+                    findViewById<ViewGroup>(R.id.fr_banner),
+                    findViewById<ViewGroup>(R.id.include),
+                    config
+                )
+            } else {
+                binding.frBanner.visibility = View.GONE
+            }
+
+        } else {
+            binding.frBanner.visibility = View.GONE
+        }
     }
 }
 

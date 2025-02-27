@@ -16,9 +16,16 @@ import androidx.core.content.ContextCompat
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityPermissionBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.disclaimers.DisclaimersActivity
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
+import com.nlbn.ads.callback.NativeCallback
+import com.nlbn.ads.util.Admob
 import com.nlbn.ads.util.AppOpenManager
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -34,6 +41,9 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
     private var isPermissionStorage = false
     private var isPermissionNotification = false
 
+    var nativePermissionNotice: NativeAd? = null
+    var nativePermissionStorage: NativeAd? = null
+
     private var checkOpen = false
 
     override fun setBinding(layoutInflater: LayoutInflater): ActivityPermissionBinding {
@@ -41,6 +51,12 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
     }
 
     override fun initView() {
+
+        loadNativePermission()
+
+        loadNativePermissionNotice()
+
+        loadNativePermissionStorage()
 
         checkStoragePermission()
         checkNotificationPermission()
@@ -132,6 +148,10 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
 
     private fun requestPermissionStorage() {
 
+        showNativePermissionStorage()
+
+        binding.frAds.visibility = View.GONE
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             storageImageActivityResultLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
 //            storageActivityResultLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
@@ -149,6 +169,8 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
     }
 
     private fun requestPermissionNotification() {
+
+        showNativePermissionNotice()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ActivityCompat.requestPermissions(
@@ -168,10 +190,15 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
 
     private val storageActivityResultLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+
+            binding.frAds.visibility = View.VISIBLE
+
             if (!it) {
                 isPermissionStorage = false
                 binding.btnAllowStorage.isEnabled = true
                 binding.btnAllowStorage.setBackgroundResource(R.drawable.ic_switch_off)
+
+                binding.frAds.visibility = View.GONE
 
                 val alertDialog = AlertDialog.Builder(this).create()
                 alertDialog.setCancelable(false)
@@ -185,6 +212,8 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                     val uri = Uri.fromParts("package", packageName, null)
                     intent.data = uri
 
+                    AppOpenManager.getInstance()
+                        .disableAppResumeWithActivity(PermissionActivity::class.java)
                     startActivityForResult(intent, 12)
 
                     checkOpen = true
@@ -211,6 +240,8 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
+        binding.frAds.visibility = View.VISIBLE
+
         if (requestCode == REQUEST_CODE_STORAGE) {
             if (grantResults.isNotEmpty()) {
                 val read = grantResults[0] == PackageManager.PERMISSION_GRANTED
@@ -225,6 +256,8 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                     binding.btnAllowStorage.setBackgroundResource(R.drawable.ic_switch_off)
                     binding.btnAllowStorage.isEnabled = true
 
+                    binding.frAds.visibility = View.GONE
+
                     val alertDialog = AlertDialog.Builder(this).create()
                     alertDialog.setCancelable(false)
 
@@ -237,6 +270,8 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                         val uri = Uri.fromParts("package", packageName, null)
                         intent.data = uri
 
+                        AppOpenManager.getInstance()
+                            .disableAppResumeWithActivity(PermissionActivity::class.java)
 //                        startActivityForResult(intent, 1234)
                         startActivityResult.launch(intent)
 
@@ -246,6 +281,10 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                     }
 
                     alertDialog.show()
+
+                    alertDialog.setOnDismissListener {
+                        binding.frAds.visibility = View.VISIBLE
+                    }
                 }
             }
 
@@ -262,6 +301,8 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                     binding.btnAllowNotification.setBackgroundResource(R.drawable.ic_switch_off)
                     binding.btnAllowNotification.isEnabled = true
 
+                    binding.frAds.visibility = View.GONE
+
                     val alertDialog = AlertDialog.Builder(this).create()
                     alertDialog.setCancelable(false)
 
@@ -274,6 +315,9 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                         val uri = Uri.fromParts("package", packageName, null)
                         intent.data = uri
 
+                        AppOpenManager.getInstance()
+                            .disableAppResumeWithActivity(PermissionActivity::class.java)
+
                         startActivityResult.launch(intent)
 //                        startActivityForResult(intent, 1234)
 
@@ -283,6 +327,10 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
                     }
 
                     alertDialog.show()
+
+                    alertDialog.setOnDismissListener {
+                        binding.frAds.visibility = View.VISIBLE
+                    }
                 }
             }
 
@@ -305,6 +353,7 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
     override fun onResume() {
         super.onResume()
 
+        AppOpenManager.getInstance().enableAppResumeWithActivity(PermissionActivity::class.java)
     }
 
     private fun checkTextGo() {
@@ -312,6 +361,179 @@ class PermissionActivity : BaseActivity<ActivityPermissionBinding>() {
             binding.btnSkip.text = getString(R.string.string_skip)
         } else {
             binding.btnSkip.text = getString(R.string.string_continue)
+        }
+    }
+
+    private fun loadNativePermission() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && Admob.getInstance().isLoadFullAds && AdsConstant.isLoadNativePermission
+        ) {
+            try {
+
+                Admob.getInstance().loadNativeAd(
+                    this,
+                    getString(R.string.native_permission),
+                    object : NativeCallback() {
+                        override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                            val adView = LayoutInflater.from(this@PermissionActivity)
+                                .inflate(
+                                    R.layout.layout_ads_native_update_no_bor,
+                                    null
+                                ) as NativeAdView
+                            binding.frAds.removeAllViews()
+                            binding.frAds.addView(adView)
+                            Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                        }
+
+                        override fun onAdFailedToLoad() {
+                            binding.frAds.removeAllViews()
+                        }
+                    })
+            } catch (e: Exception) {
+                binding.frAds.removeAllViews()
+            }
+        } else {
+            binding.frAds.removeAllViews()
+        }
+    }
+
+    private fun showNativePermissionNotice() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && Admob.getInstance().isLoadFullAds && AdsConstant.isLoadNativePermissionNotice
+        ) {
+            if (nativePermissionNotice != null) {
+                val adView = LayoutInflater.from(this@PermissionActivity)
+                    .inflate(
+                        R.layout.layout_ads_native_update_no_bor,
+                        null
+                    ) as NativeAdView
+                binding.frAds.removeAllViews()
+                binding.frAds.addView(adView)
+                Admob.getInstance().pushAdsToViewCustom(nativePermissionNotice, adView)
+            } else {
+                try {
+                    Admob.getInstance().loadNativeAd(
+                        this,
+                        getString(R.string.native_permission_notice),
+                        object : NativeCallback() {
+                            override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                                val adView = LayoutInflater.from(this@PermissionActivity)
+                                    .inflate(
+                                        R.layout.layout_ads_native_update_no_bor,
+                                        null
+                                    ) as NativeAdView
+                                binding.frAds.removeAllViews()
+                                binding.frAds.addView(adView)
+                                Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                            }
+
+                            override fun onAdFailedToLoad() {
+                                binding.frAds.removeAllViews()
+                            }
+                        })
+
+                } catch (e: Exception) {
+                    binding.frAds.removeAllViews()
+                }
+            }
+        } else {
+            binding.frAds.removeAllViews()
+        }
+    }
+
+    private fun showNativePermissionStorage() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && Admob.getInstance().isLoadFullAds && AdsConstant.isLoadNativePermissionStorage
+        ) {
+            if (nativePermissionStorage != null) {
+                val adView = LayoutInflater.from(this@PermissionActivity)
+                    .inflate(
+                        R.layout.layout_ads_native_update_no_bor,
+                        null
+                    ) as NativeAdView
+                binding.frAds.removeAllViews()
+                binding.frAds.addView(adView)
+                Admob.getInstance().pushAdsToViewCustom(nativePermissionStorage, adView)
+            } else {
+                try {
+                    Admob.getInstance().loadNativeAd(
+                        this,
+                        getString(R.string.native_permission_storage),
+                        object : NativeCallback() {
+                            override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                                val adView = LayoutInflater.from(this@PermissionActivity)
+                                    .inflate(
+                                        R.layout.layout_ads_native_update_no_bor,
+                                        null
+                                    ) as NativeAdView
+                                binding.frAds.removeAllViews()
+                                binding.frAds.addView(adView)
+                                Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                            }
+
+                            override fun onAdFailedToLoad() {
+                                binding.frAds.removeAllViews()
+                            }
+                        })
+
+                } catch (e: Exception) {
+                    binding.frAds.removeAllViews()
+                }
+            }
+        } else {
+            binding.frAds.removeAllViews()
+        }
+    }
+
+    private fun loadNativePermissionNotice() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && Admob.getInstance().isLoadFullAds && AdsConstant.isLoadNativePermissionNotice && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        ) {
+            try {
+
+                Admob.getInstance().loadNativeAd(
+                    this,
+                    getString(R.string.native_permission_notice),
+                    object : NativeCallback() {
+                        override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                            nativePermissionNotice = nativeAd
+                        }
+
+                        override fun onAdFailedToLoad() {
+                            nativePermissionNotice = null
+                        }
+                    })
+            } catch (e: Exception) {
+                nativePermissionNotice = null
+            }
+        } else {
+            nativePermissionNotice = null
+        }
+    }
+
+    private fun loadNativePermissionStorage() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && Admob.getInstance().isLoadFullAds && AdsConstant.isLoadNativePermissionStorage
+        ) {
+            try {
+
+                Admob.getInstance().loadNativeAd(
+                    this,
+                    getString(R.string.native_permission_storage),
+                    object : NativeCallback() {
+                        override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                            nativePermissionStorage = nativeAd
+                        }
+
+                        override fun onAdFailedToLoad() {
+                            nativePermissionStorage = null
+                        }
+                    })
+            } catch (e: Exception) {
+                nativePermissionStorage = null
+            }
+        } else {
+            nativePermissionStorage = null
         }
     }
 

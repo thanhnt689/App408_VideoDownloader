@@ -100,6 +100,8 @@ class NotificationsHelper @Inject constructor(
                     task.fileSize = fileSize
                     task.fileDate = lastModified
 
+                    AdsConstant.isDownloadSuccessfully = true
+
                     CoroutineScope(Dispatchers.IO).launch {
                         videoTaskItemRepository.insertVideoTaskItem(task)
 

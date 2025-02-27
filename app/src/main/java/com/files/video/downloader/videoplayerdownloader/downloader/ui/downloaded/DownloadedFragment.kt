@@ -46,6 +46,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.databinding.L
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetSortBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogConfirmDelete
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.SharedPreferenceHelper
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.detectedVideos.DetectedVideosTabViewModel
@@ -59,13 +60,21 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.Play
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity.Companion.VIDEO_URL
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.pin.PinActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.privateVideo.PrivateVideoViewModel
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
 import com.files.video.downloader.videoplayerdownloader.downloader.util.KeyboardUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.SortState
 import com.files.video.downloader.videoplayerdownloader.downloader.util.ViewUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.models.VideoTaskItem
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.tabs.TabLayout
+import com.nlbn.ads.callback.AdCallback
+import com.nlbn.ads.callback.NativeCallback
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import com.skydoves.balloon.ArrowOrientation
 import com.skydoves.balloon.Balloon
 import kotlinx.coroutines.Dispatchers
@@ -110,6 +119,8 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        loadNativeNoMediaDownloaded()
 
         bottomSheetDialog = BottomSheetDialog(requireContext(), R.style.CustomAlertBottomSheet)
 
@@ -306,6 +317,7 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
                 ).show()
             } else {
 
+                binding.frAds.visibility = View.GONE
                 val dialogDelete = DialogConfirmDelete(requireContext()) {
                     for (videoTaskItem in videoAdapter.getSelectedFile()) {
                         val isSuccessfully =
@@ -329,6 +341,10 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
                 ViewUtils.showView(true, binding.layout, 300)
 
                 videoAdapter.setIsChecked(false)
+
+                dialogDelete.setOnDismissListener {
+                    binding.frAds.visibility = View.VISIBLE
+                }
 
             }
         }
@@ -377,6 +393,8 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
     }
 
     private fun showBottomSheetSort() {
+
+        binding.frAds.visibility = View.GONE
 
         sortLayout = LayoutBottomSheetSortBinding.inflate(layoutInflater)
 
@@ -496,6 +514,10 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
 
 
         bottomSheetDialog.show()
+
+        bottomSheetDialog.setOnDismissListener {
+            binding.frAds.visibility = View.VISIBLE
+        }
     }
 
     fun updateSortState(newSortState: SortState) {
@@ -660,7 +682,68 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
     }
 
     override fun onItemClicked(videoTaskItem: VideoTaskItem) {
-        startVideo(videoTaskItem)
+
+        if (requireContext().hasNetworkConnection() && ConsentHelper.getInstance(requireContext())
+                .canRequestAds() && AdsConstant.isLoadInterDownloadedItem
+        ) {
+            Admob.getInstance().loadAndShowInter(
+                requireActivity(),
+                getString(R.string.inter_downloaded_item), true,
+                object : AdCallback() {
+                    override fun onNextAction() {
+                        startVideo(videoTaskItem)
+                    }
+
+                    override fun onAdFailedToLoad(p0: LoadAdError?) {
+                        startVideo(videoTaskItem)
+                    }
+                })
+        } else {
+            startVideo(videoTaskItem)
+        }
+
+    }
+
+    private fun loadNativeNoMediaDownloaded() {
+        if (requireContext().hasNetworkConnection() && ConsentHelper.getInstance(requireContext())
+                .canRequestAds() && AdsConstant.isLoadNativeNoMediaDownloaded
+        ) {
+
+            try {
+                Admob.getInstance().loadNativeAd(
+                    requireContext(),
+                    getString(R.string.native_nomedia_download),
+                    object : NativeCallback() {
+                        override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                            val adView = if (Admob.getInstance().isLoadFullAds) {
+                                LayoutInflater.from(requireContext())
+                                    .inflate(
+                                        R.layout.layout_native_no_media_top,
+                                        null
+                                    ) as NativeAdView
+                            } else {
+                                LayoutInflater.from(requireContext())
+                                    .inflate(
+                                        R.layout.layout_native_no_media_top,
+                                        null
+                                    ) as NativeAdView
+                            }
+                            binding.frAds.removeAllViews()
+                            binding.frAds.addView(adView)
+                            Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                        }
+
+                        override fun onAdFailedToLoad() {
+                            binding.frAds.removeAllViews()
+                        }
+                    })
+            } catch (e: Exception) {
+                binding.frAds.removeAllViews()
+            }
+
+        } else {
+            binding.frAds.removeAllViews()
+        }
     }
 
     override fun onMenuClicked(view: View, videoTaskItem: VideoTaskItem) {
@@ -692,6 +775,7 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
         tvDelete.isSelected = true
 
         layoutRename.setOnClickListener {
+            binding.frAds.visibility = View.GONE
             val dialogRename = DialogRename(
                 requireContext(),
                 videoTaskItem.fileName.substringBeforeLast(".")
@@ -735,6 +819,10 @@ class DownloadedFragment : BaseFragment<FragmentDownloadedBinding>(), VideoListe
             }
 
             dialogRename.show()
+
+            dialogRename.setOnDismissListener {
+                binding.frAds.visibility = View.VISIBLE
+            }
         }
 
         layoutDelete.setOnClickListener {

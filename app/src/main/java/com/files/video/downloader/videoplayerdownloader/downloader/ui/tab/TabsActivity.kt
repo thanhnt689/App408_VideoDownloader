@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -15,10 +16,19 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityTabsBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTab
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabFactory
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.history.HistoryAdapter
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
+import com.nlbn.ads.callback.AdCallback
+import com.nlbn.ads.callback.NativeCallback
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,9 +51,17 @@ class TabsActivity : BaseActivity<ActivityTabsBinding>() {
 
         binding.tvNumTabs.text = getString(R.string.string_num_tabs, listTabs.size.toString())
 
+        loadNativeTabs()
+
         tabModelViewModel.queryAllTabModel().observe(this) {
             listTabs.clear()
             listTabs.addAll(it)
+
+            if (it.isNullOrEmpty()) {
+                binding.frAds.visibility = View.GONE
+            } else {
+                binding.frAds.visibility = View.VISIBLE
+            }
 
             binding.tvNumTabs.text = getString(R.string.string_num_tabs, listTabs.size.toString())
 
@@ -144,4 +162,90 @@ class TabsActivity : BaseActivity<ActivityTabsBinding>() {
 
 
     }
+
+    private fun loadNativeTabs() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && AdsConstant.isLoadNativeTab && Admob.getInstance().isLoadFullAds
+        ) {
+
+            if (AdsConstant.nativeAdsAll != null) {
+                val adView = if (Admob.getInstance().isLoadFullAds) {
+                    LayoutInflater.from(this@TabsActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update_no_bor,
+                            null
+                        ) as NativeAdView
+                } else {
+                    LayoutInflater.from(this@TabsActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update,
+                            null
+                        ) as NativeAdView
+                }
+                binding.frAds.removeAllViews()
+                binding.frAds.addView(adView)
+                Admob.getInstance().pushAdsToViewCustom(AdsConstant.nativeAdsAll, adView)
+            } else {
+                try {
+                    Admob.getInstance().loadNativeAd(
+                        this,
+                        getString(R.string.native_all),
+                        object : NativeCallback() {
+                            override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                                val adView = if (Admob.getInstance().isLoadFullAds) {
+                                    LayoutInflater.from(this@TabsActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update_no_bor,
+                                            null
+                                        ) as NativeAdView
+                                } else {
+                                    LayoutInflater.from(this@TabsActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update,
+                                            null
+                                        ) as NativeAdView
+                                }
+                                binding.frAds.removeAllViews()
+                                binding.frAds.addView(adView)
+                                Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                            }
+
+                            override fun onAdFailedToLoad() {
+                                binding.frAds.removeAllViews()
+                            }
+                        })
+                } catch (e: Exception) {
+                    binding.frAds.removeAllViews()
+                }
+            }
+        } else {
+            binding.frAds.removeAllViews()
+        }
+    }
+
+    override fun onBackPressed() {
+        if (intent.getStringExtra("open") == "home") {
+            if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                    .canRequestAds() && AdsConstant.isLoadInterBack && Admob.getInstance().isLoadFullAds
+            ) {
+                Admob.getInstance().loadAndShowInter(
+                    this,
+                    getString(R.string.inter_back), true,
+                    object : AdCallback() {
+                        override fun onNextAction() {
+                            finish()
+                        }
+
+                        override fun onAdFailedToLoad(p0: LoadAdError?) {
+                            finish()
+                        }
+                    })
+            } else {
+                finish()
+            }
+        } else {
+            finish()
+        }
+    }
+
 }

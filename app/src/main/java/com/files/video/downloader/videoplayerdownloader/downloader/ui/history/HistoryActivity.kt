@@ -22,15 +22,24 @@ import com.files.video.downloader.videoplayerdownloader.downloader.data.network.
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityHistoryBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogAddBookmark
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogConfirmDelete
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabFactory
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.language.LanguageActivity.Companion.FROM_SPLASH
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.permission.PermissionActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.tab.TabModelViewModel
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
 import com.files.video.downloader.videoplayerdownloader.downloader.util.FaviconUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.KeyboardUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.ViewUtils
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
+import com.nlbn.ads.callback.AdCallback
+import com.nlbn.ads.callback.NativeCallback
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,16 +78,22 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
                 binding.tvDes.text = getString(R.string.string_go_see_the_sites)
                 binding.fabAdd.visibility = View.GONE
 
+                loadNativeHistory()
+
                 lifecycleScope.launch {
                     historyViewModel.queryHistoryFile().observe(this@HistoryActivity) {
                         if (it.isEmpty()) {
                             binding.layoutNoData.visibility = View.VISIBLE
                             binding.tvClear.visibility = View.GONE
                             binding.imgSearch.visibility = View.GONE
+
+                            binding.frAds.visibility = View.GONE
                         } else {
                             binding.layoutNoData.visibility = View.GONE
                             binding.tvClear.visibility = View.VISIBLE
                             binding.imgSearch.visibility = View.VISIBLE
+
+                            binding.frAds.visibility = View.VISIBLE
                         }
 
                         listHistory.clear()
@@ -121,14 +136,20 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
                 binding.fabAdd.visibility = View.VISIBLE
                 binding.tvClear.visibility = View.GONE
 
+                loadNativeBookmark()
+
                 lifecycleScope.launch {
                     historyViewModel.queryBookmarkFile().observe(this@HistoryActivity) {
                         if (it.isEmpty()) {
                             binding.layoutNoData.visibility = View.VISIBLE
                             binding.imgSearch.visibility = View.GONE
+
+                            binding.frAds.visibility = View.GONE
                         } else {
                             binding.layoutNoData.visibility = View.GONE
                             binding.imgSearch.visibility = View.VISIBLE
+
+                            binding.frAds.visibility = View.VISIBLE
                         }
 
                         listHistory.clear()
@@ -194,7 +215,7 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
         }
 
         binding.imgBack.setOnClickListener {
-            finish()
+            onBackPressed()
         }
 
         binding.edtSearch.addTextChangedListener(object : TextWatcher {
@@ -226,6 +247,7 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
     }
 
     private fun showDialogAddBookmark() {
+        binding.frAds.visibility = View.GONE
         val dialogAddBookmark = DialogAddBookmark(
             this@HistoryActivity,
         ) { name: String, url: String ->
@@ -258,15 +280,24 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
         }
 
         dialogAddBookmark.show()
+
+        dialogAddBookmark.setOnDismissListener {
+            binding.frAds.visibility = View.VISIBLE
+        }
     }
 
     private fun showDialogConfirmDelete(historyItem: HistoryItem) {
+        binding.frAds.visibility = View.GONE
         val dialogDelete = DialogConfirmDelete(this) {
             historyViewModel.deleteHistory(historyItem)
 
         }
 
         dialogDelete.show()
+
+        dialogDelete.setOnDismissListener {
+            binding.frAds.visibility = View.VISIBLE
+        }
     }
 
 //    private fun openNewTab(input: String) {
@@ -306,6 +337,152 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
 
 
     }
+
+    private fun loadNativeBookmark() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && AdsConstant.isLoadNativeBookMark && Admob.getInstance().isLoadFullAds
+        ) {
+
+            if (AdsConstant.nativeAdsAll != null) {
+                val adView = if (Admob.getInstance().isLoadFullAds) {
+                    LayoutInflater.from(this@HistoryActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update_no_bor,
+                            null
+                        ) as NativeAdView
+                } else {
+                    LayoutInflater.from(this@HistoryActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update,
+                            null
+                        ) as NativeAdView
+                }
+                binding.frAds.removeAllViews()
+                binding.frAds.addView(adView)
+                Admob.getInstance().pushAdsToViewCustom(AdsConstant.nativeAdsAll, adView)
+            } else {
+                try {
+                    Admob.getInstance().loadNativeAd(
+                        this,
+                        getString(R.string.native_all),
+                        object : NativeCallback() {
+                            override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                                val adView = if (Admob.getInstance().isLoadFullAds) {
+                                    LayoutInflater.from(this@HistoryActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update_no_bor,
+                                            null
+                                        ) as NativeAdView
+                                } else {
+                                    LayoutInflater.from(this@HistoryActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update,
+                                            null
+                                        ) as NativeAdView
+                                }
+                                binding.frAds.removeAllViews()
+                                binding.frAds.addView(adView)
+                                Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                            }
+
+                            override fun onAdFailedToLoad() {
+                                binding.frAds.removeAllViews()
+                            }
+                        })
+                } catch (e: Exception) {
+                    binding.frAds.removeAllViews()
+                }
+            }
+        } else {
+            binding.frAds.removeAllViews()
+        }
+    }
+
+    private fun loadNativeHistory() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && AdsConstant.isLoadNativeHistory && Admob.getInstance().isLoadFullAds
+        ) {
+
+            if (AdsConstant.nativeAdsAll != null) {
+                val adView = if (Admob.getInstance().isLoadFullAds) {
+                    LayoutInflater.from(this@HistoryActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update_no_bor,
+                            null
+                        ) as NativeAdView
+                } else {
+                    LayoutInflater.from(this@HistoryActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update,
+                            null
+                        ) as NativeAdView
+                }
+                binding.frAds.removeAllViews()
+                binding.frAds.addView(adView)
+                Admob.getInstance().pushAdsToViewCustom(AdsConstant.nativeAdsAll, adView)
+            } else {
+                try {
+                    Admob.getInstance().loadNativeAd(
+                        this,
+                        getString(R.string.native_all),
+                        object : NativeCallback() {
+                            override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                                val adView = if (Admob.getInstance().isLoadFullAds) {
+                                    LayoutInflater.from(this@HistoryActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update_no_bor,
+                                            null
+                                        ) as NativeAdView
+                                } else {
+                                    LayoutInflater.from(this@HistoryActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update,
+                                            null
+                                        ) as NativeAdView
+                                }
+                                binding.frAds.removeAllViews()
+                                binding.frAds.addView(adView)
+                                Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                            }
+
+                            override fun onAdFailedToLoad() {
+                                binding.frAds.removeAllViews()
+                            }
+                        })
+                } catch (e: Exception) {
+                    binding.frAds.removeAllViews()
+                }
+            }
+        } else {
+            binding.frAds.removeAllViews()
+        }
+    }
+
+    override fun onBackPressed() {
+        if (intent.getStringExtra("start") == "home") {
+            if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                    .canRequestAds() && AdsConstant.isLoadInterBack && Admob.getInstance().isLoadFullAds
+            ) {
+                Admob.getInstance().loadAndShowInter(
+                    this,
+                    getString(R.string.inter_back), true,
+                    object : AdCallback() {
+                        override fun onNextAction() {
+                            finish()
+                        }
+
+                        override fun onAdFailedToLoad(p0: LoadAdError?) {
+                            finish()
+                        }
+                    })
+            } else {
+                finish()
+            }
+        } else {
+            finish()
+        }
+    }
+
 
     companion object {
         fun newIntent(context: Context, open: String = ""): Intent {

@@ -8,6 +8,9 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -15,14 +18,28 @@ import com.files.video.downloader.videoplayerdownloader.downloader.helper.Prefer
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.data.remote.service.AdBlockHostsRemoteDataSource
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivityMainBinding
+import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogExitApp
+import com.files.video.downloader.videoplayerdownloader.downloader.dialog.RatingDialog
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.downloaded.DownloadedFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.processing.ProcessingFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.settings.SettingsFragment
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsInitializerHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.util.UpdateEvent
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.youtubedl_downloader.YoutubeDlDownloaderWorker
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.play.core.review.ReviewManagerFactory
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.nlbn.ads.banner.BannerPlugin
+import com.nlbn.ads.callback.AdCallback
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
+import org.greenrobot.eventbus.EventBus
 import javax.inject.Inject
+import kotlin.system.exitProcess
 
 @AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding>() {
@@ -69,6 +86,24 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun initView() {
 
+        if (this.hasNetworkConnection() && AdsConstant.isLoadBanner && Admob.getInstance().isLoadFullAds) {
+            binding.frBanner.visibility = View.VISIBLE
+        } else {
+            binding.frBanner.visibility = View.GONE
+        }
+
+        val consentHelper = ConsentHelper.getInstance(this)
+        if (!consentHelper.canLoadAndShowAds()) {
+            consentHelper.reset()
+        }
+        consentHelper.obtainConsentAndShow(this) {
+
+            loadBanner()
+            AdsConstant.loadNativeAll(this)
+
+            EventBus.getDefault().postSticky(UpdateEvent("Ads"))
+        }
+
         AdsInitializerHelper.initializeAdBlocker(
             preferenceHelper,
             lifecycleScope,
@@ -89,7 +124,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         colorNormal = Color.parseColor("#BFBFBF")
         colorSelected = Color.parseColor("#A264FF")
 
-        replaceFragment(BrowserFragment(),"BrowserFragment")
+        replaceFragment(BrowserFragment(), "BrowserFragment")
 
         changeImageIconWhenTap(
             drawableBrowserSelected,
@@ -98,7 +133,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             drawableSettingsNormal
         )
         changeTextColorWhenTap(colorSelected, colorNormal, colorNormal, colorNormal)
-
 
         initListener()
 
@@ -122,7 +156,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     )
                     changeTextColorWhenTap(colorNormal, colorSelected, colorNormal, colorNormal)
 
-                    replaceFragment(ProcessingFragment(),"ProcessingFragment")
+                    replaceFragment(ProcessingFragment(), "ProcessingFragment")
                 }
             } else {
                 if (posSelectedNavigation != 2) {
@@ -135,7 +169,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     )
                     changeTextColorWhenTap(colorNormal, colorNormal, colorSelected, colorNormal)
 
-                    replaceFragment(DownloadedFragment(),"DownloadedFragment")
+                    replaceFragment(DownloadedFragment(), "DownloadedFragment")
                 }
             }
 
@@ -162,7 +196,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     )
                     changeTextColorWhenTap(colorNormal, colorSelected, colorNormal, colorNormal)
 
-                    replaceFragment(ProcessingFragment(),"ProcessingFragment")
+                    replaceFragment(ProcessingFragment(), "ProcessingFragment")
                 }
             } else {
                 if (posSelectedNavigation != 0) {
@@ -175,7 +209,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     )
                     changeTextColorWhenTap(colorSelected, colorNormal, colorNormal, colorNormal)
 
-                    replaceFragment(BrowserFragment(),"BrowserFragment")
+                    replaceFragment(BrowserFragment(), "BrowserFragment")
                 }
             }
         }
@@ -185,8 +219,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     private fun initListener() {
         binding.layoutBrowser.setOnClickListener {
-
             if (posSelectedNavigation != 0) {
+                showInterTabHome()
                 posSelectedNavigation = 0
                 changeImageIconWhenTap(
                     drawableBrowserSelected,
@@ -196,12 +230,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 )
                 changeTextColorWhenTap(colorSelected, colorNormal, colorNormal, colorNormal)
 
-                replaceFragment(BrowserFragment(),"BrowserFragment")
+                replaceFragment(BrowserFragment(), "BrowserFragment")
             }
         }
 
         binding.layoutProcessing.setOnClickListener {
             if (posSelectedNavigation != 1) {
+                showInterTabHome()
                 posSelectedNavigation = 1
                 changeImageIconWhenTap(
                     drawableBrowserNormal,
@@ -211,12 +246,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 )
                 changeTextColorWhenTap(colorNormal, colorSelected, colorNormal, colorNormal)
 
-                replaceFragment(ProcessingFragment(),"ProcessingFragment")
+                replaceFragment(ProcessingFragment(), "ProcessingFragment")
             }
         }
 
         binding.layoutDownloaded.setOnClickListener {
             if (posSelectedNavigation != 2) {
+                showInterTabHome()
                 posSelectedNavigation = 2
                 changeImageIconWhenTap(
                     drawableBrowserNormal,
@@ -226,12 +262,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 )
                 changeTextColorWhenTap(colorNormal, colorNormal, colorSelected, colorNormal)
 
-                replaceFragment(DownloadedFragment(),"DownloadedFragment")
+                replaceFragment(DownloadedFragment(), "DownloadedFragment")
             }
         }
 
         binding.layoutSetting.setOnClickListener {
             if (posSelectedNavigation != 3) {
+                showInterTabHome()
                 posSelectedNavigation = 3
                 changeImageIconWhenTap(
                     drawableBrowserNormal,
@@ -241,7 +278,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 )
                 changeTextColorWhenTap(colorNormal, colorNormal, colorNormal, colorSelected)
 
-                replaceFragment(SettingsFragment(),"SettingsFragment")
+                replaceFragment(SettingsFragment(), "SettingsFragment")
             }
         }
 
@@ -277,6 +314,161 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         val fragmentTransaction = fragmentManager.beginTransaction()
         fragmentTransaction.replace(R.id.frame_layout, fragment, tag)
         fragmentTransaction.commit()
+    }
+
+    private fun showInterTabHome() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(
+                this
+            ).canRequestAds() && AdsConstant.isLoadInterTabHome && Admob.getInstance().isLoadFullAds
+        ) {
+            Admob.getInstance().loadAndShowInter(
+                this,
+                getString(R.string.inter_tab_home), true,
+                object : AdCallback() {
+                    override fun onNextAction() {
+
+                    }
+
+                    override fun onAdFailedToLoad(p0: LoadAdError?) {
+
+                    }
+                })
+        } else {
+
+        }
+    }
+
+    private fun loadBanner() {
+        if (this.hasNetworkConnection() && ConsentHelper.getInstance(this).canRequestAds() && Admob.getInstance().isLoadFullAds) {
+
+            if (AdsConstant.isLoadBanner) {
+                binding.frBanner.visibility = View.VISIBLE
+                val config = BannerPlugin.Config()
+                config.defaultAdUnitId = getString(R.string.banner)
+                config.defaultBannerType = BannerPlugin.BannerType.Adaptive
+                val cbFetchInterval =
+                    FirebaseRemoteConfig.getInstance().getLong("cb_fetch_interval").toInt()
+                config.defaultRefreshRateSec = cbFetchInterval
+                config.defaultCBFetchIntervalSec = cbFetchInterval
+                Admob.getInstance().loadBannerPlugin(
+                    this,
+                    findViewById<ViewGroup>(R.id.fr_banner),
+                    findViewById<ViewGroup>(R.id.include),
+                    config
+                )
+            } else {
+                binding.frBanner.visibility = View.GONE
+            }
+
+        } else {
+            binding.frBanner.visibility = View.GONE
+        }
+    }
+
+    override fun onBackPressed() {
+//        super.onBackPressed()
+        val countOpenApp = preferenceHelper.getCountExitApp()
+
+        Log.d("ntt", countOpenApp.toString())
+
+        if (!preferenceHelper.isRate() && (countOpenApp % 2 == 0)) {
+            showDialogRate(true)
+        } else {
+
+            showDialogExitApp()
+
+        }
+    }
+
+    private fun showDialogExitApp() {
+        EventBus.getDefault().post(UpdateEvent("hide_ads"))
+        val dialogExitApp = DialogExitApp(this@MainActivity) {
+            preferenceHelper.increaseCountExitApp()
+
+            finishAffinity()
+            exitProcess(1)
+        }
+
+        dialogExitApp.show()
+
+        dialogExitApp.setOnDismissListener {
+            EventBus.getDefault().post(UpdateEvent("show_ads"))
+        }
+    }
+
+    private fun showDialogRate(isExit: Boolean) {
+        EventBus.getDefault().post(UpdateEvent("hide_ads"))
+        val ratingDialog = RatingDialog(this)
+        ratingDialog.init(this, object : RatingDialog.OnPress {
+            override fun sendThank() {
+                preferenceHelper.forceRated()
+                ratingDialog.dismiss()
+
+                Toast.makeText(
+                    this@MainActivity,
+                    getString(R.string.string_thank_for_rate),
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                if (isExit) {
+                    finishAffinity()
+
+                    exitProcess(1)
+                }
+
+            }
+
+            override fun rating() {
+                val manager = ReviewManagerFactory.create(this@MainActivity)
+                val request = manager.requestReviewFlow()
+                request.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val reviewInfo = task.result
+                        val flow = manager.launchReviewFlow(this@MainActivity, reviewInfo)
+                        flow.addOnSuccessListener {
+                            preferenceHelper.forceRated()
+                            ratingDialog.dismiss()
+
+                            if (isExit) {
+                                finishAffinity()
+                                exitProcess(1)
+                            }
+
+                        }
+                    } else {
+                        preferenceHelper.forceRated()
+                        ratingDialog.dismiss()
+
+                        if (isExit) {
+                            finishAffinity()
+                            exitProcess(1)
+                        }
+                    }
+                }
+            }
+
+            override fun later() {
+                ratingDialog.dismiss()
+
+                if (isExit) {
+
+                    preferenceHelper.increaseCountExitApp()
+
+                    finishAffinity()
+                    exitProcess(1)
+                } else {
+                    preferenceHelper.increaseCountBackHome()
+                }
+
+            }
+
+        })
+
+        ratingDialog.show()
+
+        ratingDialog.setOnDismissListener {
+            EventBus.getDefault().post(UpdateEvent("show_ads"))
+        }
     }
 
     companion object {

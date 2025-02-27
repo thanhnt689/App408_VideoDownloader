@@ -2,7 +2,9 @@ package com.files.video.downloader.videoplayerdownloader.downloader.ui.pin
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +15,14 @@ import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseActi
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.ActivitySecurityBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogQuestion
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogSetPinSuccessfully
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
+import com.nlbn.ads.callback.NativeCallback
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -35,6 +44,8 @@ class SecurityActivity : BaseActivity<ActivitySecurityBinding>() {
         password = intent.getStringExtra("pass").toString()
 
         updateTextSelectQuestion(selectQuestion)
+
+        loadNativeSecurityQuestion()
 
         binding.imgMoreQuestion.setOnClickListener {
             showDialogQuestion(selectQuestion)
@@ -89,6 +100,8 @@ class SecurityActivity : BaseActivity<ActivitySecurityBinding>() {
 
     private fun showDialogSuccessfully() {
 
+        binding.frAds.visibility = View.GONE
+
         preferences.setIsSetupPinCode(true)
 
         preferences.setNumSecurityQuestion(selectQuestion)
@@ -103,19 +116,32 @@ class SecurityActivity : BaseActivity<ActivitySecurityBinding>() {
         }
 
         dialogSuccessfully.show()
+
+        dialogSuccessfully.setOnDismissListener {
+            binding.frAds.visibility = View.VISIBLE
+        }
     }
 
     private fun showDialogQuestion(selectQuestion: Int) {
-        val dialogQuestion = DialogQuestion(this, selectQuestion) {
+        binding.frAds.visibility = View.GONE
+        val dialogQuestion = DialogQuestion(this, selectQuestion) { it ->
+
+            Log.d("ntt", "showDialogQuestion: it: $it")
+
             this.selectQuestion = it
 
-            updateTextSelectQuestion(selectQuestion)
+            updateTextSelectQuestion(it)
         }
 
         dialogQuestion.show()
+
+        dialogQuestion.setOnDismissListener {
+            binding.frAds.visibility = View.VISIBLE
+        }
     }
 
     private fun updateTextSelectQuestion(selectQuestion: Int) {
+        Log.d("ntt", "updateTextSelectQuestion: selectQuestion: $selectQuestion")
         when (selectQuestion) {
             1 -> {
                 binding.tvQuestion.text = getString(R.string.string_what_is_your_lucky_number)
@@ -131,4 +157,65 @@ class SecurityActivity : BaseActivity<ActivitySecurityBinding>() {
             }
         }
     }
+
+    private fun loadNativeSecurityQuestion() {
+        if (hasNetworkConnection() && ConsentHelper.getInstance(this)
+                .canRequestAds() && AdsConstant.isLoadNativeSecurity && Admob.getInstance().isLoadFullAds
+        ) {
+
+            if (AdsConstant.nativeAdsAll != null) {
+                val adView = if (Admob.getInstance().isLoadFullAds) {
+                    LayoutInflater.from(this@SecurityActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update_no_bor,
+                            null
+                        ) as NativeAdView
+                } else {
+                    LayoutInflater.from(this@SecurityActivity)
+                        .inflate(
+                            R.layout.layout_ads_native_update,
+                            null
+                        ) as NativeAdView
+                }
+                binding.frAds.removeAllViews()
+                binding.frAds.addView(adView)
+                Admob.getInstance().pushAdsToViewCustom(AdsConstant.nativeAdsAll, adView)
+            } else {
+                try {
+                    Admob.getInstance().loadNativeAd(
+                        this,
+                        getString(R.string.native_all),
+                        object : NativeCallback() {
+                            override fun onNativeAdLoaded(nativeAd: NativeAd?) {
+                                val adView = if (Admob.getInstance().isLoadFullAds) {
+                                    LayoutInflater.from(this@SecurityActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update_no_bor,
+                                            null
+                                        ) as NativeAdView
+                                } else {
+                                    LayoutInflater.from(this@SecurityActivity)
+                                        .inflate(
+                                            R.layout.layout_ads_native_update,
+                                            null
+                                        ) as NativeAdView
+                                }
+                                binding.frAds.removeAllViews()
+                                binding.frAds.addView(adView)
+                                Admob.getInstance().pushAdsToViewCustom(nativeAd, adView)
+                            }
+
+                            override fun onAdFailedToLoad() {
+                                binding.frAds.removeAllViews()
+                            }
+                        })
+                } catch (e: Exception) {
+                    binding.frAds.removeAllViews()
+                }
+            }
+        } else {
+            binding.frAds.removeAllViews()
+        }
+    }
+
 }

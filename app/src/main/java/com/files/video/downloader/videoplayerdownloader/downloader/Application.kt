@@ -8,6 +8,8 @@ import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.files.video.downloader.videoplayerdownloader.downloader.data.repository.ProgressRepository
 import com.files.video.downloader.videoplayerdownloader.downloader.helper.PreferenceHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTab
+import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.webTab.WebTabActivity
 import com.google.firebase.FirebaseApp
 import com.nlbn.ads.util.Adjust
 import com.nlbn.ads.util.AdsApplication
@@ -22,7 +24,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.SystemUt
 import com.files.video.downloader.videoplayerdownloader.downloader.util.downloaders.generic_downloader.DaggerWorkerFactory
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.CustomProxyController
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
-import com.yausername.aria2c.Aria2c
+//import com.yausername.aria2c.Aria2c
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLException
@@ -97,6 +99,8 @@ class Application : AdsApplication() {
 
         AppOpenManager.getInstance().disableAppResumeWithActivity(SplashActivity::class.java)
 
+        AppOpenManager.getInstance().disableAppResumeWithActivity(WebTabActivity::class.java)
+
     }
 
     override fun enableAdsResume(): Boolean = true
@@ -106,7 +110,7 @@ class Application : AdsApplication() {
 
     override fun getListTestDeviceId(): MutableList<String>? = null
 
-    override fun getResumeAdId(): String = ""
+    override fun getResumeAdId(): String = getString(R.string.open_resume)
 
     override fun buildDebug(): Boolean = BuildConfig.DEBUG
 
@@ -138,7 +142,7 @@ class Application : AdsApplication() {
         try {
             YoutubeDL.getInstance().init(this)
             FFmpeg.getInstance().init(this)
-            Aria2c.getInstance().init(this)
+//            Aria2c.getInstance().init(this)
         } catch (e: YoutubeDLException) {
             AppLogger.e("failed to initialize youtubedl-android $e")
         }

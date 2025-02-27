@@ -34,6 +34,16 @@
   *** rewind();
 }
 
+-dontwarn com.daimajia.easing.Glider
+-dontwarn com.daimajia.easing.Skill
+
  -dontwarn android.media.LoudnessCodecController$OnLoudnessCodecUpdateListener
  -dontwarn android.media.LoudnessCodecController
  -keep class com.facebook.infer.annotation.** { *; }
+
+ -keepclassmembers class * extends androidx.work.Worker {
+     public <init>(android.content.Context,androidx.work.WorkerParameters);
+ }
+
+ -keep class com.facebook.** { *; }
+ -keep class com.facebook.appevents.** { *; }

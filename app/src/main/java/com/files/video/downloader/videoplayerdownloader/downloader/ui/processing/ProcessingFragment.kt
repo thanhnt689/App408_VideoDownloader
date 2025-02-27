@@ -20,6 +20,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -32,6 +33,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -49,6 +51,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Recycler
 import androidx.webkit.WebViewCompat.setAudioMuted
 import com.bumptech.glide.Glide
+import com.files.video.downloader.videoplayerdownloader.downloader.MainActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.R
 import com.files.video.downloader.videoplayerdownloader.downloader.base.BaseFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.data.network.entity.VideFormatEntityList
@@ -57,6 +60,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.databinding.F
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetDownloadBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.databinding.LayoutBottomSheetPermissionBinding
 import com.files.video.downloader.videoplayerdownloader.downloader.dialog.DialogRename
+import com.files.video.downloader.videoplayerdownloader.downloader.extensions.hasNetworkConnection
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.BrowserFragment
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.ContentType
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.DownloadButtonStateCanDownload
@@ -72,6 +76,7 @@ import com.files.video.downloader.videoplayerdownloader.downloader.ui.browser.we
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.guide.GuideActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.ui.media.PlayMediaActivity
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AdBlockerHelper
+import com.files.video.downloader.videoplayerdownloader.downloader.util.AdsConstant
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppLogger
 import com.files.video.downloader.videoplayerdownloader.downloader.util.AppUtil
 import com.files.video.downloader.videoplayerdownloader.downloader.util.CookieUtils
@@ -83,12 +88,18 @@ import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_ut
 import com.files.video.downloader.videoplayerdownloader.downloader.util.proxy_utils.OkHttpProxyClient
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.nlbn.ads.callback.NativeCallback
+import com.nlbn.ads.util.Admob
+import com.nlbn.ads.util.ConsentHelper
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
+import com.nlbn.ads.util.AppOpenManager
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -142,6 +153,8 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
     private lateinit var handler: Handler
 
     private lateinit var runnable: Runnable
+
+    private var nativePopupPermission: com.google.android.gms.ads.nativead.NativeAd? = null
 
     private var webViewClient = object : WebViewClient() {
         override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
@@ -630,6 +643,8 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
 
         bottomSheetPermissionDialog.behavior.addBottomSheetCallback(bottomSheetCallback)
 
+        showAdsNativePopupPermission(permissionLayoutBinding.frAds)
+
         runnable = Runnable {
             if (permissionLayoutBinding.btnStorage.isEnabled) {
                 permissionLayoutBinding.btnStorage.startAnimation(animation)
@@ -691,6 +706,8 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
             handler.removeCallbacks(runnable)
             handler.postDelayed(runnable, 5000L)
 
+            permissionLayoutBinding.frAds.visibility = View.GONE
+
             requestNotificationPermission.launch(
                 Manifest.permission.POST_NOTIFICATIONS
             )
@@ -709,6 +726,8 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
 
         handler.removeCallbacks(runnable)
         handler.postDelayed(runnable, 5000L)
+
+        permissionLayoutBinding.frAds.visibility = View.GONE
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             storageImageActivityResultLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
@@ -732,6 +751,9 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
 
     private val storageActivityResultLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+
+            permissionLayoutBinding.frAds.visibility = View.VISIBLE
+
             if (isGranted) {
                 if (checkNotificationPermission()) {
 
@@ -766,6 +788,8 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
         grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        permissionLayoutBinding.frAds.visibility = View.VISIBLE
 
         if (requestCode == 99) {
             if (grantResults.isNotEmpty()) {
@@ -806,6 +830,9 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
     private val requestNotificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
+
+        permissionLayoutBinding.frAds.visibility = View.VISIBLE
+
         if (isGranted) {
             if (checkStoragePermission()) {
 
@@ -834,6 +861,7 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
 
     private fun showSettingsDialog() {
 //        frAds.visibility = View.GONE
+        permissionLayoutBinding.frAds.visibility = View.GONE
         var builder = AlertDialog.Builder(requireContext())
         builder.setTitle(getString(R.string.string_permission))
             .setMessage(getString(R.string.permission_setting))
@@ -845,6 +873,7 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
         var dialog = builder.create()
         builder.setOnDismissListener {
 //            frAds.visibility = View.VISIBLE
+            permissionLayoutBinding.frAds.visibility = View.VISIBLE
         }
         dialog.show()
     }
@@ -853,7 +882,7 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
         val uri = Uri.fromParts("package", requireContext().packageName, null)
         intent.data = uri
-//        AppOpenManager.getInstance().disableAppResumeWithActivity(WebTabActivity::class.java)
+        AppOpenManager.getInstance().disableAppResumeWithActivity(MainActivity::class.java)
         startSettingResult.launch(intent)
     }
 
@@ -1306,6 +1335,70 @@ class ProcessingFragment : BaseFragment<FragmentProcessingBinding>(), ProgressLi
         formats[videoInfo.id] = format
         videoDetectionTabViewModel.selectedFormats.set(formats)
     }
+
+    private fun showAdsNativePopupPermission(frAds: FrameLayout) {
+        if (AdsConstant.isLoadNativePopupPermission && requireContext().hasNetworkConnection() && ConsentHelper.getInstance(
+                requireContext()
+            ).canRequestAds()
+        ) {
+            if (nativePopupPermission != null) {
+                val adView = if (Admob.getInstance().isLoadFullAds) {
+                    LayoutInflater.from(requireContext())
+                        .inflate(
+                            R.layout.layout_ads_native_update_no_bor,
+                            null
+                        ) as NativeAdView
+                } else {
+                    LayoutInflater.from(requireContext())
+                        .inflate(R.layout.layout_ads_native_update, null) as NativeAdView
+                }
+                val nativeAdView = adView as NativeAdView
+                frAds.removeAllViews()
+                frAds.addView(adView)
+
+                Admob.getInstance().pushAdsToViewCustom(nativePopupPermission, nativeAdView)
+            } else {
+                Admob.getInstance().loadNativeAd(
+                    requireContext(),
+                    this.getString(R.string.native_popup_permission),
+                    object : NativeCallback() {
+                        override fun onNativeAdLoaded(nativeAd: com.google.android.gms.ads.nativead.NativeAd) {
+                            nativePopupPermission = nativeAd
+                            val adView = if (Admob.getInstance().isLoadFullAds) {
+                                LayoutInflater.from(requireContext())
+                                    .inflate(
+                                        R.layout.layout_ads_native_update_no_bor,
+                                        null
+                                    ) as NativeAdView
+                            } else {
+                                LayoutInflater.from(requireContext())
+                                    .inflate(
+                                        R.layout.layout_ads_native_update,
+                                        null
+                                    ) as NativeAdView
+                            }
+                            val nativeAdView = adView as NativeAdView
+                            frAds.removeAllViews()
+                            frAds.addView(adView)
+
+                            Admob.getInstance().pushAdsToViewCustom(nativeAd, nativeAdView)
+
+                        }
+
+                        override fun onAdFailedToLoad() {
+                            nativePopupPermission = null
+                            frAds.removeAllViews()
+                        }
+
+                    }
+                )
+            }
+
+        } else {
+            frAds.removeAllViews()
+        }
+    }
+
 }
 
 class WrapContentLinearLayoutManager : LinearLayoutManager {

@@ -40,7 +40,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/_20sdp"
         android:layout_marginEnd="@dimen/_20sdp"
-        android:layout_marginBottom="@dimen/_15sdp"
         android:fontFamily="@font/sf_pro_display_regular"
         android:gravity="center"
         android:lines="3"
